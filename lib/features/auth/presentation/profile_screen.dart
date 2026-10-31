@@ -156,6 +156,15 @@ class ProfileScreen extends StatelessWidget {
               letterSpacing: -0.6,
             ),
           ),
+          const SizedBox(height: 2),
+          Text(
+            '@${state.userHandle}',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
           const SizedBox(height: 6),
           const Text(
             'Ruangmu untuk terhubung.',

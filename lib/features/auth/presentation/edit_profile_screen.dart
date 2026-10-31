@@ -12,23 +12,30 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _nameController;
+  late final TextEditingController _handleController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: TautAppState().userName);
+    _handleController = TextEditingController(text: TautAppState().userHandle);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _handleController.dispose();
     super.dispose();
   }
 
   void _handleSave(TautAppState state) {
     final name = _nameController.text.trim();
+    final handle = _handleController.text.trim();
     if (name.isNotEmpty) {
       state.setUserName(name);
+      if (handle.isNotEmpty) {
+        state.setUserHandle(handle);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profil demo diperbarui.'),
@@ -93,6 +100,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _nameController,
                 maxLength: 40,
                 decoration: InputDecoration(
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Username unik (ID teman)',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _handleController,
+                maxLength: 30,
+                decoration: InputDecoration(
+                  prefixText: '@',
                   counterText: '',
                   filled: true,
                   fillColor: Colors.white,

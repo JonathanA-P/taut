@@ -5,8 +5,7 @@ class TautAppState extends ChangeNotifier {
   static final TautAppState _instance = TautAppState._internal();
   factory TautAppState() => _instance;
 
-  TautAppState._internal() {
-  }
+  TautAppState._internal();
 
   String _currentPage = 'home';
   String get currentPage => _currentPage;
@@ -88,12 +87,43 @@ class TautAppState extends ChangeNotifier {
   String _userName = 'Adriel';
   String get userName => _userName;
 
+  String _userHandle = 'adriel';
+  String get userHandle => _userHandle;
+
   void setUserName(String name) {
     final trimmed = name.trim();
     if (trimmed.isNotEmpty) {
       _userName = trimmed;
       notifyListeners();
     }
+  }
+
+  void setUserHandle(String handle) {
+    final clean = handle.replaceAll('@', '').trim().toLowerCase();
+    if (clean.isNotEmpty) {
+      _userHandle = clean;
+      notifyListeners();
+    }
+  }
+
+  final List<FriendRequest> _friendRequests = [
+    const FriendRequest(name: 'Budi Santoso', username: 'budi.s', avatarInitial: 'B'),
+    const FriendRequest(name: 'Siti Rahma', username: 'siti.r', avatarInitial: 'S'),
+  ];
+  List<FriendRequest> get friendRequests => List.unmodifiable(_friendRequests);
+  int get pendingRequestsCount => _friendRequests.length;
+
+  void acceptFriendRequest(FriendRequest req) {
+    _friendRequests.remove(req);
+    if (!_friends.contains(req.name)) {
+      _friends.add(req.name);
+    }
+    notifyListeners();
+  }
+
+  void rejectFriendRequest(FriendRequest req) {
+    _friendRequests.remove(req);
+    notifyListeners();
   }
 
   List<String> _friends = ['Nadia', 'Raka', 'Dinda'];
@@ -108,6 +138,63 @@ class TautAppState extends ChangeNotifier {
     _friends.add(trimmed);
     notifyListeners();
     return true;
+  }
+
+  // Room Communication State (Ruangan Obrolan Jarak Jauh)
+  bool _isRoomActive = false;
+  bool get isRoomActive => _isRoomActive;
+
+  String? _roomCode;
+  String? get roomCode => _roomCode;
+
+  final List<String> _roomParticipants = [];
+  List<String> get roomParticipants => List.unmodifiable(_roomParticipants);
+
+  final List<String> _roomJoinRequests = [];
+  List<String> get roomJoinRequests => List.unmodifiable(_roomJoinRequests);
+
+  void createRoom() {
+    _roomCode = 'TAUT-8921';
+    _roomParticipants.clear();
+    _roomParticipants.add(_userName);
+    _roomJoinRequests.clear();
+    _roomJoinRequests.addAll(['Nadia (Teman)', 'Raka (Teman)']);
+    notifyListeners();
+  }
+
+  void startRoomSession() {
+    _isRoomActive = true;
+    notifyListeners();
+  }
+
+  void joinRoomByCode(String code) {
+    _roomCode = code.toUpperCase().trim();
+    _isRoomActive = true;
+    if (!_roomParticipants.contains(_userName)) {
+      _roomParticipants.add(_userName);
+    }
+    notifyListeners();
+  }
+
+  void acceptRoomParticipant(String name) {
+    _roomJoinRequests.remove(name);
+    if (!_roomParticipants.contains(name)) {
+      _roomParticipants.add(name);
+    }
+    notifyListeners();
+  }
+
+  void rejectRoomParticipant(String name) {
+    _roomJoinRequests.remove(name);
+    notifyListeners();
+  }
+
+  void endRoomSession() {
+    _isRoomActive = false;
+    _roomCode = null;
+    _roomParticipants.clear();
+    _roomJoinRequests.clear();
+    notifyListeners();
   }
 
   final List<SharingSession> _sessions = [];
@@ -407,6 +494,18 @@ class FacilityItem {
     required this.type,
     required this.address,
     required this.distance,
+  });
+}
+
+class FriendRequest {
+  final String name;
+  final String username;
+  final String avatarInitial;
+
+  const FriendRequest({
+    required this.name,
+    required this.username,
+    required this.avatarInitial,
   });
 }
 

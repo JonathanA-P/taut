@@ -124,7 +124,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 controller: _nameController,
                 maxLength: 40,
                 decoration: InputDecoration(
-                  hintText: 'Contoh: Alya',
+                  hintText: 'Contoh: Alya atau @alya',
                   counterText: '',
                   filled: true,
                   fillColor: Colors.white,
