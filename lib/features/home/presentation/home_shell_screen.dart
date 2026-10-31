@@ -101,9 +101,9 @@ class HomeShellScreen extends StatelessWidget {
                       bottom: state.isNavbarVisible ? 86 : 0,
                     ),
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 180),
                       switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
+                      switchOutCurve: Curves.easeOutCubic,
                       transitionBuilder: (child, animation) {
                         return FadeTransition(opacity: animation, child: child);
                       },
@@ -137,6 +137,8 @@ class HomeShellScreen extends StatelessWidget {
     TautAppState state,
     int activeIndex,
   ) {
+    final safeIndex = activeIndex.clamp(0, 3);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
@@ -151,42 +153,68 @@ class HomeShellScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          _buildNavItem(
-            index: 0,
-            label: 'Beranda',
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-            isActive: activeIndex == 0,
-            onTap: () => state.switchToTab(0),
-          ),
-          _buildNavItem(
-            index: 1,
-            label: 'Komunikasi',
-            icon: Icons.chat_bubble_outline_rounded,
-            activeIcon: Icons.chat_bubble_rounded,
-            isActive: activeIndex == 1,
-            onTap: () => state.switchToTab(1),
-          ),
-          _buildNavItem(
-            index: 2,
-            label: 'Lokasi',
-            icon: Icons.location_on_outlined,
-            activeIcon: Icons.location_on_rounded,
-            isActive: activeIndex == 2,
-            hasBadge: state.isSharingLocation,
-            onTap: () => state.switchToTab(2),
-          ),
-          _buildNavItem(
-            index: 3,
-            label: 'Profil',
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-            isActive: activeIndex == 3,
-            onTap: () => state.switchToTab(3),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tabWidth = constraints.maxWidth / 4;
+
+          return Stack(
+            children: [
+              // Smooth sliding active pill indicator
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.fastOutSlowIn,
+                left: safeIndex * tabWidth,
+                top: 0,
+                bottom: 0,
+                width: tabWidth,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGreen,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    label: 'Beranda',
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
+                    isActive: safeIndex == 0,
+                    onTap: () => state.switchToTab(0),
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    label: 'Komunikasi',
+                    icon: Icons.chat_bubble_outline_rounded,
+                    activeIcon: Icons.chat_bubble_rounded,
+                    isActive: safeIndex == 1,
+                    onTap: () => state.switchToTab(1),
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    label: 'Lokasi',
+                    icon: Icons.location_on_outlined,
+                    activeIcon: Icons.location_on_rounded,
+                    isActive: safeIndex == 2,
+                    hasBadge: state.isSharingLocation,
+                    onTap: () => state.switchToTab(2),
+                  ),
+                  _buildNavItem(
+                    index: 3,
+                    label: 'Profil',
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
+                    isActive: safeIndex == 3,
+                    onTap: () => state.switchToTab(3),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -201,19 +229,18 @@ class HomeShellScreen extends StatelessWidget {
     bool hasBadge = false,
   }) {
     return Expanded(
-      child: InkWell(
-        onTap: () {
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) {
           HapticFeedback.selectionClick();
           onTap();
         },
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+        onTap: () {
+          onTap();
+        },
+        child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.lightGreen : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-          ),
+          color: Colors.transparent,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -222,7 +249,7 @@ class HomeShellScreen extends StatelessWidget {
                 children: [
                   AnimatedScale(
                     scale: isActive ? 1.08 : 1.0,
-                    duration: const Duration(milliseconds: 180),
+                    duration: const Duration(milliseconds: 200),
                     curve: Curves.easeOutBack,
                     child: Icon(
                       isActive ? activeIcon : icon,
@@ -245,8 +272,9 @@ class HomeShellScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 3),
-              Text(
-                label,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
@@ -254,6 +282,7 @@ class HomeShellScreen extends StatelessWidget {
                       ? AppColors.darkGreen
                       : const Color(0xFF66756B),
                 ),
+                child: Text(label),
               ),
             ],
           ),
