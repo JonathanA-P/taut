@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../../features/home/presentation/home_shell_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
+import '../../features/home/presentation/home_page.dart';
 import '../../features/communication/presentation/communication_hub_screen.dart';
 import '../../features/communication/speech_to_text/presentation/speech_to_text_screen.dart';
 import '../../features/communication/motion_to_sound/presentation/motion_to_sound_screen.dart';
@@ -24,6 +25,24 @@ import '../../features/auth/presentation/edit_profile_screen.dart';
 import '../../features/auth/presentation/settings_accessibility_screen.dart';
 import '../../features/privacy/presentation/privacy_policy_screen.dart';
 
+class AppRoutes {
+  AppRoutes._();
+
+  static const String home = '/home';
+  static const String commHub = '/comm-hub';
+  static const String speechToText = '/stt';
+  static const String motionToSound = '/motion';
+  static const String location = '/lokasi';
+  static const String healthcareDetail = '/faskes-detail';
+  static const String friendLocation = '/lokasi-teman';
+  static const String myPosition = '/posisi-saya';
+  static const String addFriend = '/tambah-teman';
+  static const String manageSharing = '/kelola-berbagi';
+  static const String profile = '/profil';
+  static const String login = '/login';
+  static const String register = '/register';
+}
+
 /// Centralized declarative router for TAUT navigation.
 /// Maps all 20 primary application screens and flows.
 class AppRouter {
@@ -31,6 +50,9 @@ class AppRouter {
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case AppRoutes.home:
+        return MaterialPageRoute(builder: (_) => const HomePage());
+
       case AppConstants.routeHome:
         return MaterialPageRoute(builder: (_) => const HomeShellScreen());
 
@@ -50,22 +72,27 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const HomeDashboardScreen());
 
       case AppConstants.routeCommunication:
+      case AppRoutes.commHub:
         return MaterialPageRoute(builder: (_) => const CommunicationHubScreen());
 
       case AppConstants.routeSpeechToText:
+      case AppRoutes.speechToText:
         return MaterialPageRoute(builder: (_) => const SpeechToTextScreen());
 
       case AppConstants.routeMotionToSound:
+      case AppRoutes.motionToSound:
         return MaterialPageRoute(builder: (_) => const MotionToSoundScreen());
 
       case AppConstants.routeLocationHub:
       case AppConstants.routeLocationSharing:
+      case AppRoutes.location:
         return MaterialPageRoute(builder: (_) => const LocationSharingScreen());
 
       case AppConstants.routeHealthcare:
         return MaterialPageRoute(builder: (_) => const HealthcareFinderScreen());
 
       case AppConstants.routeHealthcareDetail:
+      case AppRoutes.healthcareDetail:
         final facility = settings.arguments as HealthcareFacility? ??
             const HealthcareFacility(
               id: 'osm-default',
@@ -91,17 +118,22 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const FriendsListScreen());
 
       case AppConstants.routeAddFriend:
+      case AppRoutes.addFriend:
         return MaterialPageRoute(builder: (_) => const AddFriendScreen());
 
       case AppConstants.routeLiveLocation:
+      case AppRoutes.friendLocation:
         return MaterialPageRoute(builder: (_) => const LiveLocationScreen());
 
       case AppConstants.routeManageLocationSharing:
+      case AppRoutes.manageSharing:
+      case AppRoutes.myPosition:
         return MaterialPageRoute(
           builder: (_) => const ManageLocationSharingScreen(),
         );
 
       case AppConstants.routeProfile:
+      case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
 
       case AppConstants.routeEditProfile:

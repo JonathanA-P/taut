@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
 
 /// Semantic status badge for indicating system states, active sessions, or stages.
-/// Styled as a soft, pill-shaped badge in the sage green healthcare aesthetic.
+/// Styled as a soft, pill-shaped badge supporting accessibility rules and healthcare aesthetic.
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color backgroundColor;
@@ -17,21 +18,30 @@ class StatusBadge extends StatelessWidget {
     this.icon,
   });
 
+  /// Badge hijau untuk "AKTIF".
+  const StatusBadge.active({
+    super.key,
+    this.label = 'AKTIF',
+    this.backgroundColor = const Color(0xFFE8F5E9),
+    this.textColor = const Color(0xFF2E7D32),
+    this.icon = Icons.check_circle_rounded,
+  });
+
+  /// Badge merah untuk sesi live.
+  const StatusBadge.live({
+    super.key,
+    this.label = '● LIVE',
+    this.backgroundColor = const Color(0xFFFFEBEE),
+    this.textColor = AppColors.error,
+    this.icon,
+  });
+
   factory StatusBadge.development() {
     return const StatusBadge(
       label: 'Tahap Fondasi • Siap Integrasi',
       backgroundColor: AppColors.accentMtsBg,
       textColor: AppColors.onAccentMts,
       icon: Icons.info_outline_rounded,
-    );
-  }
-
-  factory StatusBadge.active({String label = 'Semua Sistem Siap'}) {
-    return StatusBadge(
-      label: label,
-      backgroundColor: AppColors.successBg,
-      textColor: AppColors.success,
-      icon: Icons.check_circle_rounded,
     );
   }
 
@@ -72,7 +82,7 @@ class StatusBadge extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: textColor,
               letterSpacing: 0.1,
             ),

@@ -1,6 +1,5 @@
 /// Application environment variables and configurations.
-/// Fallback values are provided to ensure the app compiles and runs in development
-/// without requiring a live Supabase instance or private environment files.
+/// Centralized config for Supabase, OSM Overpass API, and service parameters.
 class Env {
   Env._();
 
@@ -13,6 +12,17 @@ class Env {
     'SUPABASE_PUBLISHABLE_KEY',
     defaultValue: 'placeholder-anon-key',
   );
+
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'placeholder-anon-key',
+  );
+
+  static bool get isSupabaseConfigured =>
+      supabaseUrl != 'https://placeholder-project.supabase.co' &&
+      supabaseUrl.isNotEmpty &&
+      supabasePublishableKey != 'placeholder-anon-key' &&
+      supabasePublishableKey.isNotEmpty;
 
   static const String overpassApiUrl = String.fromEnvironment(
     'OVERPASS_API_URL',
@@ -27,3 +37,6 @@ class Env {
   static const double defaultHealthcareRadiusMeters = 10000.0; // 10 km
   static const int locationUpdateIntervalSeconds = 10;
 }
+
+/// Backwards compatibility alias for code referencing [EnvConfig].
+typedef EnvConfig = Env;

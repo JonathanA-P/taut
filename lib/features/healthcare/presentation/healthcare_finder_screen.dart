@@ -254,7 +254,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _categories.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final cat = _categories[index];
                 final isSelected = cat['name'] == _selectedCategory;

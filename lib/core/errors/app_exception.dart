@@ -4,7 +4,11 @@ class AppException implements Exception {
   final String? code;
   final dynamic details;
 
-  const AppException({required this.message, this.code, this.details});
+  const AppException({
+    required this.message,
+    this.code,
+    this.details,
+  });
 
   @override
   String toString() => 'AppException(code: $code, message: $message)';
@@ -29,13 +33,20 @@ class LocationException extends AppException {
   const LocationException({required super.message, super.code, super.details});
 }
 
+class LocationUnavailableException extends AppException {
+  const LocationUnavailableException(String message, {String? code})
+      : super(message: message, code: code ?? 'location_unavailable');
+}
+
 /// Permission Denied Exceptions
 class PermissionDeniedException extends AppException {
-  final String permissionType;
+  final String? permissionType;
+
   const PermissionDeniedException({
-    required this.permissionType,
+    this.permissionType,
     required super.message,
-  }) : super(code: 'PERMISSION_DENIED');
+    super.code = 'PERMISSION_DENIED',
+  });
 }
 
 /// Speech Recognition Exceptions
@@ -55,3 +66,4 @@ class BisindoInferenceException extends AppException {
     super.details,
   });
 }
+

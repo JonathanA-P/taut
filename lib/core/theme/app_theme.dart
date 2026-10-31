@@ -8,24 +8,42 @@ import '../constants/app_colors.dart';
 class AppTheme {
   AppTheme._();
 
+  // Legacy & Home Palette Colors
+  static const Color background = Color(0xFFFAF0E6);
+  static const Color surface = Color(0xFFFFFDF8);
+  static const Color border = Color(0xFFEADFD2);
+  static const Color textPrimary = Color(0xFF3A2E3A);
+  static const Color textSecondary = Color(0xFF6E5C6E);
+  static const Color primary = Color(0xFF6C4AB0);
+  static const Color primaryDeep = Color(0xFF4A2E6B);
+  static const Color primaryLight = Color(0xFFEDE6FF);
+  static const Color lavender = Color(0xFFE4D7FF);
+  static const Color peach = Color(0xFFFFE3C2);
+  static const Color butter = Color(0xFFFFF3C4);
+  static const Color danger = Color(0xFFC74343);
+  static const Color mapBackground = Color(0xFFE8DFF5);
+  static const Color cameraBackground = Color(0xFF2E2140);
+
+  static const LinearGradient heroGradient = LinearGradient(
+    colors: [peach, lavender],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient headerGradient = LinearGradient(
+    colors: [primary, Color(0xFF8B6FD6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme(
-      brightness: Brightness.light,
+    final colorScheme = ColorScheme.light(
       primary: AppColors.primary,
       onPrimary: AppColors.onPrimary,
-      primaryContainer: AppColors.primaryContainer,
-      onPrimaryContainer: AppColors.onPrimaryContainer,
       secondary: AppColors.secondary,
-      onSecondary: AppColors.onSecondary,
-      secondaryContainer: AppColors.secondaryContainer,
-      onSecondaryContainer: AppColors.onSecondaryContainer,
-      error: AppColors.error,
-      onError: Colors.white,
       surface: AppColors.surface,
-      onSurface: AppColors.onSurface,
-      surfaceContainerHighest: AppColors.surfaceVariant,
-      onSurfaceVariant: AppColors.onSurfaceVariant,
-      outline: AppColors.outline,
+      error: AppColors.error,
+      onSurface: AppColors.textPrimary,
     );
 
     return ThemeData(
@@ -53,6 +71,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: AppColors.lightGreen, width: 1.2),
         ),
+        margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -65,9 +84,8 @@ class AppTheme {
             borderRadius: BorderRadius.circular(26),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -81,9 +99,8 @@ class AppTheme {
             borderRadius: BorderRadius.circular(26),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

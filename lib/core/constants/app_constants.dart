@@ -3,6 +3,9 @@
 class AppConstants {
   AppConstants._();
 
+  static const String appName = 'TAUT';
+  static const String tagline = 'Terhubung tanpa hambatan.';
+
   // Route Names - 20 Main Screens & Navigation Flow
   static const String routeHome = '/';
   static const String routeSplash = '/splash';
@@ -43,8 +46,18 @@ class AppConstants {
     'pharmacy',
   ];
 
-  // Default Search Radius (10 km)
+  static const double healthcareRadiusKm = 10;
   static const double defaultSearchRadiusMeters = 10000.0;
+
+  static const Duration initialSharingRemaining = Duration(
+    minutes: 14,
+    seconds: 32,
+  );
+
+  static const String demoUserName = 'Jonathan';
+  static const String demoFriendName = 'Budi Santoso';
+  static const String demoLastLocation = 'Jl. Contoh No. 1, Malang';
+  static const String demoInviteCode = 'TAUT-8K2P';
 
   // BISINDO Confidence Threshold
   static const double defaultGestureConfidenceThreshold = 0.70;

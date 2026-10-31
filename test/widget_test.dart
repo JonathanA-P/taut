@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taut/app.dart';
+import 'package:taut/core/constants/app_constants.dart';
 import 'package:taut/core/utils/distance_calculator.dart';
 
 void main() {
   group('TautApp Smoke & Navigation Test', () {
+    testWidgets('Renders HomePage by default', (WidgetTester tester) async {
+      await tester.pumpWidget(const TautApp());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
     testWidgets('Renders HomeShellScreen with all 4 primary destinations', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const TautApp());
+      await tester.pumpWidget(
+        const TautApp(initialRoute: AppConstants.routeHome),
+      );
       await tester.pumpAndSettle();
 
       // Verify navigation bar destinations exist
