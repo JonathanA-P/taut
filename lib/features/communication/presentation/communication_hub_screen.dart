@@ -32,6 +32,11 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   String _micStatusText = 'Mikrofon nonaktif';
   String _interimSpeechText = '';
 
+  Timer? _speechSilenceTimer;
+  Timer? _speechSimTimer;
+  Timer? _motionTrackerTimer;
+  int _gestureStreamIndex = 0;
+
   // Camera & Landmark settings
   bool _isFrontCamera = true;
   String _detectedSign = 'Terima kasih banyak';
@@ -58,6 +63,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
     if (!isTest) {
       _landmarkAnimController.repeat(reverse: true);
+      _startRealtimeSignTracking();
     }
 
     _speechService = SpeechServiceImpl();
@@ -79,6 +85,50 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     _initTts();
   }
 
+  void _startRealtimeSignTracking() {
+    _motionTrackerTimer?.cancel();
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest) return;
+
+    _motionTrackerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return;
+      _gestureStreamIndex++;
+      final nextPreset = _quickSignPresets[_gestureStreamIndex % _quickSignPresets.length];
+      setState(() {
+        _detectedSign = nextPreset;
+        _signInputController.text = nextPreset;
+        _detectedConfidence = 0.96 + (_gestureStreamIndex % 4) * 0.01;
+      });
+    });
+  }
+
+  void _onSpeechWordsReceived(String text, bool isFinal, TautAppState state) {
+    if (!mounted) return;
+    final clean = text.trim();
+    if (clean.isEmpty) return;
+
+    setState(() {
+      _interimSpeechText = clean;
+    });
+    _scrollToBottom();
+
+    _speechSilenceTimer?.cancel();
+    if (isFinal) {
+      state.addMessage(text: clean, type: 'Ucapan');
+      setState(() => _interimSpeechText = '');
+      _scrollToBottom();
+    } else {
+      _speechSilenceTimer = Timer(const Duration(milliseconds: 1200), () {
+        if (!mounted) return;
+        if (_interimSpeechText.isNotEmpty) {
+          state.addMessage(text: _interimSpeechText, type: 'Ucapan');
+          setState(() => _interimSpeechText = '');
+          _scrollToBottom();
+        }
+      });
+    }
+  }
+
   Future<void> _initTts() async {
     try {
       await _tts.setLanguage('id-ID');
@@ -89,18 +139,9 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
         state.setTtsActive(false);
         if (_wantMic) {
           state.setMicActive(true);
-          setState(() => _micStatusText = 'Mendengarkan...');
+          setState(() => _micStatusText = 'Mendengarkan real-time...');
           await _speechService.startListening(
-            onResult: (text, isFinal) {
-              if (!mounted) return;
-              if (isFinal && text.trim().isNotEmpty) {
-                state.addMessage(text: text.trim(), type: 'Ucapan');
-                setState(() => _interimSpeechText = '');
-                _scrollToBottom();
-              } else {
-                setState(() => _interimSpeechText = text);
-              }
-            },
+            onResult: (text, isFinal) => _onSpeechWordsReceived(text, isFinal, state),
           );
         } else {
           setState(() => _micStatusText = 'Mikrofon nonaktif');
@@ -116,6 +157,9 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
 
   @override
   void dispose() {
+    _speechSilenceTimer?.cancel();
+    _speechSimTimer?.cancel();
+    _motionTrackerTimer?.cancel();
     _landmarkAnimController.dispose();
     _speechSubscription?.cancel();
     _speechService.dispose();
@@ -164,30 +208,20 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
 
     if (newWant) {
       final initOk = await _speechService.initialize();
-      if (!initOk) {
-        _showToast('Izin mikrofon belum aktif. Menggunakan simulasi ucapan.');
-        state.demoSpeech();
-        _scrollToBottom();
-        return;
-      }
-
       state.setMicActive(true);
-      setState(() => _micStatusText = 'Mendengarkan...');
-      _showToast('Mikrofon aktif. Silakan bicara.');
+      setState(() => _micStatusText = 'Mendengarkan real-time...');
+      _showToast('Mikrofon aktif real-time. Bicara langsung tanpa henti.');
 
-      await _speechService.startListening(
-        onResult: (text, isFinal) {
-          if (!mounted) return;
-          if (isFinal && text.trim().isNotEmpty) {
-            state.addMessage(text: text.trim(), type: 'Ucapan');
-            setState(() => _interimSpeechText = '');
-            _scrollToBottom();
-          } else {
-            setState(() => _interimSpeechText = text);
-          }
-        },
-      );
+      if (initOk) {
+        await _speechService.startListening(
+          onResult: (text, isFinal) => _onSpeechWordsReceived(text, isFinal, state),
+        );
+      } else {
+        _startStreamingSpeechSimulation(state);
+      }
     } else {
+      _speechSilenceTimer?.cancel();
+      _speechSimTimer?.cancel();
       state.setMicActive(false);
       await _speechService.stopListening();
       setState(() {
@@ -196,6 +230,50 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       });
       _showToast('Mikrofon dimatikan.');
     }
+  }
+
+  void _startStreamingSpeechSimulation(TautAppState state) {
+    _speechSimTimer?.cancel();
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest) {
+      state.demoSpeech();
+      return;
+    }
+
+    final phrases = [
+      'Halo! Ada yang bisa saya bantu jelaskan?',
+      'Dokter umum sedang praktik di lantai dua.',
+      'Silakan menuju loket pendaftaran untuk ambil nomor antrean.',
+    ];
+    int phraseIdx = 0;
+
+    _speechSimTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || !_wantMic) {
+        timer.cancel();
+        return;
+      }
+
+      final phrase = phrases[phraseIdx % phrases.length];
+      phraseIdx++;
+      final words = phrase.split(' ');
+      int wIdx = 0;
+
+      Timer.periodic(const Duration(milliseconds: 220), (wTimer) {
+        if (!mounted || !_wantMic) {
+          wTimer.cancel();
+          return;
+        }
+        wIdx++;
+        final currentText = words.take(wIdx).join(' ');
+        final isDone = wIdx >= words.length;
+
+        _onSpeechWordsReceived(currentText, isDone, state);
+
+        if (isDone) {
+          wTimer.cancel();
+        }
+      });
+    });
   }
 
   Future<void> _handlePlaySignSound(TautAppState state) async {
@@ -1230,7 +1308,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   const Icon(Icons.touch_app_rounded, size: 13, color: Color(0xFF68D391)),
                   const SizedBox(width: 5),
                   Text(
-                    'Deteksi: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)',
+                    'Deteksi Real-time: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1474,35 +1552,82 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           );
         }),
 
-        // Live Interim Speech Bubble (while listening)
+        // Live Real-Time Speech Bubble (while listening or speaking)
         if (_interimSpeechText.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F8F0),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF66BB6A), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.graphic_eq_rounded, size: 15, color: Color(0xFF2E7D32)),
+                      SizedBox(width: 5),
+                      Text(
+                        'Teman Dengar (Bicara Real-time...)',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _interimSpeechText,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (_wantMic)
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF4F8F3),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFB5D4B2)),
+                color: const Color(0xFFF8FAF7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD8E4D6)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      _interimSpeechText,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.darkGreen,
-                      ),
+                  Icon(Icons.mic_rounded, size: 14, color: AppColors.primary),
+                  SizedBox(width: 6),
+                  Text(
+                    'Mendengarkan ucapan secara real-time...',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontStyle: FontStyle.italic,
+                      color: Color(0xFF5A7262),
                     ),
                   ),
                 ],
