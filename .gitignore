@@ -52,3 +52,18 @@ app.*.map.json
 .env.*
 !.env.example
 
+# Agent local files
+.agents/
+skills-lock.json
+
+# Internal AI & Agent workflow documentation (kept local, excluded from Git)
+AGENTS.md
+ARCHITECTURE.md
+DATABASE_DESIGN.md
+DEVELOPMENT_WORKFLOW.md
+IMPLEMENTATION_PLAN.md
+INTEGRATION_CONTRACTS.md
+PRIVACY_AND_SECURITY.md
+
+
+
