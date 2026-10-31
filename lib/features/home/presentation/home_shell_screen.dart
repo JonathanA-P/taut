@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_modular_background.dart';
 import '../../auth/presentation/edit_profile_screen.dart';
 import '../../auth/presentation/profile_screen.dart';
 import '../../auth/presentation/settings_accessibility_screen.dart';
@@ -80,14 +82,36 @@ class HomeShellScreen extends StatelessWidget {
             }
           },
           child: Scaffold(
+            resizeToAvoidBottomInset: false,
+            backgroundColor: Colors.transparent,
             body: Stack(
+              fit: StackFit.expand,
               children: [
+                // Stationary modular background - unaffected by keyboard or tab swaps
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: TautModularBackground(),
+                    ),
+                  ),
+                ),
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.only(
                       bottom: state.isNavbarVisible ? 86 : 0,
                     ),
-                    child: _resolveScreen(state.currentPage),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey(state.currentPage),
+                        child: _resolveScreen(state.currentPage),
+                      ),
+                    ),
                   ),
                 ),
                 if (state.isNavbarVisible)
@@ -178,7 +202,10 @@ class HomeShellScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -193,12 +220,17 @@ class HomeShellScreen extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
-                    isActive ? activeIcon : icon,
-                    size: 22,
-                    color: isActive
-                        ? AppColors.darkGreen
-                        : const Color(0xFF66756B),
+                  AnimatedScale(
+                    scale: isActive ? 1.08 : 1.0,
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      isActive ? activeIcon : icon,
+                      size: 22,
+                      color: isActive
+                          ? AppColors.darkGreen
+                          : const Color(0xFF66756B),
+                    ),
                   ),
                   if (hasBadge)
                     const Positioned(

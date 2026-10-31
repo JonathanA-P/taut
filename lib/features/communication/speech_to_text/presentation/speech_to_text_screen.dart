@@ -177,7 +177,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     final hasContent = _displayCaption.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Live Speech-to-Text'),
         actions: [

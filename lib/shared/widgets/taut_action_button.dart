@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:taut/core/theme/app_theme.dart';
 
 class TautActionButton extends StatelessWidget {
@@ -42,10 +43,17 @@ class TautActionButton extends StatelessWidget {
       ],
     );
 
+    final VoidCallback? handlePressed = onPressed == null
+        ? null
+        : () {
+            HapticFeedback.lightImpact();
+            onPressed!();
+          };
+
     switch (_variant) {
       case _ButtonVariant.danger:
         return ElevatedButton(
-          onPressed: onPressed,
+          onPressed: handlePressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.danger,
             foregroundColor: Colors.white,
@@ -53,9 +61,9 @@ class TautActionButton extends StatelessWidget {
           child: child,
         );
       case _ButtonVariant.secondary:
-        return OutlinedButton(onPressed: onPressed, child: child);
+        return OutlinedButton(onPressed: handlePressed, child: child);
       case _ButtonVariant.primary:
-        return ElevatedButton(onPressed: onPressed, child: child);
+        return ElevatedButton(onPressed: handlePressed, child: child);
     }
   }
 }

@@ -177,7 +177,7 @@ void main() {
       expect(find.text('Pengaturan'), findsOneWidget);
       expect(find.text('Putar suara setelah konfirmasi'), findsOneWidget);
       expect(find.text('Mulai ulang onboarding'), findsOneWidget);
-      expect(find.text('Reset seluruh demo'), findsOneWidget);
+      expect(find.text('Atur ulang preferensi'), findsOneWidget);
     });
   });
 }

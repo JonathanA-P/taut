@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
@@ -55,6 +56,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   void _handleLogoTap() {
+    HapticFeedback.lightImpact();
     _bounceController.forward().then((_) => _bounceController.reverse());
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -391,6 +393,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           height: 52,
           child: ElevatedButton.icon(
             onPressed: () {
+              HapticFeedback.lightImpact();
               Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
             },
             style: ElevatedButton.styleFrom(

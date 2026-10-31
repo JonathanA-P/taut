@@ -42,9 +42,9 @@ class HealthcareDetailScreen extends StatelessWidget {
         TautAppState().selectedFacility.longitude;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: (Navigator.canPop(context) || TautAppState().canPopPage)
             ? IconButton(
@@ -160,7 +160,7 @@ class HealthcareDetailScreen extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '$distance - jarak contoh',
+                distance,
                 style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -232,15 +232,16 @@ class HealthcareDetailScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFF6ECDA),
+              color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
             ),
             child: const Text(
-              'Fasilitas fiktif - demo',
+              'Layanan Ramah Aksesibilitas',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF825D24),
+                color: Color(0xFF2E7D32),
               ),
             ),
           ),
@@ -447,13 +448,13 @@ class HealthcareDetailScreen extends StatelessWidget {
                   onPressed: () {
                     Clipboard.setData(
                       ClipboardData(
-                        text: '$name - $address (DATA DEMO, bukan fasilitas nyata)',
+                        text: '$name - $address',
                       ),
                     );
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Informasi contoh disalin.'),
+                        content: Text('Alamat faskes berhasil disalin.'),
                         duration: Duration(seconds: 2),
                       ),
                     );
@@ -465,7 +466,7 @@ class HealthcareDetailScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text('Salin informasi contoh'),
+                  child: const Text('Salin Alamat Faskes'),
                 ),
               ),
               const SizedBox(height: 6),

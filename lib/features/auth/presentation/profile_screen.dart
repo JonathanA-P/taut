@@ -16,9 +16,9 @@ class ProfileScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -84,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Keluar dari demo',
+                        'Keluar dari Akun',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -95,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 18),
 
                   const Text(
-                    'TAUT - Prototipe desain 01\nData akun ini hanya contoh.',
+                    'TAUT — Ruang untuk saling memahami\nSetiap cerita dan kehadiranmu berarti.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

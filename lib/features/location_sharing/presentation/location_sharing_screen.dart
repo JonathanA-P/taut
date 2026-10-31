@@ -14,9 +14,9 @@ class LocationSharingScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -61,7 +61,7 @@ class LocationSharingScreen extends StatelessWidget {
                     context: context,
                     icon: Icons.people_outline_rounded,
                     title: 'Teman terhubung',
-                    subtitle: '${state.friends.length} teman contoh',
+                    subtitle: '${state.friends.length} sahabat terhubung',
                     onTap: () => state.navigateTo('friends'),
                   ),
                   const SizedBox(height: 12),
@@ -69,7 +69,7 @@ class LocationSharingScreen extends StatelessWidget {
                     context: context,
                     icon: Icons.location_on_outlined,
                     title: 'Berbagi lokasi',
-                    subtitle: '${state.sessions.length} sesi demo aktif',
+                    subtitle: '${state.sessions.length} sesi berbagi aktif',
                     onTap: () => state.navigateTo('sharing'),
                   ),
                   const SizedBox(height: 24),
@@ -82,7 +82,7 @@ class LocationSharingScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Text(
-                      'Tidak ada pelacakan latar belakang. Berbagi selalu dimulai dan dihentikan olehmu.',
+                      'Ruang aman tanpa pelacakan tersembunyi. Kamu yang memegang kendali kapan pun berbagi atau berhenti.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF5B6E55),

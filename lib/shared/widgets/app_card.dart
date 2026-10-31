@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 
 class AppCard extends StatelessWidget {
@@ -44,7 +45,10 @@ class AppCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: onTap != null
             ? InkWell(
-                onTap: onTap,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onTap!();
+                },
                 child: Padding(
                   padding: padding,
                   child: child,

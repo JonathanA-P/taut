@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_avatar.dart';
@@ -26,7 +27,7 @@ class HomePage extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
@@ -202,8 +203,9 @@ class HomePage extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.sageGreen,
+        color: const Color(0xFFDCE7DC).withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.2),
       ),
       child: Stack(
         children: [
@@ -254,6 +256,7 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 18),
               ElevatedButton.icon(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   if (onNavigateToCommunication != null) {
                     onNavigateToCommunication!();
                   } else {
@@ -339,11 +342,20 @@ class HomePage extends StatelessWidget {
     required Color bgColor,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.90),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.0),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(22),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -379,8 +391,9 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFriendsCard(BuildContext context, TautAppState state) {
     final displayFriends = state.friends.take(3).toList();
@@ -388,7 +401,7 @@ class HomePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFEDF0E9)),
         boxShadow: const [
@@ -424,7 +437,7 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  isSharingWithFriend ? 'Sesi demo aktif' : 'Terhubung',
+                  isSharingWithFriend ? 'Saling berbagi' : 'Terhubung',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Color(0xFF758174),
@@ -481,7 +494,7 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${state.sessions.length} penerima - simulasi lokal',
+            '${state.sessions.length} sahabat • Saling terhubung hangat',
             style: const TextStyle(fontSize: 12.5, color: Color(0xFF4C6551)),
           ),
           const SizedBox(height: 12),
@@ -499,7 +512,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'Kelola sesi',
+                'Kelola Berbagi Lokasi',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
@@ -523,7 +536,7 @@ class HomePage extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Lokasimu tetap privat.\nKamu yang menentukan kapan berbagi.',
+              'Ruang privat & aman.\nKamu memegang kendali penuh kapan pun berbagi.',
               style: TextStyle(
                 fontSize: 12,
                 color: Color(0xFF758174),

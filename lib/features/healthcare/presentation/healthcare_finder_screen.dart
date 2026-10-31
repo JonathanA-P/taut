@@ -96,9 +96,9 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
         final filteredList = state.filteredFacilities;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -228,8 +228,8 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                         ),
                         child: Text(
                           state.isRealHealthcareLoaded
-                              ? 'Live OpenStreetMap'
-                              : 'Data contoh',
+                              ? 'Live Terdekat'
+                              : 'Rekomendasi Terpilih',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -591,7 +591,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
-                          item.isReal ? item.distance : '${item.distance} - jarak contoh',
+                          item.distance,
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,

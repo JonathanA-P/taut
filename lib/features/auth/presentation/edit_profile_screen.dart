@@ -277,9 +277,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final state = TautAppState();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: (Navigator.canPop(context) || state.canPopPage)
             ? IconButton(

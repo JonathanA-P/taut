@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -43,7 +44,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   bool _isFrontCamera = true;
   String _detectedSign = 'Menunggu isyarat...';
   double _detectedConfidence = 0.0;
-  final double _fps = 29.8;
 
   CameraController? _cameraController;
   List<CameraDescription> _availableCameras = [];
@@ -326,6 +326,11 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     }
 
     final newWant = !_wantMic;
+    if (newWant) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
+    }
     setState(() {
       _wantMic = newWant;
     });
@@ -401,6 +406,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   }
 
   Future<void> _handlePlaySignSound(TautAppState state) async {
+    HapticFeedback.lightImpact();
     final text = _signInputController.text.trim();
     if (text.isEmpty) {
       _showToast('Tidak ada teks isyarat untuk diputar.');
@@ -454,6 +460,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   }
 
   void _selectSignPreset(String preset) {
+    HapticFeedback.selectionClick();
     setState(() {
       _detectedSign = preset;
       _signInputController.text = preset;
@@ -470,7 +477,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -1558,7 +1565,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                       ),
                       const SizedBox(width: 5),
                       const Text(
-                        'LIVE BISINDO',
+                        'ISYARAT AKTIF',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -1571,14 +1578,14 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    '$_fps FPS',
-                    style: const TextStyle(
+                  child: const Text(
+                    'Siap Menyimak',
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFFCCE8D2),
@@ -1669,8 +1676,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   const SizedBox(width: 5),
                   Text(
                     _detectedConfidence > 0.0
-                        ? 'Deteksi Real-time: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)'
-                        : 'Deteksi Real-time: $_detectedSign',
+                        ? 'Isyarat terbaca: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)'
+                        : 'Isyarat terbaca: $_detectedSign',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1724,7 +1731,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  'Periksa & Koreksi',
+                  'Sentuh untuk Menyesuaikan',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -1830,12 +1837,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             Icon(Icons.forum_outlined, size: 30, color: Color(0xFF94A3B8)),
             SizedBox(height: 6),
             Text(
-              'Percakapan dimulai dari satu sapaan.',
+              'Setiap cerita bermula dari satu sapaan hangat.',
               style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
             SizedBox(height: 2),
             Text(
-              'Gunakan kamera isyarat untuk Teman Tuli atau mikrofon untuk teman dengar.',
+              'Sampaikan lewat isyarat tangan atau suara. Kami bantu menghubungkan keduanya.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),

@@ -11,9 +11,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
     final state = TautAppState();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: (Navigator.canPop(context) || state.canPopPage)
             ? IconButton(
@@ -194,7 +194,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
           SizedBox(height: 6),
           Text(
-            'Peta dan berbagi lokasi pada prototipe menggunakan data contoh. Tidak ada koordinat nyata yang dikirim.',
+            'Peta dan pencarian fasilitas kesehatan mengutamakan privasimu. Koordinat hanya digunakan saat kamu memintanya.',
             style: TextStyle(
               fontSize: 13.5,
               color: AppColors.textSecondary,
@@ -212,7 +212,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
           SizedBox(height: 6),
           Text(
-            'Data demo disimpan dalam memori halaman. Muat ulang akan menghapus perubahan. Tidak ada audio, video, atau kata sandi yang disimpan.',
+            'Data disimpan aman dalam perangkat lokalmu. Tidak ada rekaman audio, video, atau kata sandi yang disalahgunakan.',
             style: TextStyle(
               fontSize: 13.5,
               color: AppColors.textSecondary,

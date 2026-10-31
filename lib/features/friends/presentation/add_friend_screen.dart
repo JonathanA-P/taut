@@ -44,7 +44,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Teman contoh ditambahkan.'),
+        content: Text('Sahabat berhasil ditambahkan.'),
         duration: Duration(seconds: 2),
       ),
     );
@@ -60,9 +60,9 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
     final state = TautAppState();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: (Navigator.canPop(context) || state.canPopPage)
             ? IconButton(
@@ -165,7 +165,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Tambah ke demo',
+                    'Hubungkan Sahabat',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -175,7 +175,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
               ),
               const SizedBox(height: 14),
               const Text(
-                'Tidak ada undangan yang dikirim.',
+                'Tersimpan aman dalam ruang terhubungmu.',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,

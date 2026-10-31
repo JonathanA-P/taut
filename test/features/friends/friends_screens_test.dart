@@ -35,7 +35,7 @@ void main() {
       expect(find.text('Tambah teman'), findsOneWidget);
       expect(find.text('Perluas ruang terhubung.'), findsOneWidget);
       expect(find.text('Nama teman'), findsOneWidget);
-      expect(find.text('Tambah ke demo'), findsOneWidget);
+      expect(find.text('Hubungkan Sahabat'), findsOneWidget);
     });
 
     testWidgets('LiveLocationScreen renders live map and friend details', (tester) async {
@@ -48,7 +48,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Lokasi bersama'), findsOneWidget);
-      expect(find.text('Sesi berbagi demo'), findsOneWidget);
+      expect(find.text('Sesi berbagi lokasi'), findsOneWidget);
       expect(find.textContaining('Peta ilustrasi'), findsOneWidget);
     });
 
@@ -65,7 +65,7 @@ void main() {
       expect(find.text('Mulai sesi baru'), findsOneWidget);
       expect(find.text('Bagikan kepada'), findsOneWidget);
       expect(find.text('Durasi'), findsOneWidget);
-      expect(find.text('Mulai berbagi demo'), findsOneWidget);
+      expect(find.textContaining('Mulai berbagi'), findsOneWidget);
     });
   });
 }

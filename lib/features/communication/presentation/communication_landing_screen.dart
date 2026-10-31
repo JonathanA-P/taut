@@ -12,7 +12,7 @@ class CommunicationLandingScreen extends StatelessWidget {
     final state = TautAppState();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(left: 24, right: 24, top: 14, bottom: 96),

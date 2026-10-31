@@ -19,7 +19,7 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
     final facilityName = targetFacility?.name ?? 'Fasilitas Kesehatan Terdekat';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Bagi Lokasi ke Faskes'),
       ),

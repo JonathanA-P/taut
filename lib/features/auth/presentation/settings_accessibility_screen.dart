@@ -16,9 +16,9 @@ class SettingsAccessibilityScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -165,7 +165,7 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Reset seluruh demo',
+                        'Atur ulang preferensi',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

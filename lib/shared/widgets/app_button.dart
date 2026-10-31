@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 
 class AppButton extends StatelessWidget {
@@ -57,6 +58,13 @@ class AppButton extends StatelessWidget {
       ),
     );
 
+    final VoidCallback? handlePressed = onPressed == null
+        ? null
+        : () {
+            HapticFeedback.lightImpact();
+            onPressed!();
+          };
+
     if (isOutlined) {
       final style = OutlinedButton.styleFrom(
         foregroundColor: effectiveFg,
@@ -72,14 +80,14 @@ class AppButton extends StatelessWidget {
 
       if (icon != null) {
         return OutlinedButton.icon(
-          onPressed: onPressed,
+          onPressed: handlePressed,
           style: style,
           icon: Icon(icon, size: 20, color: effectiveFg),
           label: textWidget,
         );
       }
       return OutlinedButton(
-        onPressed: onPressed,
+        onPressed: handlePressed,
         style: style,
         child: textWidget,
       );
@@ -97,7 +105,7 @@ class AppButton extends StatelessWidget {
 
     if (icon != null) {
       return ElevatedButton.icon(
-        onPressed: onPressed,
+        onPressed: handlePressed,
         style: elevatedStyle,
         icon: Icon(icon, size: 20, color: effectiveFg),
         label: textWidget,
@@ -105,7 +113,7 @@ class AppButton extends StatelessWidget {
     }
 
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: handlePressed,
       style: elevatedStyle,
       child: textWidget,
     );

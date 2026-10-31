@@ -1,59 +1,1869 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TAUT — Ruang untuk saling memahami</title><style>
-:root{--bg:#F8FAF7;--sage:#D7E3D1;--ink:#263D2F;--green:#527B5D;--light:#E5EEE5;--muted:#66756b;--line:#e4e9e1;--font:16px}*{box-sizing:border-box}body{margin:0;background:#e9ede6;color:var(--ink);font:var(--font)/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;color:inherit;border:0}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #8b632a;outline-offset:3px}button:disabled{opacity:.5;cursor:default}a{color:var(--green)}svg{vertical-align:middle}h1,h2,h3,p{margin:0}h1{font-size:28px;letter-spacing:-1px;line-height:1.2}h2{font-size:20px;letter-spacing:-.5px}h3{font-size:17px}small,.small{font-size:13px}p{color:var(--muted)}.muted{color:var(--muted)}.studio{position:fixed;left:max(28px,calc(50vw - 620px));top:70px;width:255px}.logo{display:flex;align-items:center;gap:10px;font-size:34px;font-weight:750;letter-spacing:-2px}.logo svg{width:42px;height:42px}.studio h1{margin:52px 0 18px;font-size:40px;font-weight:500;line-height:1.16}.studio p{line-height:1.8}.studio select{width:100%;margin:14px 0;background:transparent;border:1px solid #bdcabb;padding:13px;border-radius:12px}.eyebrow{font-size:11px;letter-spacing:2px;font-weight:700;text-transform:uppercase}.studio footer{font-size:12px;color:#66756b;margin-top:32px}.phone{max-width:430px;min-height:100dvh;margin:auto;background:var(--bg);position:relative;box-shadow:0 20px 80px #263d2f10}.statusbar{height:42px;display:flex;justify-content:space-between;padding:13px 25px 7px;font-size:12px;font-weight:700}.demo{font-size:10px;letter-spacing:.8px;padding:4px 10px;border-radius:20px;background:#f2eadb;color:#77582f}.content{padding:18px 23px 110px;min-height:calc(100dvh - 42px)}.row{display:flex;align-items:center;gap:12px}.between{justify-content:space-between}.stack{display:grid;gap:14px}.spacer{height:24px}.section{margin:26px 0 13px}.avatar{width:47px;height:47px;border-radius:50%;background:#e9ddcd;display:inline-flex;align-items:center;justify-content:center;font-weight:650;color:#655747;flex-shrink:0;border:3px solid var(--bg)}.avatar.green{background:#dce7dc;color:var(--green)}.avatar.purple{background:#e6e2ef;color:#6a6086}.iconbtn{width:48px;height:48px;border-radius:16px;background:white;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.icon{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.btn{padding:13px 19px;min-height:48px;border-radius:16px;font-weight:600;background:var(--green);color:white;display:inline-flex;gap:9px;align-items:center;justify-content:center}.btn.full{width:100%}.btn.secondary{background:var(--light);color:var(--ink)}.btn.ghost{background:transparent;color:var(--green);border:1px solid #b9c9b6}.btn.danger{background:#f4e3de;color:#8b4435}.textbtn{background:none;color:var(--green);font-size:13px;font-weight:650;min-height:44px;padding:6px}.card{background:white;padding:18px;border-radius:22px;border:1px solid #edf0e9;box-shadow:0 5px 16px #263d2f03}.hero{position:relative;background:var(--sage);border-radius:26px;overflow:hidden;margin-top:24px;padding:24px}.hero h2{font-size:27px;line-height:1.2;max-width:195px;font-weight:600}.hero p{max-width:180px;margin:12px 0 20px;font-size:14px;color:#4c6551}.hero .art{position:absolute;right:-6px;bottom:65px;width:165px;pointer-events:none}.hero .btn{position:relative;z-index:1;font-size:14px}.features{display:grid;grid-template-columns:1fr 1fr;gap:12px}.feature{padding:19px 17px;text-align:left;border-radius:22px;min-height:143px;display:flex;flex-direction:column;align-items:start;gap:7px;background:#e9eee6}.feature:nth-child(2){background:#f1e9de}.feature:nth-child(3){background:#e6ebf0}.feature:nth-child(4){background:#ede8f0}.feature .icon{width:25px;height:25px;margin-bottom:8px}.feature small{color:#627065;font-size:12px}.feature strong{font-size:15px}.nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:min(398px,calc(100% - 30px));background:#ffffffed;border:1px solid #e6ebe3;border-radius:25px;display:flex;padding:8px;z-index:8;box-shadow:0 6px 30px #263d2f12;backdrop-filter:blur(15px)}.nav button{background:none;flex:1;display:grid;justify-items:center;gap:3px;font-size:10px;color:#758174;padding:7px 2px;border-radius:17px;min-height:55px}.nav button.active{background:var(--light);color:var(--ink);font-weight:700}.tag{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:9px;background:var(--light);font-size:11px;color:#4c6551}.tag.amber{background:#f6ecda;color:#825d24}.listbutton{width:100%;text-align:left;background:white;display:flex;align-items:center;gap:12px;padding:16px;border-radius:20px;border:1px solid var(--line)}.listbutton .grow{flex:1}.line{height:1px;background:var(--line);margin:16px 0}.pagehead{display:flex;align-items:center;gap:14px;margin:0 0 23px}.pagehead h1{font-size:24px}.pagehead .iconbtn{background:transparent}.hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}.field{display:grid;gap:7px;font-size:13px;font-weight:600;margin-bottom:17px}input,textarea,select{width:100%;border:1px solid #d9e2d5;border-radius:14px;background:white;padding:13px;color:var(--ink);min-height:48px}textarea{resize:vertical;min-height:83px}.chips{display:flex;gap:8px;overflow:auto;padding:4px 0 14px}.chip{border:1px solid var(--line);border-radius:24px;background:white;padding:10px 16px;white-space:nowrap;font-size:13px;min-height:44px}.chip.active{background:var(--green);color:white}.map{height:170px;position:relative;background:#e9eee3;border-radius:22px;overflow:hidden;border:1px solid #dae3d3}.map svg{width:100%;height:100%}.maplabel{position:absolute;left:12px;top:12px;background:#fffffff0;border-radius:10px;padding:6px 9px;font-size:10px}.facilityIcon{width:57px;height:61px;border-radius:16px;background:#e8eee5;display:flex;align-items:center;justify-content:center;color:var(--green);flex-shrink:0}.facilityIcon .icon{width:28px;height:28px}.facility h3{font-size:15px}.facility small{font-size:12px;color:var(--muted)}.onboardArt{height:260px;display:flex;align-items:center;justify-content:center;background:var(--light);border-radius:40% 40% 35% 30%;margin:20px 0 30px}.onboardArt .art{width:280px}.center{text-align:center}.dots{display:flex;justify-content:center;gap:7px;margin:25px}.dots i{width:7px;height:7px;background:#cfdbca;border-radius:5px}.dots i:first-child{width:26px;background:var(--green)}.camera{height:196px;border-radius:20px;background:#263d2f;position:relative;color:white;display:flex;align-items:center;justify-content:center;overflow:hidden}.camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.camera .placeholder{position:absolute;text-align:center;padding:20px}.camera .placeholder svg{width:45px;height:45px;opacity:.6}.camera .corners{position:absolute;inset:35px 75px;border:1px solid #ffffff70;border-radius:30px;pointer-events:none}.camera .badge{position:absolute;left:12px;top:12px;background:#ffffff19;border-radius:20px;padding:4px 9px;font-size:10px}.camera .camcontrol{position:absolute;right:12px;bottom:12px}.camera .iconbtn{background:#ffffffdb;color:var(--ink);width:42px;height:42px}.communication .section{margin-top:17px}.communication .card{padding:15px}.transcript{font-size:calc(var(--font) * 1.15);padding:14px 0;min-height:70px;line-height:1.5}.mic{width:52px;height:52px;border-radius:50%;background:var(--green);color:white;flex-shrink:0}.mic.on{background:#9a5143;box-shadow:0 0 0 5px #f2e5df}.message{background:var(--light);padding:12px 15px;border-radius:17px 17px 17px 3px;margin:10px 20px 10px 0}.message.sign{background:#f2eadd;border-radius:17px 17px 3px 17px;margin:10px 0 10px 20px}.message small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;color:#61705d}.conversation{max-height:240px;overflow:auto}.empty{text-align:center;padding:20px 12px;color:var(--muted);font-size:14px}.toggle{width:47px;height:28px;background:#c8d0c5;border-radius:20px;position:relative;flex-shrink:0;min-height:28px}.toggle:after{content:'';width:20px;height:20px;background:white;border-radius:50%;position:absolute;left:4px;top:4px}.toggle.on{background:var(--green)}.toggle.on:after{left:23px}.setting{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:16px 0}.toast{position:fixed;bottom:102px;left:50%;transform:translateX(-50%);width:min(370px,90%);padding:14px 20px;border-radius:16px;background:#263d2f;color:white;font-size:13px;z-index:40;box-shadow:0 8px 30px #0002}.modal{border:0;border-radius:26px;width:min(390px,90%);color:var(--ink);padding:25px;box-shadow:0 20px 90px #0003}.modal::backdrop{background:#152d2266;backdrop-filter:blur(3px)}.modal h2{margin-bottom:12px}.modal .btn{margin-top:12px}.hidden{display:none!important}.stat{font-size:40px;font-weight:500;letter-spacing:-2px}.notice{background:#f0f3eb;padding:14px;border-radius:14px;font-size:12px;color:#5b6e55}.profileHero{background:var(--sage);border-radius:26px;padding:28px;text-align:center}.profileHero .avatar{width:76px;height:76px;font-size:26px;margin-bottom:12px}.legal p{margin:12px 0;font-size:14px}.topLabel{display:flex;align-items:center;gap:6px;font-size:12px}.dot{width:6px;height:6px;background:var(--green);border-radius:50%}@media(min-width:1000px){.phone{margin:25px 0 25px calc(50% - 100px);min-height:860px;border-radius:36px;overflow:hidden;border:7px solid #fff}.content{min-height:810px}.nav{left:calc(50% + 115px);bottom:30px}.toast{left:calc(50% + 115px)}}@media(max-width:999px){.studio{display:none}}@media(prefers-reduced-motion:no-preference){button{transition:background .16s,transform .16s}button:active{transform:scale(.98)}}
-.communication .pagehead{margin-bottom:18px}.communication .pagehead h1{font-size:21px}.communication .camera{height:160px}.communication .section{margin-top:12px}.communication textarea{min-height:62px;height:62px;padding:10px}.communication .transcript{min-height:55px;padding:9px 0}.communication .card{padding:13px}.communication .hint{font-size:11px}.communication .btn{padding:10px 14px}.hero h2,.hero p{position:relative;z-index:1}@media(max-width:380px){.hero .art{width:135px;right:-8px;bottom:83px}.hero h2{max-width:160px;font-size:25px}.content{padding-left:17px;padding-right:17px}.feature{padding:16px 12px}.communication .pagehead h1{font-size:19px}}
-</style></head><body><aside class="studio"><div class="logo" id="brand"></div><div class="eyebrow" style="margin-top:50px">DESIGN PREVIEW / 01</div><h1>Lebih dekat.<br>Lebih dipahami.</h1><p>Ruang komunikasi yang hangat, setara, dan selalu dalam kendalimu.</p><div class="spacer"></div><label class="eyebrow" for="screenPicker">Jelajahi layar</label><select id="screenPicker" aria-label="Jelajahi layar"></select><button class="btn ghost full" onclick="resetDemo()">Reset demo</button><footer>Prototipe interaktif • Data contoh<br>HTML mandiri · Identitas sage green<br><br>Navigasi sementara: Beranda, Komunikasi, Lokasi, Profil. Label navigasi asli tidak tersedia dalam struktur folder.</footer></aside><div class="phone"><div class="statusbar"><span>9:41</span><span class="demo">PROTOTIPE · DATA DEMO</span><span>▴ ▴ ▰</span></div><main id="app" class="content"></main><nav id="nav" class="nav" aria-label="Navigasi utama"></nav></div><div id="toast" class="toast hidden" role="status"></div><dialog id="dialog" class="modal"></dialog>
-<script>
-const icons={home:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z',chat:'M21 11a8 8 0 0 1-8 8H7l-5 3 2-6a8 8 0 1 1 17-5ZM8 10h8M8 14h5',pin:'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0',user:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21v-2a8 8 0 0 1 16 0v2',mic:'M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0ZM5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8',hand:'M8 13V5a2 2 0 0 1 4 0v7-9a2 2 0 0 1 4 0v9-6a2 2 0 0 1 4 0v10c0 4-3 7-7 7-3 0-5-2-7-5l-3-5a2 2 0 0 1 3-2l2 2',hospital:'M4 21V5h16v16M9 21v-5h6v5M9 9h6M12 6v6M1 21h22',arrow:'M5 12h14m-6-6 6 6-6 6',back:'M19 12H5m6-6-6 6 6 6',chevron:'m9 5 7 7-7 7',friends:'M10 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M1 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 5 5v1',shield:'M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6ZM8 12l3 3 5-6',settings:'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2',camera:'M3 6h4l2-3h6l2 3h4v15H3ZM16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0',sound:'M3 9h4l5-5v16l-5-5H3ZM16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14',plus:'M12 5v14M5 12h14',clock:'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0M12 6v6l4 2',logout:'M9 3H3v18h6M8 12h13m-5-5 5 5-5 5',check:'m5 12 4 4L19 6',search:'M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0m-2 6 6 6'};
-const I=(n)=>`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[n]||icons.chat}"/></svg>`;
-const logo=`<svg viewBox="0 0 50 50" fill="none" aria-hidden="true"><path d="M26 14C10-2-3 21 15 34c17 13 32-9 17-20C19 4 7 25 24 36" stroke="#527B5D" stroke-width="6" stroke-linecap="round"/></svg><span>taut<span style="color:#8aab7e">.</span></span>`;
-function art(){return `<svg class="art" viewBox="0 0 230 230" aria-hidden="true"><ellipse cx="116" cy="205" rx="95" ry="12" fill="#b8cbb0"/><circle cx="129" cy="101" r="86" fill="#e7efdf"/><path d="M30 200v-55q0-38 40-38t40 38v55" fill="#527B5D"/><path d="M125 200v-61q0-32 34-32t39 32v61" fill="#a7b997"/><path d="m53 143 30 31 50-28" fill="none" stroke="#d6aa8b" stroke-width="16" stroke-linecap="round"/><path d="m176 143-23 28-25-18" fill="none" stroke="#b87d61" stroke-width="14" stroke-linecap="round"/><ellipse cx="69" cy="79" rx="25" ry="31" fill="#d6aa8b"/><path d="M44 80q-15-40 22-38 35-1 28 36l-12-16q-11 15-38 10" fill="#263d2f"/><ellipse cx="159" cy="82" rx="24" ry="30" fill="#b87d61"/><path d="M135 79q-12-35 19-39 36-6 30 41l-14-23q-15 13-35 12" fill="#384a38"/><path d="M82 84h3m67 0h3" stroke="#263d2f" stroke-width="3" stroke-linecap="round"/><path d="M79 95q7 5 11-1m50 1q6 5 11 0" stroke="#79533c" fill="none" stroke-width="2"/><rect x="85" y="7" width="55" height="33" rx="14" fill="white"/><path d="m108 38-8 9 2-12" fill="white"/><circle cx="102" cy="23" r="3" fill="#527B5D"/><circle cx="113" cy="23" r="3" fill="#527B5D"/><circle cx="124" cy="23" r="3" fill="#527B5D"/></svg>`}
-const screens={home:'Beranda',onboard:'Onboarding',login:'Masuk',register:'Daftar',hub:'Hub komunikasi',comm:'Komunikasi langsung',location:'Hub lokasi',finder:'Fasilitas kesehatan',detail:'Detail fasilitas',friends:'Teman terhubung',add:'Tambah teman',live:'Lokasi bersama',sharing:'Kelola berbagi',profile:'Profil',edit:'Edit profil',settings:'Pengaturan',privacy:'Privasi & izin'};
-let state={page:'home',name:'Adriel',friends:['Nadia','Raka','Dinda'],sessions:[],messages:[],filter:'Semua',query:'',facility:0,font:16,mic:false,cam:false,sign:'',demoStep:0};let stream=null,recognition=null,ttsActive=false,wantMic=false,toastTimer,previous=[];
-const facilities=[{name:'Klinik Harmoni',type:'Klinik',address:'Jl. Contoh Sehat No. 12',distance:'0,8 km'},{name:'RS Taman Sehat',type:'Rumah sakit',address:'Jl. Contoh Utama No. 8',distance:'1,6 km'},{name:'Puskesmas Cempaka',type:'Puskesmas',address:'Jl. Contoh Cempaka No. 4',distance:'2,3 km'}];
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const avatar=(n,i=0)=>`<span class="avatar ${['','green','purple'][i%3]}">${esc(n.slice(0,1))}</span>`;
-function button(t,act,cls=''){return `<button class="btn ${cls}" onclick="${act}">${t}</button>`}function head(title,back='home'){return `<header class="pagehead"><button class="iconbtn" aria-label="Kembali" onclick="go('${back}')">${I('back')}</button><h1>${title}</h1></header>`}function notice(t){return `<div class="notice">${t}</div>`}function toast(t){let el=document.getElementById('toast');el.textContent=t;el.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),4000)}
-function modal(title,body){document.getElementById('dialog').innerHTML=`<h2>${title}</h2>${body}<button class="btn ghost full" onclick="document.getElementById('dialog').close()">Tutup</button>`;document.getElementById('dialog').showModal()}
-function go(page){if(state.page==='comm'&&page!=='comm')cleanup();previous.push(state.page);state.page=page;render();window.scrollTo(0,0)}
-function map(){return `<div class="map"><svg viewBox="0 0 360 170" aria-hidden="true"><rect width="360" height="170" fill="#e6ecdf"/><path d="m0 40 360 70M80 0l-20 170M270 0l-50 170M0 150 360 20" stroke="white" stroke-width="16"/><path d="M0 95q100-50 170 30t190-20" stroke="#c6dce0" fill="none" stroke-width="16"/><path d="m99 140 18-72 120 27" stroke="#527b5d" stroke-width="4" stroke-dasharray="6 4" fill="none"/><circle cx="102" cy="135" r="9" fill="#527b5d" stroke="white" stroke-width="4"/><g transform="translate(235 73)"><rect width="29" height="29" rx="9" fill="#527b5d"/><path d="M8 15h13m-6-6v12" stroke="white" stroke-width="3"/></g></svg><span class="maplabel">Peta ilustrasi · bukan posisi nyata</span></div>`}
-function home(){return `<div class="row between"><div><p class="small">Halo, selamat datang</p><h1 style="margin-top:3px">${esc(state.name)} <span style="color:#84a078">✦</span></h1></div><button style="background:none" aria-label="Buka profil" onclick="go('profile')">${avatar(state.name)}</button></div><section class="hero"><div class="eyebrow" style="font-size:9px;margin-bottom:14px">SETIAP CERITA BERARTI</div><h2>Saling mengerti,<br>tanpa batas.</h2><p>Ucapkan atau isyaratkan.<br>Kami bantu menyampaikan.</p>${art()}${button('Mulai Komunikasi '+I('arrow'),"go('comm')")}</section><div class="row between section"><h2>Teman aktivitasmu</h2><span class="small muted">4 fitur utama</span></div><div class="features">${[['mic','Ucapan ke Teks','Dengar lewat tulisan','comm'],['hand','Isyarat ke Suara','Sampaikan dengan isyarat','comm'],['hospital','Fasilitas Kesehatan','Temukan layanan sekitar','finder'],['pin','Berbagi Lokasi','Tetap dekat, tetap aman','sharing']].map(([i,t,s,p])=>`<button class="feature" onclick="go('${p}')">${I(i)}<strong>${t}</strong><small>${s}</small></button>`).join('')}</div><div class="row between section"><h2>Teman terhubung</h2><button class="textbtn" onclick="go('friends')">Lihat semua ${I('chevron')}</button></div><div class="card" style="display:flex;justify-content:space-around;text-align:center">${state.friends.slice(0,3).map((n,i)=>`<button style="background:none" onclick="go('friends')">${avatar(n,i)}<div class="small" style="margin-top:7px">${esc(n)}</div><span style="font-size:10px;color:var(--muted)">${state.sessions.some(s=>s.name===n)?'Sesi demo aktif':'Terhubung'}</span></button>`).join('')}</div>${state.sessions.length?`<div class="card section" style="background:var(--light)"><div class="row">${I('pin')}<h3>Berbagi lokasi aktif</h3></div><p class="small" style="margin:10px 0">${state.sessions.length} penerima · simulasi lokal</p>${button('Kelola sesi',"go('sharing')",'secondary full')}</div>`:`<div class="row" style="margin-top:20px;align-items:start;color:var(--muted)">${I('shield')}<p class="hint" style="margin:0">Lokasimu tetap privat.<br>Kamu yang menentukan kapan berbagi.</p></div>`}`}
-function comm(){return `<div class="communication">${head('Komunikasi langsung')}<div class="row between" style="margin:-10px 0 14px"><span class="topLabel"><span class="dot"></span>Satu ruang, dua arah</span><button class="textbtn" onclick="cycleFont()">Aa · Ukuran teks</button></div><div class="camera"><video id="video" autoplay playsinline muted></video><div id="camPlaceholder" class="placeholder ${state.cam?'hidden':''}">${I('hand')}<div style="margin-top:6px;font-size:13px">Ruang untuk isyaratmu</div><small style="opacity:.6">Aktifkan kamera saat kamu siap</small></div><div class="corners"></div><span class="badge" id="camStatus">${state.cam?'Kamera aktif':'Kamera nonaktif'}</span><button class="iconbtn camcontrol" aria-label="Aktifkan atau matikan kamera" onclick="toggleCam()">${I('camera')}</button></div><p class="hint">Posisikan wajah dan tangan dalam bingkai. Pengenalan isyarat pada prototipe ini adalah simulasi.</p><div class="card section"><div class="row between"><h3>Isyarat → suara</h3><span class="tag amber">Simulasi</span></div><label class="field" style="margin:12px 0 8px"><span class="small muted">Periksa hasil sebelum diputar</span><textarea id="signText" placeholder="Hasil isyarat akan muncul di sini…" oninput="state.sign=this.value">${esc(state.sign)}</textarea></label><div class="row">${button('Coba isyarat',"demoSign()",'secondary')}${button(I('sound')+' Putar',"speakSign()")}</div></div><div class="card section"><div class="row between"><div><h3>Ucapan → teks</h3><span class="small muted" id="micStatus">${state.mic?'Mendengarkan…':'Mikrofon nonaktif'}</span></div><button id="micBtn" class="mic ${state.mic?'on':''}" aria-label="Aktifkan atau matikan mikrofon" onclick="toggleMic()">${I('mic')}</button></div><div id="transcript" class="transcript muted">Ucapan teman dengar akan tampil di sini.</div><button class="textbtn" onclick="demoSpeech()">Coba contoh ucapan ${I('arrow')}</button></div><div class="row between section"><h3>Percakapan</h3><button class="textbtn" onclick="state.messages=[];renderMessages()">Bersihkan</button></div><div id="messages" class="conversation"></div><form onsubmit="sendManual(event)" class="row" style="align-items:end;margin-top:12px"><label class="field" style="margin:0;flex:1"><span>Ketik sebagai alternatif</span><input id="manual" placeholder="Tulis pesan…" required maxlength="500"></label><button class="iconbtn" type="submit" aria-label="Kirim pesan">${I('arrow')}</button></form><p class="hint">Teks hanya berada dalam sesi ini. Audio dan video tidak direkam oleh prototipe.</p>${button('Akhiri sesi',"endSession()",'ghost full section')}</div>`}
-function renderMessages(){const el=document.getElementById('messages');if(el)el.innerHTML=state.messages.length?state.messages.map((m,i)=>`<div class="message ${m.type==='Ucapan'?'':'sign'}"><small>${m.type}${m.demo?' · demo':''}</small>${esc(m.text)}${m.type==='Ketik'?`<button class="textbtn" aria-label="Putar pesan" onclick="speak(state.messages[${i}].text)">${I('sound')}</button>`:''}</div>`).join(''):'<div class="empty">Percakapan dimulai dari satu sapaan.</div>'}
-function addMessage(text,type,demo=false){state.messages.push({text,type,demo});renderMessages()}
-function demoSign(){state.sign=['Halo, senang bertemu denganmu.','Terima kasih.','Saya ingin bertanya.'][state.demoStep++%3];document.getElementById('signText').value=state.sign;toast('Contoh hasil simulasi, bukan pembacaan kamera.')}
-function demoSpeech(){const t='Halo! Ada yang bisa saya bantu?';document.getElementById('transcript').textContent=t;addMessage(t,'Ucapan',true)}
-function speakSign(){state.sign=document.getElementById('signText').value.trim();if(!state.sign)return toast('Coba simulasi atau tulis hasil terlebih dahulu.');addMessage(state.sign,'Isyarat',true);speak(state.sign)}
-function sendManual(e){e.preventDefault();const el=document.getElementById('manual');if(el.value.trim())addMessage(el.value.trim(),'Ketik');el.value=''}
-async function toggleCam(){if(state.cam){stream?.getTracks().forEach(t=>t.stop());stream=null;state.cam=false;updateCam();return}try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Kamera memerlukan browser yang mendukung dan HTTPS atau localhost.');stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});if(state.page!=='comm'){stream.getTracks().forEach(t=>t.stop());return}state.cam=true;updateCam()}catch(e){toast('Kamera tidak tersedia atau izin ditolak. Simulasi tetap dapat digunakan.')}}
-function updateCam(){let v=document.getElementById('video');if(v)v.srcObject=stream;document.getElementById('camPlaceholder')?.classList.toggle('hidden',state.cam);let c=document.getElementById('camStatus');if(c)c.textContent=state.cam?'Kamera aktif':'Kamera nonaktif'}
-function updateMic(t){document.getElementById('micStatus')?.replaceChildren(document.createTextNode(t));document.getElementById('micBtn')?.classList.toggle('on',state.mic)}
-function startRecognition(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){wantMic=false;toast('Pengenalan ucapan tidak didukung. Gunakan contoh ucapan atau ketik pesan.');return}recognition=new SR();recognition.lang='id-ID';recognition.continuous=true;recognition.interimResults=true;recognition.onstart=()=>{state.mic=true;updateMic('Mendengarkan…')};recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){let text=e.results[i][0].transcript;let el=document.getElementById('transcript');if(el)el.textContent=text;if(e.results[i].isFinal)addMessage(text,'Ucapan')}};recognition.onerror=e=>{wantMic=false;state.mic=false;updateMic('Tidak dapat mendengar · coba lagi');toast('Ucapan tidak tersedia: '+e.error+'. Gunakan ketik pesan.')};recognition.onend=()=>{state.mic=false;updateMic(ttsActive?'Dijeda saat suara diputar':'Mikrofon nonaktif')};try{recognition.start()}catch{wantMic=false;toast('Mikrofon belum siap. Coba lagi.')}}
-function toggleMic(){if(wantMic||state.mic){wantMic=false;recognition?.abort();state.mic=false;updateMic('Mikrofon nonaktif')}else{modal('Aktifkan mikrofon?',`<p>Browser akan meminta izin. Layanan pengenalan ucapan browser dapat memerlukan internet dan memproses audio melalui penyedianya.</p><button class="btn full" onclick="document.getElementById('dialog').close();wantMic=true;startRecognition()">Lanjutkan</button>`)}}
-function speak(text){if(!window.speechSynthesis)return toast('Suara tidak didukung di browser ini. Teks tetap dapat dibaca.');speechSynthesis.cancel();ttsActive=true;recognition?.abort();state.mic=false;updateMic('Dijeda saat suara diputar');let u=new SpeechSynthesisUtterance(text);u.lang='id-ID';let voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('id'));if(voice)u.voice=voice;u.onend=u.onerror=()=>{ttsActive=false;if(wantMic&&state.page==='comm')startRecognition();else updateMic('Mikrofon nonaktif')};speechSynthesis.speak(u)}
-function cleanup(){wantMic=false;state.mic=false;recognition?.abort();recognition=null;stream?.getTracks().forEach(t=>t.stop());stream=null;state.cam=false;ttsActive=false;window.speechSynthesis?.cancel();updateMic('Mikrofon nonaktif');updateCam()}
-function endSession(){cleanup();state.messages=[];state.sign='';go('home');toast('Sesi selesai. Kamera, mikrofon, dan suara dihentikan.')}
-function cycleFont(){state.font=state.font===16?19:state.font===19?22:16;document.documentElement.style.setProperty('--font',state.font+'px');toast('Ukuran teks: '+state.font+' px')}
-function finder(){return `${head('Fasilitas kesehatan','location')}<h2 style="font-size:28px;margin-bottom:7px">Temukan bantuan<br>di sekitarmu.</h2><p class="small" style="margin-bottom:22px">Tempat yang tepat, lebih mudah dijangkau.</p><label class="field"><span class="hidden">Cari fasilitas</span><input aria-label="Cari fasilitas" id="search" placeholder="Cari nama fasilitas…" value="${esc(state.query)}" oninput="state.query=this.value;renderFacilities()"></label><div class="chips">${['Semua','Klinik','Rumah sakit','Puskesmas'].map(c=>`<button class="chip ${c===state.filter?'active':''}" onclick="state.filter='${c}';render()">${c}</button>`).join('')}</div>${map()}<div class="row between section"><h3>Pilihan di sekitar</h3><span class="tag amber">Data contoh</span></div><div id="facilities" class="stack"></div><p class="hint">Nama, alamat, dan jarak di sini fiktif untuk peninjauan desain.</p>`}
-function renderFacilities(){const el=document.getElementById('facilities');if(!el)return;el.innerHTML=facilities.map((f,i)=>({f,i})).filter(({f})=>(state.filter==='Semua'||f.type===state.filter)&&f.name.toLowerCase().includes(state.query.toLowerCase())).map(({f,i})=>`<button class="listbutton facility" onclick="state.facility=${i};go('detail')"><span class="facilityIcon">${I('hospital')}</span><span class="grow"><small>${f.type}</small><h3>${f.name}</h3><small>${I('pin')} ${f.distance} · jarak contoh</small></span>${I('chevron')}</button>`).join('')||'<div class="empty">Tidak ada fasilitas yang sesuai. Coba kata lain.</div>'}
-function detail(){const f=facilities[state.facility];return `${head('Detail fasilitas','finder')}<div class="profileHero"><div class="facilityIcon" style="margin:0 auto 16px;background:white">${I('hospital')}</div><span class="tag">${f.type}</span><h1 style="margin:14px 0 8px">${f.name}</h1><p class="small">${I('pin')} ${f.distance} · jarak contoh</p></div><div class="spacer"></div>${map()}<div class="card section"><h3>Informasi lokasi</h3><p style="margin:10px 0">${f.address}</p><span class="tag amber">Fasilitas fiktif · demo</span><div class="line"></div><div class="small muted">Jam buka, layanan, dan aksesibilitas</div><p style="margin-top:6px">Informasi belum tersedia</p></div><div class="stack">${button(I('arrow')+' Petunjuk Arah',"modal('Pratinjau rute',map()+'<p class=hint>Fasilitas ini fiktif. Rute nyata tidak tersedia dalam demo.</p>')",'full')}${button(I('pin')+' Bagikan lokasi fasilitas',"shareFacility()",'secondary full')}</div>`}
-function shareFacility(){modal('Bagikan fasilitas',`<p>Ini membagikan informasi fasilitas, bukan lokasi langsungmu.</p><div class="notice" style="margin-top:15px">${facilities[state.facility].name} · ${facilities[state.facility].address}<br>DATA DEMO — bukan fasilitas nyata.</div><button class="btn full" onclick="copyFacility()">Salin informasi contoh</button>`)}
-async function copyFacility(){let f=facilities[state.facility];try{await navigator.clipboard.writeText(f.name+' — '+f.address+' (DATA DEMO, bukan fasilitas nyata)');toast('Informasi contoh disalin.')}catch{toast('Salin teks informasi yang terlihat pada dialog.')}}
-function friends(){return `${head('Teman terhubung','location')}<p style="margin-bottom:20px">Tetap dekat dengan orang yang kamu percaya.</p><div class="stack">${state.friends.map((n,i)=>`<button class="listbutton" onclick="go('sharing')">${avatar(n,i)}<span class="grow"><strong>${esc(n)}</strong><br><small class="muted">${state.sessions.some(s=>s.name===n)?'Sesi berbagi demo aktif':'Tidak ada sesi berbagi'}</small></span>${I('chevron')}</button>`).join('')}</div><div class="spacer"></div>${button(I('plus')+' Tambah teman',"go('add')",'full')}<p class="hint">Daftar teman contoh. Menambahkan nama tidak mengirim undangan sungguhan.</p>`}
-function sharing(){return `${head('Berbagi lokasi','location')}${notice('Kamu memilih penerima dan durasinya. Sesi di prototipe ini merupakan simulasi; tidak ada koordinat yang dikirim.')}<div class="section"><h2>Mulai sesi baru</h2></div><form onsubmit="startSharing(event)"><label class="field">Bagikan kepada<select id="recipient">${state.friends.map(n=>`<option>${esc(n)}</option>`).join('')}</select></label><label class="field">Durasi<select id="duration"><option value="15">15 menit</option><option value="30">30 menit</option><option value="60">1 jam</option></select></label><label class="row small" style="align-items:start;margin-bottom:20px"><input type="checkbox" required style="width:21px;min-height:21px;margin-top:2px">Saya setuju memulai simulasi berbagi lokasi dengan penerima yang dipilih.</label>${button('Mulai berbagi demo',"",'full')}</form><div class="row between section"><h2>Sesi aktif</h2><span class="tag">${state.sessions.length} penerima</span></div><div id="sessions">${sessionList()}</div>`}
-function sessionList(){return state.sessions.length?state.sessions.map((s,i)=>`<div class="card" style="margin-bottom:10px"><div class="row">${avatar(s.name)}<div style="flex:1"><h3>${esc(s.name)}</h3><small class="muted" data-expiry="${s.end}">${remaining(s.end)}</small></div><span class="tag amber">Demo</span></div><div class="row" style="margin-top:15px">${button('Lihat lokasi',"go('live')",'secondary')}${button('Hentikan',`stopSharing(${i})`,'danger')}</div></div>`).join(''):'<div class="empty card">Belum ada sesi aktif.<br>Lokasimu tidak dibagikan.</div>'}
-function remaining(t){return Math.max(0,Math.ceil((t-Date.now())/60000))+' menit tersisa'}
-function startSharing(e){e.preventDefault();let name=document.getElementById('recipient').value,end=Date.now()+Number(document.getElementById('duration').value)*60000;state.sessions=state.sessions.filter(s=>s.name!==name);state.sessions.push({name,end});render();toast('Sesi demo dimulai. Tidak ada lokasi nyata yang dikirim.')}
-function stopSharing(i){state.sessions.splice(i,1);render();toast('Sesi berbagi dihentikan.')}
-function locationPage(){return `${head('Ruang lokasi')}<section class="hero" style="margin:0"><div class="eyebrow">DEKAT DENGAN YANG BERARTI</div><h2 style="margin-top:15px">Ke mana pun,<br>tetap terhubung.</h2><p>Temukan fasilitas dan atur berbagi lokasi dengan tenang.</p>${I('pin')}</section><div class="stack section">${[['hospital','Fasilitas kesehatan','Cari klinik dan rumah sakit','finder'],['friends','Teman terhubung',state.friends.length+' teman contoh','friends'],['pin','Berbagi lokasi',state.sessions.length+' sesi demo aktif','sharing']].map(([i,t,s,p])=>`<button class="listbutton" onclick="go('${p}')"><span class="facilityIcon">${I(i)}</span><span class="grow"><h3>${t}</h3><small class="muted">${s}</small></span>${I('chevron')}</button>`).join('')}</div>${notice('Tidak ada pelacakan latar belakang. Berbagi selalu dimulai dan dihentikan olehmu.')}`}
-function profile(){return `${head('Profil')}<div class="profileHero">${avatar(state.name)}<h1>${esc(state.name)}</h1><p class="small" style="margin:8px 0 15px">Ruangmu untuk terhubung.</p>${button('Edit profil',"go('edit')",'ghost')}</div><div class="stack section">${[['settings','Pengaturan & aksesibilitas','settings'],['shield','Privasi & izin','privacy'],['friends','Teman terhubung','friends']].map(([i,t,p])=>`<button class="listbutton" onclick="go('${p}')">${I(i)}<span class="grow">${t}</span>${I('chevron')}</button>`).join('')}</div>${button('Keluar dari demo',"go('login')",'ghost full')}<p class="hint center">TAUT · Prototipe desain 01<br>Data akun ini hanya contoh.</p>`}
-function settings(){return `${head('Pengaturan','profile')}<h2>Kenyamanan untukmu</h2><p class="small" style="margin:8px 0 25px">Sesuaikan cara kamu menggunakan TAUT.</p><div class="card"><label class="field">Ukuran teks<select onchange="state.font=Number(this.value);document.documentElement.style.setProperty('--font',state.font+'px')">${[16,19,22].map(n=>`<option value="${n}" ${state.font===n?'selected':''}>${n===16?'Standar':n===19?'Besar':'Sangat besar'} · ${n}px</option>`).join('')}</select></label><div class="notice" style="font-size:var(--font)">Halo, senang bisa saling memahami.</div><div class="line"></div><h3>Putar suara setelah konfirmasi</h3><p class="hint">Hasil isyarat dapat diperiksa dan disunting sebelum kamu menekan Putar.</p></div><div class="section">${button('Mulai ulang onboarding',"go('onboard')",'secondary full')}</div>${button('Reset seluruh demo',"resetDemo()",'ghost full')}`}
-function privacy(){return `${head('Privasi & izin','profile')}<div class="profileHero">${I('shield')}<h2 style="margin-top:12px">Kendalinya ada padamu.</h2><p class="small" style="margin-top:8px">Izin diminta saat fitur digunakan.</p></div><div class="card section legal"><h3>Kamera</h3><p>Preview kamera hanya aktif setelah kamu memilih tombol kamera dan memberi izin browser. Tidak ada model BISINDO terhubung.</p><h3>Mikrofon</h3><p>Pengenalan ucapan memakai kemampuan browser, jika tersedia. Penyedia browser dapat memproses audio melalui internet.</p><h3>Lokasi</h3><p>Peta dan berbagi lokasi pada prototipe menggunakan data contoh. Tidak ada koordinat nyata yang dikirim.</p><h3>Penyimpanan</h3><p>Data demo disimpan dalam memori halaman. Muat ulang akan menghapus perubahan. Tidak ada audio, video, atau kata sandi yang disimpan.</p></div>${button('Hentikan akses perangkat',"cleanup();toast('Akses kamera dan mikrofon dihentikan.')",'ghost full')}`}
-function onboarding(){return `<div class="row between"><div class="logo" style="font-size:28px">${logo}</div><button class="textbtn" onclick="go('home')">Lewati</button></div><div class="onboardArt">${art()}</div><div class="center"><div class="eyebrow" style="color:var(--green);margin-bottom:14px">SALING MEMAHAMI</div><h1 style="font-size:34px">Ceritamu layak<br>untuk didengar.</h1><p style="margin:18px 14px">Ucapan menjadi tulisan. Isyarat menjadi suara. Terhubung dalam satu ruang yang nyaman.</p><div class="dots"><i></i><i></i><i></i></div>${button('Mulai bersama TAUT '+I('arrow'),"go('login')",'full')}<p class="hint">Dirancang untuk komunikasi yang lebih setara.</p></div>`}
-function auth(register=false){return `${head(register?'Buat akun':'Selamat datang','onboard')}<div class="logo" style="margin:25px 0 35px">${logo}</div><h1>${register?'Mulai perjalananmu.':'Senang bertemu lagi.'}</h1><p style="margin:12px 0 30px">Masuk ke ruang yang memahami kamu.</p><form onsubmit="authSubmit(event,${register})">${register?'<label class="field">Nama<input id="authName" required maxlength="40" autocomplete="name" placeholder="Nama panggilanmu"></label>':''}<label class="field">Email<input type="email" required autocomplete="email" placeholder="nama@email.com"></label><label class="field">Kata sandi<input type="password" required minlength="6" autocomplete="${register?'new-password':'current-password'}" placeholder="Minimal 6 karakter"></label>${notice('Form simulasi. Jangan gunakan kata sandi asli. Tidak ada data yang dikirim atau akun yang dibuat.')}<div class="spacer"></div><button class="btn full">${register?'Daftar demo':'Masuk demo'}</button></form><button class="textbtn" style="width:100%;margin-top:16px" onclick="go('${register?'login':'register'}')">${register?'Sudah punya akun? Masuk':'Belum punya akun? Daftar'}</button>${button('Jelajahi tanpa akun',"go('home')",'ghost full')}`}
-function authSubmit(e,reg){e.preventDefault();if(reg)state.name=document.getElementById('authName').value.trim()||'Teman';go('home');toast('Selamat datang di demo TAUT.')}
-function render(){document.getElementById('screenPicker').value=state.page;let page='';switch(state.page){case'home':page=home();break;case'comm':page=comm();break;case'finder':page=finder();break;case'detail':page=detail();break;case'friends':page=friends();break;case'sharing':page=sharing();break;case'location':page=locationPage();break;case'profile':page=profile();break;case'settings':page=settings();break;case'privacy':page=privacy();break;case'onboard':page=onboarding();break;case'login':page=auth();break;case'register':page=auth(true);break;case'hub':page=head('Ruang komunikasi')+`<div class="onboardArt">${art()}</div><h1>Dua arah.<br>Satu percakapan.</h1><p style="margin:15px 0 25px">Baca ucapan teman dengar, lalu balas lewat isyarat atau tulisan tanpa berpindah layar.</p>`+button('Mulai komunikasi',"go('comm')",'full');break;case'add':page=head('Tambah teman','friends')+`<h2>Perluas ruang terhubung.</h2><p style="margin:12px 0 24px">Tambahkan nama untuk mencoba alur berbagi.</p><form onsubmit="event.preventDefault();addFriend()"><label class="field">Nama teman<input id="friendName" required maxlength="40" placeholder="Contoh: Alya"></label><button class="btn full">Tambah ke demo</button></form><p class="hint">Tidak ada undangan yang dikirim.</p>`;break;case'edit':page=head('Edit profil','profile')+`<form onsubmit="event.preventDefault();state.name=document.getElementById('profileName').value.trim()||'Teman';go('profile');toast('Profil demo diperbarui.')"><label class="field">Nama panggilan<input id="profileName" value="${esc(state.name)}" required maxlength="40"></label><button class="btn full">Simpan perubahan</button></form>`;break;case'live':page=head('Lokasi bersama','sharing')+map()+`<div class="section"><h2>Sesi berbagi demo</h2><p class="hint">Lokasi pada peta adalah ilustrasi. Tidak ada pergerakan atau koordinat nyata.</p></div>`+sessionList();break;}document.getElementById('app').innerHTML=page;let group=['home','onboard','login','register'].includes(state.page)?'home':['hub','comm'].includes(state.page)?'hub':['profile','edit','settings','privacy'].includes(state.page)?'profile':'location';document.getElementById('nav').classList.toggle('hidden',['onboard','login','register','comm'].includes(state.page));document.getElementById('nav').innerHTML=[['home','home','Beranda'],['hub','chat','Komunikasi'],['location','pin','Lokasi'],['profile','user','Profil']].map(([p,i,t])=>`<button class="${group===p?'active':''}" ${group===p?'aria-current="page"':''} onclick="go('${p}')">${I(i)}${t}</button>`).join('');if(state.page==='comm'){updateCam();renderMessages()}if(state.page==='finder')renderFacilities()}
-function addFriend(){let n=document.getElementById('friendName').value.trim();if(!n)return;if(state.friends.some(f=>f.toLowerCase()===n.toLowerCase()))return toast('Nama ini sudah ada.');state.friends.push(n);go('friends');toast('Teman contoh ditambahkan.')}
-function resetDemo(){cleanup();state.sessions=[];state.friends=['Nadia','Raka','Dinda'];state.messages=[];state.sign='';state.name='Adriel';state.font=16;state.filter='Semua';state.query='';document.documentElement.style.setProperty('--font','16px');go('home');toast('Demo dikembalikan ke keadaan awal.')}
-setInterval(()=>{let count=state.sessions.length;state.sessions=state.sessions.filter(s=>s.end>Date.now());if(state.sessions.length!==count){render();toast('Sesi berbagi demo telah berakhir.')}document.querySelectorAll('[data-expiry]').forEach(el=>el.textContent=remaining(Number(el.dataset.expiry)))},1000);
-window.addEventListener('pagehide',cleanup);document.addEventListener('visibilitychange',()=>{if(document.hidden)cleanup()});document.getElementById('brand').innerHTML=logo;document.getElementById('screenPicker').innerHTML=Object.entries(screens).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');document.getElementById('screenPicker').onchange=e=>go(e.target.value);render();
-</script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TAUT — Ruang untuk saling memahami (Interactive Prototype)</title>
+  
+  <!-- Leaflet OpenStreetMap CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --bg: #F8FAF7;
+      --surface: #FFFFFF;
+      --border: #E4E9E1;
+      --ink: #263D2F;
+      --muted: #66756B;
+      --green: #527B5D;
+      --dark-green: #263D2F;
+      --light-green: #E5EEE5;
+      --sage: #D7E3D1;
+      --amber: #825D24;
+      --amber-bg: #F6ECDA;
+      --danger: #8B4435;
+      --danger-bg: #F4E3DE;
+      --font-scale: 16px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0;
+      background: #E8ECE6;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: var(--font-scale);
+      line-height: 1.5;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR STUDIO */
+    .studio {
+      width: 320px;
+      padding: 32px 24px;
+      height: 100vh;
+      overflow-y: auto;
+      background: #DFE5DD;
+      border-right: 1px solid #CED7CB;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--dark-green);
+      letter-spacing: -1.2px;
+    }
+    .brand span { color: #8AAB7E; }
+    .studio h2 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--green);
+      margin: 24px 0 8px;
+      font-weight: 800;
+    }
+    .studio p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0 0 16px;
+      line-height: 1.4;
+    }
+    .screen-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .screen-btn {
+      padding: 9px 10px;
+      background: white;
+      border: 1px solid #CCD6C9;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--dark-green);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .screen-btn:hover { background: #EDF3EB; border-color: var(--green); }
+    .screen-btn.active { background: var(--green); color: white; border-color: var(--green); }
+    .screen-btn.full { grid-column: span 2; }
+    
+    .studio-box {
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid #CCD6C9;
+      margin-bottom: 16px;
+    }
+
+    /* DEVICE PREVIEW */
+    .preview-canvas {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .phone {
+      width: 412px;
+      height: 870px;
+      background: var(--bg);
+      border-radius: 44px;
+      box-shadow: 0 25px 70px rgba(38, 61, 47, 0.2), 0 0 0 10px #FFFFFF, 0 0 0 12px #CCD6C9;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* PHONE STATUS BAR */
+    .statusbar {
+      height: 44px;
+      padding: 12px 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark-green);
+      flex-shrink: 0;
+      z-index: 50;
+      background: transparent;
+    }
+    .statusbar .badge-taut {
+      background: rgba(82, 123, 93, 0.12);
+      color: var(--green);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    /* CONTENT VIEW */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+      padding-bottom: 96px;
+    }
+    .content-area.no-nav {
+      padding-bottom: 0;
+    }
+
+    /* BOTTOM FLOATING NAV BAR */
+    .nav-bar {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      height: 66px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      border-radius: 28px;
+      border: 1px solid #E6EBE3;
+      box-shadow: 0 8px 32px rgba(38, 61, 47, 0.12);
+      display: flex;
+      align-items: center;
+      padding: 4px 6px;
+      z-index: 60;
+    }
+    .nav-item {
+      flex: 1;
+      height: 54px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #66756B;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+    .nav-item.active {
+      background: var(--light-green);
+      color: var(--dark-green);
+      font-weight: 700;
+    }
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      margin-bottom: 2px;
+      transition: transform 0.2s ease;
+    }
+    .nav-item.active svg {
+      transform: scale(1.08);
+    }
+    .nav-badge-dot {
+      position: absolute;
+      top: 6px;
+      right: 24px;
+      width: 7px;
+      height: 7px;
+      background: #8B4435;
+      border-radius: 50%;
+    }
+
+    /* COMMON COMPONENTS */
+    h1, h2, h3, h4, p { margin: 0; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 20px;
+      min-height: 48px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--green); color: white; }
+    .btn-primary:hover { background: #44684E; }
+    .btn-secondary { background: var(--light-green); color: var(--dark-green); }
+    .btn-secondary:hover { background: #D6E4D4; }
+    .btn-outline { background: transparent; border: 1.2px solid #B9C9B6; color: var(--green); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); }
+    .btn-full { width: 100%; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 22px;
+      border: 1px solid rgba(220, 230, 218, 0.85);
+      padding: 18px;
+      box-shadow: 0 4px 18px rgba(38, 61, 47, 0.04);
+    }
+
+    /* SCREEN 1: TAUT WELCOME */
+    .welcome-screen {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 36%, #D6E7D2 0%, #EBF4E8 45%, #F8FAF7 85%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 48px 24px 36px;
+      text-align: center;
+      z-index: 10;
+    }
+    .welcome-rings-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 110px;
+      cursor: pointer;
+    }
+    .pulse-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.8px solid rgba(82, 123, 93, 0.35);
+      animation: pulseExpand 3s infinite ease-out;
+    }
+    .pulse-ring:nth-child(1) { width: 140px; height: 140px; animation-delay: 0s; }
+    .pulse-ring:nth-child(2) { width: 180px; height: 180px; animation-delay: 1s; }
+    .pulse-ring:nth-child(3) { width: 220px; height: 220px; animation-delay: 2s; }
+
+    @keyframes pulseExpand {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    .welcome-knot-card {
+      width: 96px;
+      height: 96px;
+      background: white;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 36px rgba(82, 123, 93, 0.22);
+      z-index: 2;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .welcome-rings-wrap:hover .welcome-knot-card {
+      transform: scale(1.08);
+    }
+    .welcome-soundwave {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(215, 227, 209, 0.8);
+      border-radius: 14px;
+      margin-top: 14px;
+    }
+    .sound-bar {
+      width: 3.5px;
+      background: var(--green);
+      border-radius: 3px;
+      animation: soundDance 1.2s infinite ease-in-out;
+    }
+    .sound-bar:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+    .sound-bar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+    .sound-bar:nth-child(3) { height: 18px; animation-delay: 0.5s; background: #385841; }
+    .sound-bar:nth-child(4) { height: 12px; animation-delay: 0.2s; }
+    .sound-bar:nth-child(5) { height: 7px; animation-delay: 0.4s; }
+
+    @keyframes soundDance {
+      0%, 100% { transform: scaleY(0.7); }
+      50% { transform: scaleY(1.3); }
+    }
+
+    /* SCREEN 2: ONBOARDING */
+    .onboarding-wrap {
+      padding: 16px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+    }
+    .onboard-illustration {
+      width: 100%;
+      height: 220px;
+      background: linear-gradient(135deg, #E3EDE0, #D8E7D5);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 24px rgba(38, 61, 47, 0.06);
+    }
+    .page-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin: 20px 0;
+    }
+    .page-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 4px;
+      background: #D5E2D2;
+      transition: all 0.25s ease;
+    }
+    .page-dot.active {
+      width: 26px;
+      background: var(--green);
+    }
+
+    /* SCREEN 3: AUTH (LOGIN / REGISTER) */
+    .auth-tabs {
+      display: flex;
+      background: #EDF3EB;
+      border-radius: 16px;
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .auth-tab.active {
+      background: white;
+      color: var(--dark-green);
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .form-group {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark-green);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid #D9E2D5;
+      border-radius: 14px;
+      font-size: 14px;
+      color: var(--dark-green);
+      background: white;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(82, 123, 93, 0.15);
+    }
+
+    /* SCREEN 4: BERANDA */
+    .home-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px 8px;
+    }
+    .home-hero {
+      margin: 12px 20px;
+      background: var(--sage);
+      border-radius: 26px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .home-hero h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--dark-green);
+      line-height: 1.25;
+      margin: 8px 0;
+      letter-spacing: -0.5px;
+    }
+    .home-hero p {
+      font-size: 13px;
+      color: #4C6551;
+      max-width: 190px;
+      margin-bottom: 16px;
+    }
+    .hero-art-icon {
+      position: absolute;
+      right: -8px;
+      bottom: -6px;
+      width: 140px;
+      height: 140px;
+      opacity: 0.9;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 20px;
+    }
+    .feature-card {
+      padding: 16px;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 125px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      border: none;
+      text-align: left;
+    }
+    .feature-card:active { transform: scale(0.97); }
+    .feature-card.f-stt { background: #E9EEE6; }
+    .feature-card.f-motion { background: #F1E9DE; }
+    .feature-card.f-faskes { background: #E6EBF0; }
+    .feature-card.f-location { background: #EDE8F0; }
+
+    /* SCREEN 5: KOMUNIKASI (CAMERA & SIGN) */
+    .comm-viewport {
+      margin: 12px 20px;
+      height: 200px;
+      border-radius: 22px;
+      background: #263D2F;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .comm-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    .hud-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-sign-pill {
+      position: absolute;
+      bottom: 12px;
+      background: rgba(22, 37, 29, 0.9);
+      border: 1px solid #48BB78;
+      border-radius: 16px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chat-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      margin-bottom: 8px;
+      max-width: 82%;
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .chat-bubble.sign {
+      background: #F1E9DE;
+      color: #4A3A25;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.speech {
+      background: var(--light-green);
+      color: var(--dark-green);
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+
+    /* LEAFLET MAP CONTAINER */
+    #leafletMap {
+      width: 100%;
+      height: 190px;
+      border-radius: 20px;
+      border: 1px solid #D6E0D2;
+      z-index: 1;
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: absolute;
+      top: 54px;
+      left: 24px;
+      right: 24px;
+      background: #263D2F;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 999;
+      transform: translateY(-80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* MODAL BOTTOM SHEET */
+    .modal-sheet {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 27, 20, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 80;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-sheet.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet-card {
+      background: white;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      padding: 20px 24px 32px;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.15, 0.85, 0.35, 1);
+    }
+    .modal-sheet.open .sheet-card {
+      transform: translateY(0);
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: #CCD7C7;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* RESPONSIVE LAYOUT */
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .studio { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #CED7CB; }
+      .preview-canvas { padding: 16px; }
+      .phone { width: 100%; max-width: 412px; height: 840px; }
+    }
+
+    /* ========================================================
+       MODULAR VECTOR BACKGROUND SYSTEM (Gemini Ref: 6uhnu16uhnu16uhn)
+       Independent components: Base Gradient, Concentric Hub,
+       Thin Wavy Horizons, 4-Pointed Stars, Clustered Dot Constellation
+       ======================================================== */
+    .taut-modular-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+      display: none; /* Controlled by showScreen(): active on home, comm, faskes, sharing, profile */
+    }
+
+    /* 1. Base Gradient */
+    .taut-modular-bg .bg-base-gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        #D0E0CC 0%,
+        #DEEAD8 18%,
+        #ECF3E9 36%,
+        #F6F8F3 54%,
+        #FAF7EF 72%,
+        #FBF4E6 100%
+      );
+    }
+
+    /* Ambient Radial Glows */
+    .taut-modular-bg .bg-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(48px);
+      pointer-events: none;
+    }
+    .taut-modular-bg .glow-top-right {
+      top: -8%;
+      right: -12%;
+      width: 75%;
+      height: 38%;
+      background: radial-gradient(circle, rgba(162, 203, 160, 0.48) 0%, rgba(162, 203, 160, 0) 70%);
+    }
+    .taut-modular-bg .glow-mid-left {
+      top: 42%;
+      left: -18%;
+      width: 60%;
+      height: 32%;
+      background: radial-gradient(circle, rgba(255, 250, 224, 0.55) 0%, rgba(255, 250, 224, 0) 70%);
+    }
+    .taut-modular-bg .glow-bottom-right {
+      bottom: -6%;
+      right: -10%;
+      width: 70%;
+      height: 34%;
+      background: radial-gradient(circle, rgba(252, 240, 218, 0.6) 0%, rgba(252, 240, 218, 0) 70%);
+    }
+
+    /* 2. Concentric Circles Hub */
+    .taut-modular-bg .bg-concentric-hub {
+      position: absolute;
+      top: 14%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 76%;
+      aspect-ratio: 1 / 1;
+    }
+    .taut-modular-bg .bg-concentric-hub svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 3. Wavy Lines */
+    .taut-modular-bg .bg-wavy-lines {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .taut-modular-bg .bg-wavy-lines svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 4. Stars Layer */
+    .taut-modular-bg .bg-stars-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .taut-modular-bg .star-item {
+      position: absolute;
+    }
+    .taut-modular-bg .star-hub-left {
+      top: 31%;
+      left: 21%;
+      width: 15px;
+      height: 15px;
+    }
+    .taut-modular-bg .star-hub-right {
+      top: 27.5%;
+      right: 17%;
+      width: 17px;
+      height: 17px;
+    }
+    .taut-modular-bg .star-lower-right {
+      top: 57.5%;
+      right: 19%;
+      width: 13px;
+      height: 13px;
+    }
+
+    /* 5. Dots & Constellation Dust Layer */
+    .taut-modular-bg .bg-dots-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .taut-modular-bg .bg-dots-layer svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DESKTOP CONTROL STUDIO -->
+  <aside class="studio">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 50 50" fill="none">
+        <path d="M26 14C10-2-3 21 15 34c17 13 32-9 17-20C19 4 7 25 24 36" stroke="#527B5D" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      taut<span>.</span>
+    </div>
+    
+    <h2>Alur Layar Interaktif</h2>
+    <p>Pilih layar untuk menguji UI/UX, micro-interaction, dan gaya bahasa ramah inklusif.</p>
+
+    <div class="screen-grid">
+      <button class="screen-btn full active" onclick="showScreen('welcome')">1. TAUT Welcome (Gbr 1)</button>
+      <button class="screen-btn" onclick="showScreen('onboard')">2. Onboarding</button>
+      <button class="screen-btn" onclick="showScreen('auth')">3. Register / Login</button>
+      <button class="screen-btn full" onclick="showScreen('home')">4. Beranda (Home)</button>
+      <button class="screen-btn full" onclick="showScreen('comm')">5. Komunikasi (Kamera & Isyarat)</button>
+      <button class="screen-btn" onclick="openRoomSheet()">6. Ruang Obrolan</button>
+      <button class="screen-btn" onclick="showScreen('faskes')">7. Faskes (OSM)</button>
+      <button class="screen-btn" onclick="showScreen('sharing')">8. Berbagi Lokasi</button>
+      <button class="screen-btn" onclick="showScreen('profile')">9. Profil & Akses</button>
+    </div>
+
+    <h2>Fitur Perangkat Nyata</h2>
+    <div class="studio-box">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--dark-green);">Uji Suara & Kamera:</div>
+      <button class="btn btn-secondary btn-full" style="min-height:38px;font-size:12px;margin-bottom:8px" onclick="testTtsSpeech()">🔊 Putar TTS Bahasa Indonesia</button>
+      <button class="btn btn-outline btn-full" style="min-height:38px;font-size:12px;" onclick="requestCameraAccess()">📷 Aktifkan Kamera Laptop/HP</button>
+    </div>
+
+    <h2>Aksesibilitas & Font</h2>
+    <div class="studio-box">
+      <label style="font-size:11.5px;font-weight:700;color:var(--dark-green);display:block;margin-bottom:6px">Ukuran Huruf UI:</label>
+      <div style="display:flex;gap:6px">
+        <button class="screen-btn" style="flex:1;text-align:center" onclick="setFontScale(14)">Kecil</button>
+        <button class="screen-btn active" style="flex:1;text-align:center" onclick="setFontScale(16)">Normal</button>
+        <button class="screen-btn" style="flex:1;text-align:center" onclick="setFontScale(19)">Besar</button>
+      </div>
+    </div>
+
+    <button class="btn btn-outline btn-full" style="margin-top:auto" onclick="playAutoDemo()">▶ Putar Simulasi Alur Penuh</button>
+  </aside>
+
+  <!-- PHONE CONTAINER -->
+  <main class="preview-canvas">
+    <div class="phone" id="phoneContainer">
+      
+      <!-- TOP STATUS BAR -->
+      <div class="statusbar" id="topStatusBar">
+        <span>09:41</span>
+        <span class="badge-taut">TAUT PREVIEW</span>
+        <span>● 85% 🔋</span>
+      </div>
+
+      <!-- TOAST MESSAGE -->
+      <div class="toast" id="toastMessage">
+        <span id="toastIcon">✦</span>
+        <span id="toastText">Pesan pemberitahuan</span>
+      </div>
+
+      <!-- STATIONARY MODULAR BACKGROUND (ACTIVE ON HOME, COMM, FASKES, SHARING, PROFILE) -->
+      <div class="taut-modular-bg" id="modularBackground">
+        <!-- 1. BASE BACKGROUND: Pure CSS Linear & Radial Gradients -->
+        <div class="bg-base-gradient"></div>
+        <div class="bg-glow glow-top-right"></div>
+        <div class="bg-glow glow-mid-left"></div>
+        <div class="bg-glow glow-bottom-right"></div>
+
+        <!-- 2. MODULAR ASSET: Concentric Circles Hub -->
+        <div class="bg-asset bg-concentric-hub">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+            <circle cx="200" cy="200" r="145" fill="none" stroke="#7E9F7C" stroke-width="1.2" opacity="0.14" />
+            <circle cx="200" cy="200" r="126" fill="none" stroke="#7E9F7C" stroke-width="1.3" opacity="0.18" />
+            <circle cx="200" cy="200" r="108" fill="none" stroke="#7E9F7C" stroke-width="1.4" opacity="0.22" />
+            <circle cx="200" cy="200" r="90" fill="none" stroke="#7E9F7C" stroke-width="1.5" opacity="0.28" />
+            <circle cx="200" cy="200" r="72" fill="none" stroke="#7E9F7C" stroke-width="1.6" opacity="0.34" />
+            <circle cx="200" cy="200" r="54" fill="none" stroke="#7E9F7C" stroke-width="1.8" opacity="0.40" />
+            <circle cx="200" cy="200" r="38" fill="rgba(146, 179, 142, 0.12)" stroke="#7E9F7C" stroke-width="1.8" opacity="0.46" />
+            <circle cx="200" cy="200" r="22" fill="rgba(146, 179, 142, 0.18)" stroke="#7E9F7C" stroke-width="2.0" opacity="0.55" />
+          </svg>
+        </div>
+
+        <!-- 3. MODULAR ASSET: Thin Wavy Lines (Soundwaves / Horizons) -->
+        <div class="bg-asset bg-wavy-lines">
+          <svg viewBox="0 0 400 800" preserveAspectRatio="none">
+            <path d="M -10 165 C 100 150, 220 210, 410 195" fill="none" stroke="#7F9E7D" stroke-width="1.3" opacity="0.42" stroke-linecap="round" />
+            <path d="M -10 500 C 130 480, 250 515, 410 490" fill="none" stroke="#7F9E7D" stroke-width="1.2" opacity="0.38" stroke-linecap="round" />
+            <path d="M -10 680 C 140 700, 260 620, 410 635" fill="none" stroke="#C2B89D" stroke-width="1.1" opacity="0.35" stroke-linecap="round" />
+          </svg>
+        </div>
+
+        <!-- 4. MODULAR ASSET: Four-Pointed Stars (Celestial Sparkles) -->
+        <div class="bg-asset bg-stars-layer">
+          <svg class="star-item star-hub-left" viewBox="0 0 24 24">
+            <path d="M 12 2 Q 12 12 2 12 Q 12 12 12 22 Q 12 12 22 12 Q 12 12 12 2 Z" fill="#4B6E4E" opacity="0.75" />
+          </svg>
+          <svg class="star-item star-hub-right" viewBox="0 0 24 24">
+            <path d="M 12 2 Q 12 12 2 12 Q 12 12 12 22 Q 12 12 22 12 Q 12 12 12 2 Z" fill="#4B6E4E" opacity="0.80" />
+          </svg>
+          <svg class="star-item star-lower-right" viewBox="0 0 24 24">
+            <path d="M 12 2 Q 12 12 2 12 Q 12 12 12 22 Q 12 12 22 12 Q 12 12 12 2 Z" fill="#4B6E4E" opacity="0.70" />
+          </svg>
+        </div>
+
+        <!-- 5. MODULAR ASSET: Scattered Dots & Micro-Constellation Dust -->
+        <div class="bg-asset bg-dots-layer">
+          <svg viewBox="0 0 400 800" preserveAspectRatio="none">
+            <circle cx="78" cy="250" r="3.6" fill="#587A5B" opacity="0.85" />
+            <circle cx="108" cy="292" r="4.2" fill="#587A5B" opacity="0.85" />
+            <circle cx="314" cy="222" r="3.8" fill="#587A5B" opacity="0.85" />
+            <circle cx="344" cy="265" r="4.5" fill="#587A5B" opacity="0.85" />
+            <circle cx="70" cy="475" r="3.2" fill="#8CA88F" opacity="0.75" />
+            <circle cx="118" cy="502" r="3.5" fill="#587A5B" opacity="0.85" />
+            <circle cx="175" cy="112" r="1.4" fill="#5A7D5C" opacity="0.6" />
+            <circle cx="215" cy="118" r="1.2" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="235" cy="125" r="1.5" fill="#5A7D5C" opacity="0.6" />
+            <circle cx="250" cy="148" r="1.3" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="274" cy="130" r="1.4" fill="#5A7D5C" opacity="0.55" />
+            <circle cx="285" cy="172" r="1.3" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="308" cy="188" r="1.4" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="318" cy="256" r="1.2" fill="#5A7D5C" opacity="0.45" />
+            <circle cx="332" cy="285" r="1.4" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="340" cy="242" r="1.1" fill="#5A7D5C" opacity="0.4" />
+            <circle cx="90" cy="210" r="1.3" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="60" cy="265" r="1.1" fill="#5A7D5C" opacity="0.4" />
+            <circle cx="82" cy="310" r="1.4" fill="#5A7D5C" opacity="0.55" />
+            <circle cx="102" cy="340" r="1.3" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="115" cy="370" r="1.2" fill="#5A7D5C" opacity="0.45" />
+            <circle cx="130" cy="385" r="1.3" fill="#5A7D5C" opacity="0.5" />
+            <circle cx="145" cy="402" r="1.1" fill="#5A7D5C" opacity="0.4" />
+            <circle cx="155" cy="390" r="1.2" fill="#5A7D5C" opacity="0.45" />
+            <circle cx="210" cy="405" r="1.3" fill="#5A7D5C" opacity="0.45" />
+            <circle cx="290" cy="348" r="1.2" fill="#5A7D5C" opacity="0.4" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- MAIN APP VIEWPORTS -->
+      <div class="content-area" id="mainContent">
+
+        <!-- ============================================== -->
+        <!-- SCREEN 1: TAUT WELCOME (GAMBAR 1 FIGMA REVISED)-->
+        <!-- ============================================== -->
+        <section id="view-welcome" class="welcome-screen">
+          <div style="width:100%;display:flex;justify-content:flex-end">
+            <span style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px">TAUT V2.2</span>
+          </div>
+
+          <div class="welcome-rings-wrap" onclick="triggerKnotBounce()">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring"></div>
+            <div class="welcome-knot-card" id="welcomeKnot">
+              <svg width="52" height="52" viewBox="0 0 50 50" fill="none">
+                <path d="M26 14C10-2-3 21 15 34c17 13 32-9 17-20C19 4 7 25 24 36" stroke="#527B5D" stroke-width="5.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div>
+            <div class="brand" style="font-size:36px;justify-content:center;margin-bottom:6px">taut<span>.</span></div>
+            <p style="font-size:15px;color:#4E6554;font-weight:600">Ruang untuk saling memahami</p>
+            
+            <div class="welcome-soundwave">
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+            </div>
+          </div>
+
+          <div style="width:100%;padding:0 8px">
+            <div style="width:130px;height:4px;background:#E2EDE0;border-radius:10px;margin:0 auto 16px;overflow:hidden">
+              <div style="width:100%;height:100%;background:var(--green)"></div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="showScreen('onboard')">
+              Mulai Eksplorasi →
+            </button>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 2: ONBOARDING INTRO (3 SLIDES)          -->
+        <!-- ============================================== -->
+        <section id="view-onboard" class="onboarding-wrap" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="brand" style="font-size:24px">taut<span>.</span></div>
+            <button style="background:none;border:none;color:var(--green);font-weight:700;cursor:pointer" onclick="showScreen('auth')">Lewati</button>
+          </div>
+
+          <div id="onboardSlideContent">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div>
+            <div class="page-dots" id="onboardDots">
+              <div class="page-dot active"></div>
+              <div class="page-dot"></div>
+              <div class="page-dot"></div>
+            </div>
+            <button class="btn btn-primary btn-full" id="onboardNextBtn" onclick="nextOnboardSlide()">
+              Lanjutkan →
+            </button>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 3: AUTH (REGISTER & LOGIN)              -->
+        <!-- ============================================== -->
+        <section id="view-auth" style="display:none;padding:24px 20px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <button class="btn btn-secondary" style="min-height:36px;padding:6px 12px;border-radius:12px" onclick="showScreen('onboard')">←</button>
+            <h1 style="font-size:22px;font-weight:700;color:var(--dark-green)">Akun TAUT</h1>
+          </div>
+
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tabRegister" onclick="setAuthTab('register')">Daftar Akun</button>
+            <button class="auth-tab" id="tabLogin" onclick="setAuthTab('login')">Masuk</button>
+          </div>
+
+          <div id="authFormArea">
+            <!-- Register Fields -->
+            <div id="registerFields">
+              <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input class="form-input" id="regName" placeholder="Contoh: Jonathan Adriel" value="Jonathan Adriel">
+              </div>
+              <div class="form-group">
+                <label>Username Unik (@)</label>
+                <input class="form-input" id="regUsername" placeholder="Contoh: adriel.taut" value="adriel.taut">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input class="form-input" type="email" id="regEmail" placeholder="nama@email.com" value="jonathan@taut.id">
+            </div>
+            <div class="form-group">
+              <label>Kata Sandi</label>
+              <input class="form-input" type="password" id="regPass" placeholder="Minimal 6 karakter" value="••••••••">
+            </div>
+
+            <div style="background:#F0F3EB;border-radius:14px;padding:12px;font-size:12px;color:#5B6E55;margin:16px 0">
+              🛡️ Ruang privat dan aman. Kami melindungi privasi komunikasi dan lokasimu.
+            </div>
+
+            <button class="btn btn-primary btn-full" onclick="submitAuth()">
+              Mulai Terhubung →
+            </button>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 4: BERANDA (HOME DASHBOARD)             -->
+        <!-- ============================================== -->
+        <section id="view-home" style="display:none">
+          <div class="home-header">
+            <div>
+              <p style="font-size:13px;color:var(--muted)">Halo, selamat datang</p>
+              <h1 style="font-size:26px;font-weight:700;color:var(--dark-green);letter-spacing:-0.5px">
+                Jonathan <span style="color:#84A078">✦</span>
+              </h1>
+            </div>
+            <div style="width:48px;height:48px;border-radius:50%;background:#DCE7DC;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--green);border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.06);cursor:pointer" onclick="showScreen('profile')">
+              J
+            </div>
+          </div>
+
+          <!-- Hero Banner -->
+          <div class="home-hero">
+            <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--dark-green);text-transform:uppercase">
+              SETIAP CERITA BERARTI
+            </div>
+            <h2>Saling mengerti,<br>tanpa batas.</h2>
+            <p>Ucapkan atau isyaratkan. Kami bantu menyampaikan.</p>
+            <button class="btn btn-primary" onclick="showScreen('comm')">
+              Mulai Percakapan →
+            </button>
+            <svg class="hero-art-icon" viewBox="0 0 200 200" fill="none">
+              <circle cx="100" cy="100" r="90" fill="#C4DCBD" opacity="0.5"/>
+              <path d="M50 140 C 70 80, 130 80, 150 140" stroke="#263D2F" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="75" cy="80" r="16" fill="#527B5D"/>
+              <circle cx="125" cy="80" r="16" fill="#8AAB7E"/>
+            </svg>
+          </div>
+
+          <!-- 4 Fitur Utama -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:20px 20px 10px">
+            <h2 style="font-size:18px;font-weight:700;color:var(--dark-green)">Ruang Terhubung</h2>
+            <span style="font-size:12px;color:var(--muted)">4 fitur utama</span>
+          </div>
+
+          <div class="feature-grid">
+            <button class="feature-card f-stt" onclick="showScreen('comm')">
+              <span style="font-size:24px">🎙️</span>
+              <div>
+                <strong style="font-size:14px;color:var(--dark-green)">Ucapan ke Teks</strong>
+                <p style="font-size:11px;color:#556658">Dengar lewat tulisan</p>
+              </div>
+            </button>
+            <button class="feature-card f-motion" onclick="showScreen('comm')">
+              <span style="font-size:24px">✋</span>
+              <div>
+                <strong style="font-size:14px;color:var(--dark-green)">Isyarat ke Suara</strong>
+                <p style="font-size:11px;color:#6B5A42">Sampaikan isyarat</p>
+              </div>
+            </button>
+            <button class="feature-card f-faskes" onclick="showScreen('faskes')">
+              <span style="font-size:24px">🏥</span>
+              <div>
+                <strong style="font-size:14px;color:var(--dark-green)">Faskes Ramah</strong>
+                <p style="font-size:11px;color:#4A5F6E">Layanan sekitar</p>
+              </div>
+            </button>
+            <button class="feature-card f-location" onclick="showScreen('sharing')">
+              <span style="font-size:24px">📍</span>
+              <div>
+                <strong style="font-size:14px;color:var(--dark-green)">Berbagi Lokasi</strong>
+                <p style="font-size:11px;color:#5B5066">Tetap dekat, aman</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- Sahabat Terhubung -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 20px 10px">
+            <h2 style="font-size:18px;font-weight:700;color:var(--dark-green)">Sahabat Terhubung</h2>
+            <button style="background:none;border:none;color:var(--green);font-size:12.5px;font-weight:700;cursor:pointer" onclick="showScreen('sharing')">Kelola →</button>
+          </div>
+
+          <div class="card" style="margin:0 20px;display:flex;justify-content:space-around;text-align:center">
+            <div onclick="showScreen('sharing')" style="cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:50%;background:#E9DDCD;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#655747">N</div>
+              <div style="font-size:12.5px;font-weight:700;color:var(--dark-green)">Nadia</div>
+              <div style="font-size:10px;color:#2E7D32;font-weight:600">● Saling berbagi</div>
+            </div>
+            <div onclick="showScreen('sharing')" style="cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:50%;background:#DCE7DC;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--green)">R</div>
+              <div style="font-size:12.5px;font-weight:700;color:var(--dark-green)">Raka</div>
+              <div style="font-size:10px;color:var(--muted)">Terhubung</div>
+            </div>
+            <div onclick="showScreen('sharing')" style="cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:50%;background:#E6E2EF;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#6A6086">D</div>
+              <div style="font-size:12.5px;font-weight:700;color:var(--dark-green)">Dinda</div>
+              <div style="font-size:10px;color:var(--muted)">Terhubung</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 5: KOMUNIKASI (KAMERA & ISYARAT)        -->
+        <!-- ============================================== -->
+        <section id="view-comm" style="display:none">
+          <div style="padding:14px 20px 8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h1 style="font-size:22px;font-weight:700;color:var(--dark-green)">Komunikasi Langsung</h1>
+              <p style="font-size:12px;color:var(--muted)">Satu ruang, dua arah</p>
+            </div>
+            <button class="btn btn-secondary" style="min-height:36px;padding:6px 12px;font-size:12px" onclick="openRoomSheet()">+ Buat Room</button>
+          </div>
+
+          <!-- Room Bar -->
+          <div class="card" style="margin:8px 20px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:#F6FAF5">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--dark-green)">Ruang Temu Jarak Jauh</div>
+              <div style="font-size:11px;color:var(--muted)">Terhubung hangat, tanpa batas jarak</div>
+            </div>
+            <button class="btn btn-primary" style="min-height:34px;padding:4px 12px;font-size:12px" onclick="openRoomSheet()">Gabung</button>
+          </div>
+
+          <!-- Kamera Viewfinder & AI BISINDO -->
+          <div class="comm-viewport" id="commViewport">
+            <video id="webcamVideo" class="comm-video" autoplay playsinline muted style="display:none"></video>
+            
+            <div id="camPlaceholderText" style="text-align:center;padding:20px">
+              <div style="font-size:32px;margin-bottom:6px">📷</div>
+              <div style="font-size:13px;font-weight:600">Kamera Siap Menyimak Isyarat</div>
+              <p style="font-size:11px;opacity:0.7">Gunakan webcam atau mode simulasi gesture</p>
+              <button class="btn btn-primary" style="min-height:32px;padding:4px 12px;font-size:11.5px;margin-top:10px" onclick="requestCameraAccess()">Aktifkan Kamera</button>
+            </div>
+
+            <!-- HUD Badges -->
+            <div class="hud-badge">
+              <span style="width:7px;height:7px;border-radius:50%;background:#48BB78"></span>
+              ISYARAT AKTIF • Siap Menyimak
+            </div>
+
+            <!-- Detection Realtime Pill -->
+            <div class="hud-sign-pill" id="liveDetectionPill">
+              <span>✋</span>
+              <span id="liveDetectionLabel">Isyarat terbaca: "Halo, selamat pagi" (97%)</span>
+            </div>
+          </div>
+
+          <!-- Dari Isyarat Menjadi Suara Card -->
+          <div class="card" style="margin:12px 20px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-size:13.5px;font-weight:700;color:var(--dark-green);display:flex;align-items:center;gap:6px">
+                <span>✋</span> Dari Isyarat Menjadi Suara
+              </div>
+              <span style="font-size:10px;background:#EEF5ED;color:var(--green);padding:2px 8px;border-radius:8px;font-weight:600">Sentuh untuk Menyesuaikan</span>
+            </div>
+
+            <textarea id="signTextInput" style="width:100%;height:58px;padding:10px;border-radius:12px;border:1px solid #D6E4D4;font-family:inherit;font-size:14px;color:var(--dark-green);resize:none" placeholder="Isyarat yang diterjemahkan...">Halo, selamat pagi</textarea>
+
+            <div style="display:flex;gap:6px;margin:8px 0;overflow-x:auto;padding-bottom:4px">
+              <button class="btn btn-secondary" style="min-height:30px;padding:4px 10px;font-size:11px;white-space:nowrap" onclick="setSignText('Halo, selamat pagi')">Halo, selamat pagi</button>
+              <button class="btn btn-secondary" style="min-height:30px;padding:4px 10px;font-size:11px;white-space:nowrap" onclick="setSignText('Terima kasih banyak')">Terima kasih banyak</button>
+              <button class="btn btn-secondary" style="min-height:30px;padding:4px 10px;font-size:11px;white-space:nowrap" onclick="setSignText('Berapa harganya?')">Berapa harganya?</button>
+            </div>
+
+            <button class="btn btn-primary btn-full" style="min-height:42px" onclick="playCurrentSignTts()">
+              🔊 Bunyikan Suara
+            </button>
+          </div>
+
+          <!-- Percakapan Thread -->
+          <div class="card" style="margin:12px 20px;padding:14px">
+            <div style="font-size:13.5px;font-weight:700;color:var(--dark-green);margin-bottom:10px">Percakapan Hangat</div>
+            
+            <div id="chatThread" style="max-height:140px;overflow-y:auto;padding-right:4px">
+              <div class="chat-bubble speech">
+                <div style="font-size:10px;font-weight:700;color:#527B5D;margin-bottom:2px">TEMAN DENGAR (UCAPAN)</div>
+                Selamat pagi! Senang bertemu denganmu hari ini.
+              </div>
+              <div class="chat-bubble sign">
+                <div style="font-size:10px;font-weight:700;color:#8B632A;margin-bottom:2px">ISYARAT (SUARA DIPUTAR)</div>
+                Halo, selamat pagi
+              </div>
+            </div>
+
+            <!-- Quick Template Chips -->
+            <div style="display:flex;gap:6px;margin:10px 0 6px;overflow-x:auto">
+              <button class="btn btn-secondary" style="min-height:28px;padding:3px 8px;font-size:11px;white-space:nowrap" onclick="sendTemplateMsg('Saya ingin periksa ke dokter.')">🏥 Tanya Dokter</button>
+              <button class="btn btn-secondary" style="min-height:28px;padding:3px 8px;font-size:11px;white-space:nowrap" onclick="sendTemplateMsg('Bisa tolong tuliskan?')">✍️ Minta Tuliskan</button>
+              <button class="btn btn-secondary" style="min-height:28px;padding:3px 8px;font-size:11px;white-space:nowrap" onclick="sendTemplateMsg('Saya Teman Tuli.')">🤝 Saya Teman Tuli</button>
+            </div>
+
+            <!-- Chat Bar + Mic Button -->
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="form-input" id="chatInputMsg" placeholder="Tulis pesan..." style="height:44px;font-size:13px">
+              <button class="btn btn-primary" style="min-height:44px;padding:0 14px" onclick="sendChatFromInput()">→</button>
+              <button class="btn btn-secondary" id="micToggleBtn" style="min-height:44px;padding:0 14px;background:#EBF3EA" onclick="toggleMicSpeechRecognition()">🎙️</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 6: FASILITAS KESEHATAN (OSM MAP)        -->
+        <!-- ============================================== -->
+        <section id="view-faskes" style="display:none;padding:16px 20px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <button class="btn btn-secondary" style="min-height:36px;padding:6px 12px;border-radius:12px" onclick="showScreen('home')">←</button>
+            <h1 style="font-size:22px;font-weight:700;color:var(--dark-green)">Fasilitas Kesehatan</h1>
+          </div>
+
+          <!-- Location Search Action Card -->
+          <div class="card" style="margin-bottom:14px;background:#F5F9F4;border-color:#D8E6D5">
+            <div style="font-size:13px;font-weight:700;color:var(--dark-green);margin-bottom:4px">Layanan Ramah Aksesibilitas</div>
+            <p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Temukan rumah sakit, puskesmas, dan klinik dengan fasilitas kursi roda dan juru bahasa isyarat.</p>
+            <button class="btn btn-primary btn-full" id="btnFindFaskesLive" onclick="triggerOsmSearch()">
+              📍 Temukan Fasilitas Kesehatan di Sekitar
+            </button>
+          </div>
+
+          <!-- OpenStreetMap Leaflet Container -->
+          <div id="leafletMap"></div>
+          <div style="font-size:10.5px;color:var(--muted);margin:4px 0 14px;text-align:right">Data peta: © OpenStreetMap contributors</div>
+
+          <!-- Category Chips -->
+          <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px">
+            <button class="screen-btn active" onclick="filterFaskes('Semua', this)">Semua</button>
+            <button class="screen-btn" onclick="filterFaskes('Rumah Sakit', this)">Rumah Sakit</button>
+            <button class="screen-btn" onclick="filterFaskes('Klinik', this)">Klinik</button>
+            <button class="screen-btn" onclick="filterFaskes('Puskesmas', this)">Puskesmas</button>
+          </div>
+
+          <!-- Facility List -->
+          <div id="facilityCardList" style="display:flex;flex-direction:column;gap:10px">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 7: BERBAGI LOKASI & LOKASI TEMAN        -->
+        <!-- ============================================== -->
+        <section id="view-sharing" style="display:none;padding:16px 20px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <button class="btn btn-secondary" style="min-height:36px;padding:6px 12px;border-radius:12px" onclick="showScreen('home')">←</button>
+            <h1 style="font-size:22px;font-weight:700;color:var(--dark-green)">Berbagi Lokasi</h1>
+          </div>
+
+          <!-- Safe banner -->
+          <div style="background:#F0F3EB;border-radius:14px;padding:12px;font-size:12px;color:#5B6E55;margin-bottom:16px;line-height:1.5">
+            Ruang saling menjaga. Lokasimu hanya dibagikan secara privat kepada sahabat terpilih selama durasi yang kamu tentukan.
+          </div>
+
+          <!-- Form Berbagi -->
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-size:14px;font-weight:700;color:var(--dark-green);margin-bottom:12px">Mulai Sesi Berbagi</div>
+            
+            <div class="form-group">
+              <label>Bagikan kepada sahabat</label>
+              <select class="form-input" id="shareFriendSelect">
+                <option value="Nadia">Nadia (Sahabat)</option>
+                <option value="Raka">Raka (Keluarga)</option>
+                <option value="Dinda">Dinda (Teman Kantor)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Durasi waktu</label>
+              <select class="form-input" id="shareDurationSelect">
+                <option value="15">15 menit</option>
+                <option value="30">30 menit</option>
+                <option value="60">1 jam</option>
+              </select>
+            </div>
+
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--dark-green);margin-bottom:14px">
+              <input type="checkbox" id="agreeShareCheck" checked style="width:18px;height:18px;margin-top:2px">
+              Saya setuju membagikan lokasi secara aman kepada sahabat terpilih.
+            </label>
+
+            <button class="btn btn-primary btn-full" onclick="startLocationSession()">
+              Mulai Berbagi Lokasi →
+            </button>
+          </div>
+
+          <!-- Sesi Aktif -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h2 style="font-size:16px;font-weight:700;color:var(--dark-green)">Sesi Berbagi Aktif</h2>
+            <span style="font-size:11px;background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:8px;font-weight:700">1 Penerima</span>
+          </div>
+
+          <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:42px;height:42px;border-radius:50%;background:#E9DDCD;display:flex;align-items:center;justify-content:center;font-weight:700;color:#655747">N</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--dark-green)">Nadia</div>
+                <div style="font-size:11px;color:var(--muted)">12 menit tersisa • Aktif</div>
+              </div>
+            </div>
+            <button class="btn btn-danger" style="min-height:34px;padding:4px 12px;font-size:12px" onclick="showToast('Sesi berbagi dengan Nadia telah dihentikan.')">Hentikan</button>
+          </div>
+
+          <!-- Lokasi Teman Yang Dibagikan ke Kita -->
+          <div style="font-size:16px;font-weight:700;color:var(--dark-green);margin-bottom:8px">Lokasi Sahabat yang Dibagikan ke Kamu</div>
+          <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:42px;height:42px;border-radius:50%;background:#DCE7DC;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--green)">D</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--dark-green)">Dinda</div>
+                <div style="font-size:11px;color:var(--muted)">Jl. Ijen No. 14 • 1,2 km dari posisimu</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="min-height:34px;padding:4px 12px;font-size:12px" onclick="showToast('Membuka rute menuju posisi Dinda...')">Lihat Peta</button>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SCREEN 8: PROFIL & PENGATURAN AKSESIBILITAS    -->
+        <!-- ============================================== -->
+        <section id="view-profile" style="display:none;padding:16px 20px">
+          <div style="text-align:center;padding:16px 0 20px">
+            <div style="width:76px;height:76px;border-radius:50%;background:#DCE7DC;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--green);border:4px solid white;box-shadow:0 4px 16px rgba(0,0,0,0.08)">
+              J
+            </div>
+            <h1 style="font-size:22px;font-weight:700;color:var(--dark-green)">Jonathan Adriel</h1>
+            <p style="font-size:12px;color:var(--green);font-weight:600">@adriel.taut • Sahabat TAUT</p>
+          </div>
+
+          <div class="card" style="margin-bottom:14px">
+            <div style="font-size:13.5px;font-weight:700;color:var(--dark-green);margin-bottom:12px">Preferensi Aksesibilitas</div>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #EDF0E9">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--dark-green)">Getaran & Haptic Feedback</div>
+                <div style="font-size:11px;color:var(--muted)">Getar saat ucapan atau isyarat terbaca</div>
+              </div>
+              <input type="checkbox" checked style="width:20px;height:20px">
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--dark-green)">Teks Kontras Tinggi</div>
+                <div style="font-size:11px;color:var(--muted)">Meningkatkan kejelasan tulisan</div>
+              </div>
+              <input type="checkbox" checked style="width:20px;height:20px">
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:20px">
+            <div style="font-size:13px;font-weight:600;color:var(--dark-green);margin-bottom:6px">TAUT — Ruang untuk saling memahami</div>
+            <p style="font-size:11.5px;color:var(--muted);line-height:1.5">Versi 2.2 • Dibuat dengan cinta untuk inklusivitas Teman Tuli & Dengar di seluruh Indonesia.</p>
+          </div>
+
+          <button class="btn btn-outline btn-full" onclick="showScreen('auth')">
+            Keluar dari Akun
+          </button>
+        </section>
+
+      </div> <!-- /content-area -->
+
+      <!-- BOTTOM NAVIGATION (FOR APP SCREENS) -->
+      <nav class="nav-bar" id="bottomNavBar" style="display:none">
+        <button class="nav-item active" id="navHome" onclick="showScreen('home')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Beranda
+        </button>
+        <button class="nav-item" id="navComm" onclick="showScreen('comm')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          Komunikasi
+        </button>
+        <button class="nav-item" id="navFaskes" onclick="showScreen('faskes')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Lokasi
+          <span class="nav-badge-dot"></span>
+        </button>
+        <button class="nav-item" id="navProfile" onclick="showScreen('profile')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          Profil
+        </button>
+      </nav>
+
+      <!-- MODAL SHEET: RUANG OBROLAN (ROOM SETUP & QR) -->
+      <div class="modal-sheet" id="roomModalSheet">
+        <div class="sheet-card">
+          <div class="sheet-handle" onclick="closeRoomSheet()"></div>
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="font-size:17px;font-weight:700;color:var(--dark-green)">Ruangan Obrolan Jarak Jauh</h3>
+            <button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)" onclick="closeRoomSheet()">✕</button>
+          </div>
+
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Satu user dibatasi maksimal 1 ruangan obrolan aktif demi privasi dan fokus interaksi.</p>
+
+          <div style="text-align:center;background:#F6FAF5;border:1px solid #D6E4D4;border-radius:18px;padding:16px;margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:8px">KODE GABUNG ROOM</div>
+            <div style="font-size:26px;font-weight:800;color:var(--dark-green);letter-spacing:2px">TAUT-8921</div>
+            
+            <!-- SVG QR Code -->
+            <svg width="110" height="110" viewBox="0 0 100 100" style="margin:12px auto;display:block">
+              <rect width="100" height="100" fill="white" rx="8"/>
+              <rect x="10" y="10" width="28" height="28" fill="#263D2F"/>
+              <rect x="16" y="16" width="16" height="16" fill="white"/>
+              <rect x="20" y="20" width="8" height="8" fill="#263D2F"/>
+              
+              <rect x="62" y="10" width="28" height="28" fill="#263D2F"/>
+              <rect x="68" y="16" width="16" height="16" fill="white"/>
+              <rect x="72" y="20" width="8" height="8" fill="#263D2F"/>
+              
+              <rect x="10" y="62" width="28" height="28" fill="#263D2F"/>
+              <rect x="16" y="68" width="16" height="16" fill="white"/>
+              <rect x="20" y="72" width="8" height="8" fill="#263D2F"/>
+              
+              <circle cx="50" cy="50" r="8" fill="#527B5D"/>
+              <rect x="44" y="20" width="6" height="18" fill="#263D2F"/>
+              <rect x="54" y="64" width="20" height="8" fill="#263D2F"/>
+              <rect x="70" y="46" width="14" height="12" fill="#263D2F"/>
+            </svg>
+            <div style="font-size:11px;color:var(--muted)">Tunjukkan QR ini kepada teman atau rekan kelas</div>
+          </div>
+
+          <button class="btn btn-primary btn-full" onclick="showToast('Berhasil membuka ruang: TAUT-8921');closeRoomSheet();showScreen('comm')">
+            Masuk ke Ruang Obrolan →
+          </button>
+        </div>
+      </div>
+
+    </div> <!-- /phone -->
+  </main>
+
+  <script>
+    // ==========================================
+    // DATA & STATE
+    // ==========================================
+    let currentScreen = 'welcome';
+    let onboardIndex = 0;
+    let mapInstance = null;
+    let cameraActive = false;
+
+    const onboardData = [
+      {
+        badge: 'SALING MEMAHAMI • 1/3',
+        title: 'Ceritamu layak\nuntuk didengar.',
+        desc: 'Ruang komunikasi yang hangat, setara, dan menghubungkan teman Tuli dan Dengar tanpa sekat.',
+        icon: '🤝'
+      },
+      {
+        badge: 'KOMUNIKASI DUA ARAH • 2/3',
+        title: 'Dua arah,\nsatu percakapan.',
+        desc: 'Suara diubah menjadi teks seketika, dan isyarat tangan diterjemahkan menjadi suara yang ramah.',
+        icon: '🎙️ ⇄ ✋'
+      },
+      {
+        badge: 'FASILITAS & LOKASI • 3/3',
+        title: 'Tetap dekat,\nsaling menjaga.',
+        desc: 'Temukan rumah sakit dan klinik ramah difabel terdekat, serta bagikan lokasi secara aman.',
+        icon: '🏥 📍'
+      }
+    ];
+
+    const faskesList = [
+      { name: 'RSUD Dr. Saiful Anwar', type: 'Rumah Sakit', addr: 'Jl. Jaksa Agung Suprapto No. 2', dist: '0,9 km', lat: -7.9723, lon: 112.6318 },
+      { name: 'Klinik Pratama Harmoni', type: 'Klinik', addr: 'Jl. Buring No. 12, Klojen', dist: '1,4 km', lat: -7.9750, lon: 112.6280 },
+      { name: 'Puskesmas Rampal Celaket', type: 'Puskesmas', addr: 'Jl. Simpang Kasembon No. 5', dist: '2,1 km', lat: -7.9650, lon: 112.6350 },
+      { name: 'Apotek Kimia Farma Ijen', type: 'Apotek', addr: 'Jl. Besar Ijen No. 77', dist: '1,8 km', lat: -7.9710, lon: 112.6220 }
+    ];
+
+    // ==========================================
+    // NAVIGATION CONTROLLER
+    // ==========================================
+    function showScreen(name) {
+      currentScreen = name;
+
+      // Hide all screen sections
+      const screens = ['welcome', 'onboard', 'auth', 'home', 'comm', 'faskes', 'sharing', 'profile'];
+      screens.forEach(s => {
+        const el = document.getElementById('view-' + s);
+        if (el) el.style.display = 'none';
+      });
+
+      // Show selected screen
+      const target = document.getElementById('view-' + name);
+      if (target) {
+        target.style.display = (name === 'welcome' || name === 'onboard') ? 'flex' : 'block';
+      }
+
+      // Handle Bottom Navigation & Stationary Modular Background visibility
+      const bottomNav = document.getElementById('bottomNavBar');
+      const contentArea = document.getElementById('mainContent');
+      const modBg = document.getElementById('modularBackground');
+      const phone = document.getElementById('phoneContainer');
+      const appScreens = ['home', 'comm', 'faskes', 'sharing', 'profile'];
+      
+      if (appScreens.includes(name)) {
+        bottomNav.style.display = 'flex';
+        contentArea.classList.remove('no-nav');
+        updateNavItems(name);
+        if (modBg) modBg.style.display = 'block';
+        if (phone) phone.style.background = 'transparent';
+      } else {
+        bottomNav.style.display = 'none';
+        contentArea.classList.add('no-nav');
+        if (modBg) modBg.style.display = 'none';
+        if (phone) phone.style.background = 'var(--bg)';
+      }
+
+      // Update studio buttons
+      document.querySelectorAll('.screen-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(name));
+      });
+
+      // Special screen initializations
+      if (name === 'onboard') renderOnboardSlide();
+      if (name === 'faskes') initLeafletMap();
+
+      showToast(`Navigasi ke: ${name.toUpperCase()}`);
+    }
+
+    function updateNavItems(activeName) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      if (activeName === 'home') document.getElementById('navHome')?.classList.add('active');
+      if (activeName === 'comm') document.getElementById('navComm')?.classList.add('active');
+      if (activeName === 'faskes' || activeName === 'sharing') document.getElementById('navFaskes')?.classList.add('active');
+      if (activeName === 'profile') document.getElementById('navProfile')?.classList.add('active');
+    }
+
+    // ==========================================
+    // ONBOARDING SLIDES
+    // ==========================================
+    function renderOnboardSlide() {
+      const data = onboardData[onboardIndex];
+      const wrap = document.getElementById('onboardSlideContent');
+      wrap.innerHTML = `
+        <div class="onboard-illustration">
+          <div style="font-size:60px">${data.icon}</div>
+        </div>
+        <div style="text-align:center;margin-top:24px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.8px;color:var(--green);margin-bottom:8px">
+            ${data.badge}
+          </div>
+          <h2 style="font-size:25px;font-weight:800;color:var(--dark-green);line-height:1.25;margin-bottom:10px;white-space:pre-line">
+            ${data.title}
+          </h2>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5">
+            ${data.desc}
+          </p>
+        </div>
+      `;
+
+      // Update dots
+      const dots = document.querySelectorAll('.page-dot');
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === onboardIndex);
+      });
+
+      const nextBtn = document.getElementById('onboardNextBtn');
+      nextBtn.textContent = onboardIndex === 2 ? 'Mulai Sekarang →' : 'Lanjutkan →';
+    }
+
+    function nextOnboardSlide() {
+      if (onboardIndex < 2) {
+        onboardIndex++;
+        renderOnboardSlide();
+      } else {
+        showScreen('auth');
+      }
+    }
+
+    // ==========================================
+    // AUTH TABS
+    // ==========================================
+    function setAuthTab(mode) {
+      const isReg = mode === 'register';
+      document.getElementById('tabRegister').classList.toggle('active', isReg);
+      document.getElementById('tabLogin').classList.toggle('active', !isReg);
+      document.getElementById('registerFields').style.display = isReg ? 'block' : 'none';
+    }
+
+    function submitAuth() {
+      const name = document.getElementById('regName').value || 'Jonathan';
+      showToast(`Selamat datang, ${name}!`);
+      showScreen('home');
+    }
+
+    // ==========================================
+    // TOAST SYSTEM
+    // ==========================================
+    let toastTimeout;
+    function showToast(text, icon = '✦') {
+      const toast = document.getElementById('toastMessage');
+      document.getElementById('toastText').textContent = text;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    // ==========================================
+    // KNOT BOUNCE (WELCOME)
+    // ==========================================
+    function triggerKnotBounce() {
+      const knot = document.getElementById('welcomeKnot');
+      knot.style.transform = 'scale(1.22) rotate(8deg)';
+      setTimeout(() => knot.style.transform = 'scale(1)', 220);
+      showToast('TAUT: Ruang untuk saling memahami', '🌱');
+    }
+
+    // ==========================================
+    // WEBCAM & TTS SERVICES
+    // ==========================================
+    async function requestCameraAccess() {
+      const video = document.getElementById('webcamVideo');
+      const placeholder = document.getElementById('camPlaceholderText');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        cameraActive = true;
+        showToast('Kamera aktif! Membaca gerakan tangan real-time.', '📷');
+        simulateSignDetectionLoop();
+      } catch (err) {
+        showToast('Kamera tidak dapat diakses, beralih ke mode simulasi isyarat.', '⚠️');
+      }
+    }
+
+    function simulateSignDetectionLoop() {
+      const labels = ['"Halo, selamat pagi" (97%)', '"Terima kasih banyak" (98%)', '"Apa kabar?" (95%)', '"Saya Teman Tuli" (99%)'];
+      let idx = 0;
+      setInterval(() => {
+        idx = (idx + 1) % labels.length;
+        document.getElementById('liveDetectionLabel').textContent = `Isyarat terbaca: ${labels[idx]}`;
+      }, 3500);
+    }
+
+    function setSignText(txt) {
+      document.getElementById('signTextInput').value = txt;
+      showToast(`Isyarat dipilih: "${txt}"`);
+    }
+
+    function playCurrentSignTts() {
+      const text = document.getElementById('signTextInput').value;
+      if (!text) return;
+      
+      // Add to chat thread
+      const thread = document.getElementById('chatThread');
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble sign';
+      bubble.innerHTML = `<div style="font-size:10px;font-weight:700;color:#8B632A;margin-bottom:2px">ISYARAT (SUARA DIPUTAR)</div>${text}`;
+      thread.appendChild(bubble);
+      thread.scrollTop = thread.scrollHeight;
+
+      testTtsSpeech(text);
+    }
+
+    function testTtsSpeech(textToSpeak = 'Halo, selamat pagi. Senang bertemu denganmu.') {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.lang = 'id-ID';
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+        showToast(`Memutar suara: "${textToSpeak}"`, '🔊');
+      } else {
+        showToast('Browser ini tidak mendukung TTS web sintetis.');
+      }
+    }
+
+    function toggleMicSpeechRecognition() {
+      const btn = document.getElementById('micToggleBtn');
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recog = new SR();
+        recog.lang = 'id-ID';
+        recog.start();
+        btn.style.background = '#F4E3DE';
+        showToast('Mendengarkan ucapanmu...', '🎙️');
+
+        recog.onresult = (e) => {
+          const spoken = e.results[0][0].transcript;
+          sendTemplateMsg(spoken, 'TEMAN DENGAR (UCAPAN)');
+          btn.style.background = '#EBF3EA';
+        };
+        recog.onerror = () => {
+          btn.style.background = '#EBF3EA';
+        };
+      } else {
+        sendTemplateMsg('Selamat datang di TAUT, salam kenal!', 'TEMAN DENGAR (UCAPAN)');
+        showToast('Simulasi suara ucapan diterima.', '🎙️');
+      }
+    }
+
+    function sendChatFromInput() {
+      const input = document.getElementById('chatInputMsg');
+      const msg = input.value.trim();
+      if (!msg) return;
+      sendTemplateMsg(msg, 'PESAN TEKS');
+      input.value = '';
+    }
+
+    function sendTemplateMsg(msg, sender = 'PESAN TEMAN') {
+      const thread = document.getElementById('chatThread');
+      const bubble = document.createElement('div');
+      bubble.className = sender.includes('UCAPAN') ? 'chat-bubble speech' : 'chat-bubble sign';
+      bubble.innerHTML = `<div style="font-size:10px;font-weight:700;margin-bottom:2px">${sender}</div>${msg}`;
+      thread.appendChild(bubble);
+      thread.scrollTop = thread.scrollHeight;
+      showToast('Pesan terkirim ke percakapan.');
+    }
+
+    // ==========================================
+    // ROOM BOTTOM SHEET
+    // ==========================================
+    function openRoomSheet() {
+      document.getElementById('roomModalSheet').classList.add('open');
+    }
+    function closeRoomSheet() {
+      document.getElementById('roomModalSheet').classList.remove('open');
+    }
+
+    // ==========================================
+    // OPENSTREETMAP LEAFLET INTEGRATION
+    // ==========================================
+    function initLeafletMap() {
+      setTimeout(() => {
+        const mapDiv = document.getElementById('leafletMap');
+        if (!mapDiv) return;
+
+        if (!mapInstance) {
+          // Default Malang Center Coordinates
+          mapInstance = L.map('leafletMap').setView([-7.9723, 112.6318], 14);
+
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap'
+          }).addTo(mapInstance);
+
+          // Add user pin
+          const userIcon = L.divIcon({
+            className: 'custom-pin',
+            html: '<div style="background:#263D2F;color:white;width:30px;height:30px;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.3);font-size:14px">📍</div>',
+            iconSize: [30, 30]
+          });
+          L.marker([-7.9723, 112.6318], { icon: userIcon }).addTo(mapInstance).bindPopup('<b>Posisi Kamu Sekarang</b>').openPopup();
+
+          // Add facility markers
+          faskesList.forEach(f => {
+            const fIcon = L.divIcon({
+              className: 'custom-faskes-pin',
+              html: `<div style="background:#527B5D;color:white;width:26px;height:26px;border-radius:8px;border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25);font-size:12px">🏥</div>`,
+              iconSize: [26, 26]
+            });
+            L.marker([f.lat, f.lon], { icon: fIcon }).addTo(mapInstance).bindPopup(`<b>${f.name}</b><br>${f.type} • ${f.dist}`);
+          });
+        } else {
+          mapInstance.invalidateSize();
+        }
+
+        renderFaskesCards(faskesList);
+      }, 100);
+    }
+
+    function renderFaskesCards(items) {
+      const listEl = document.getElementById('facilityCardList');
+      if (!listEl) return;
+      listEl.innerHTML = items.map(f => `
+        <div class="card" style="padding:14px;cursor:pointer" onclick="showToast('Menuju ${f.name} (${f.dist})')">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div>
+              <span style="font-size:10.5px;background:#E8F5E9;color:#2E7D32;padding:2px 7px;border-radius:6px;font-weight:700">${f.type}</span>
+              <div style="font-size:14.5px;font-weight:700;color:var(--dark-green);margin:4px 0 2px">${f.name}</div>
+              <div style="font-size:11.5px;color:var(--muted)">${f.addr}</div>
+            </div>
+            <div style="text-align:right">
+              <span style="font-size:13px;font-weight:700;color:var(--green)">${f.dist}</span>
+              <div style="font-size:10px;color:var(--muted)">dari kamu</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid #EDF0E9;display:flex;justify-content:space-between;font-size:11px;color:#527B5D">
+            <span>♿ Akses Kursi Roda</span>
+            <span>🤟 Juru Bahasa Isyarat</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterFaskes(category, btn) {
+      document.querySelectorAll('#view-faskes .screen-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filtered = category === 'Semua' ? faskesList : faskesList.filter(f => f.type === category);
+      renderFaskesCards(filtered);
+    }
+
+    function triggerOsmSearch() {
+      const btn = document.getElementById('btnFindFaskesLive');
+      btn.textContent = '⏳ Mencari fasilitas terdekat...';
+      setTimeout(() => {
+        btn.textContent = '📍 Perbarui Lokasi & Cari Ulang';
+        showToast('Ditemukan 4 faskes ramah difabel di sekitarmu!', '🏥');
+      }, 1000);
+    }
+
+    // ==========================================
+    // LOCATION SHARING ACTIONS
+    // ==========================================
+    function startLocationSession() {
+      const friend = document.getElementById('shareFriendSelect').value;
+      const duration = document.getElementById('shareDurationSelect').value;
+      showToast(`Lokasi aman berhasil dibagikan ke ${friend} selama ${duration} menit.`, '📍');
+    }
+
+    // ==========================================
+    // FONT ACCESSIBILITY
+    // ==========================================
+    function setFontScale(px) {
+      document.documentElement.style.setProperty('--font-scale', px + 'px');
+      showToast(`Ukuran font diatur ke: ${px}px`);
+    }
+
+    // ==========================================
+    // AUTO DEMO WALKTHROUGH
+    // ==========================================
+    function playAutoDemo() {
+      showToast('Memulai simulasi alur penuh...');
+      showScreen('welcome');
+      setTimeout(() => {
+        triggerKnotBounce();
+        setTimeout(() => {
+          showScreen('onboard');
+          setTimeout(() => {
+            showScreen('home');
+            setTimeout(() => {
+              showScreen('comm');
+              setTimeout(() => {
+                showToast('Simulasi selesai! Jelajahi bebas.');
+              }, 4000);
+            }, 3500);
+          }, 3500);
+        }, 2500);
+      }, 1500);
+    }
+
+    // Initial render
+    window.onload = () => {
+      showScreen('welcome');
+    };
+  </script>
+</body>
+</html>

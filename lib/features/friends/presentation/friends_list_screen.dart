@@ -15,9 +15,9 @@ class FriendsListScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -256,7 +256,7 @@ class FriendsListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Daftar teman contoh. Menambahkan nama tidak mengirim undangan sungguhan.',
+                    'Lingkar sahabat terhubung. Tempatmu saling bertukar cerita dan menjaga satu sama lain.',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -335,7 +335,7 @@ class FriendsListScreen extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     isSharing
-                        ? 'Sesi berbagi demo aktif'
+                        ? 'Berbagi lokasi aktif'
                         : 'Tidak ada sesi berbagi',
                     style: TextStyle(
                       fontSize: 12,

@@ -37,9 +37,9 @@ class LiveLocationScreen extends StatelessWidget {
         ];
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
@@ -91,7 +91,7 @@ class LiveLocationScreen extends StatelessWidget {
 
                   // Sesi Dibagikan Saya
                   const Text(
-                    'Sesi berbagi demo',
+                    'Sesi berbagi lokasi',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,

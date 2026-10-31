@@ -493,6 +493,7 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text(
           'Isyarat BISINDO ke Suara',
