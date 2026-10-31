@@ -4,7 +4,7 @@ class AppConstants {
   static const String appName = 'TAUT';
   static const String tagline = 'Terhubung tanpa hambatan.';
 
-  static const String routeHome = '/';
+  static const String routeHome = '/home';
   static const String routeSplash = '/splash';
   static const String routeOnboarding = '/onboarding';
   static const String routeLogin = '/login';

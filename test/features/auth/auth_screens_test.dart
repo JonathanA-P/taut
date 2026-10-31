@@ -25,8 +25,11 @@ void main() {
       expect(find.textContaining('taut'), findsOneWidget);
       expect(find.text('Ruang untuk saling memahami'), findsOneWidget);
 
-      // Advance timer so pending timer resolves
+      // Advance timer so pending timer resolves and navigates to LoginScreen
       await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     testWidgets('OnboardingScreen renders 3-step intro slides, illustration, and CTA', (tester) async {

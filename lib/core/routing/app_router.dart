@@ -51,12 +51,12 @@ class AppRouter {
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutes.home:
-      case AppConstants.routeHome:
-        return MaterialPageRoute(builder: (_) => const HomeShellScreen());
-
+      case AppRoutes.splash:
       case AppConstants.routeSplash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
+
+      case AppRoutes.home:
+        return MaterialPageRoute(builder: (_) => const HomeShellScreen());
 
       case AppConstants.routeOnboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
