@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../../features/home/presentation/home_shell_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
-import '../../features/home/presentation/home_page.dart';
 import '../../features/communication/presentation/communication_hub_screen.dart';
 import '../../features/communication/speech_to_text/presentation/speech_to_text_screen.dart';
 import '../../features/communication/motion_to_sound/presentation/motion_to_sound_screen.dart';
@@ -53,8 +52,6 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => const HomePage());
-
       case AppConstants.routeHome:
         return MaterialPageRoute(builder: (_) => const HomeShellScreen());
 

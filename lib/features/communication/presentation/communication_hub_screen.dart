@@ -203,7 +203,9 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     _micStatusText = 'Mikrofon nonaktif';
     state.endCommunicationSession();
     _showToast('Sesi selesai. Kamera, mikrofon, dan suara dihentikan.');
-    if (Navigator.canPop(context)) {
+    if (state.canPopPage) {
+      state.popPage();
+    } else if (Navigator.canPop(context)) {
       Navigator.pop(context);
     }
   }
@@ -218,7 +220,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
-            leading: Navigator.canPop(context)
+            leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => _handleEndSession(state),
@@ -232,7 +234,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
           body: SafeArea(
             child: SingleChildScrollView(
               controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

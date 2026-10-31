@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
-import 'healthcare_detail_screen.dart';
 
 /// Healthcare Finder Screen strictly implementing the TAUT HTML prototype design:
 /// - Screen title: "Fasilitas kesehatan"
@@ -53,11 +52,17 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
           appBar: AppBar(
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: Navigator.canPop(context)
+            leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_rounded),
                     color: AppColors.darkGreen,
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      if (state.canPopPage) {
+                        state.popPage();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
                   )
                 : null,
             title: const Text(
@@ -71,7 +76,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -335,12 +340,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
     return InkWell(
       onTap: () {
         state.setSelectedFacilityIndex(index);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => HealthcareDetailScreen(facilityItem: item),
-          ),
-        );
+        state.navigateTo('detail');
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(

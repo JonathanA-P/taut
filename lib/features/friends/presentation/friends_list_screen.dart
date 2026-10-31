@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
-import 'add_friend_screen.dart';
-import 'manage_location_sharing_screen.dart';
 
 /// Friends List Screen strictly implementing the TAUT HTML prototype:
 /// - Screen title: "Teman terhubung"
@@ -26,11 +24,17 @@ class FriendsListScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: Navigator.canPop(context)
+            leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_rounded),
                     color: AppColors.darkGreen,
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      if (state.canPopPage) {
+                        state.popPage();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
                   )
                 : null,
             title: const Text(
@@ -44,7 +48,7 @@ class FriendsListScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -66,7 +70,7 @@ class FriendsListScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final name = state.friends[index];
                       final isSharing = state.sessions.any((s) => s.name == name);
-                      return _buildFriendCard(context, name, isSharing, index);
+                      return _buildFriendCard(context, state, name, isSharing, index);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -76,14 +80,7 @@ class FriendsListScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AddFriendScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () => state.navigateTo('add'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -122,6 +119,7 @@ class FriendsListScreen extends StatelessWidget {
 
   Widget _buildFriendCard(
     BuildContext context,
+    TautAppState state,
     String name,
     bool isSharing,
     int index,
@@ -141,14 +139,7 @@ class FriendsListScreen extends StatelessWidget {
     final colorTxt = textColors[index % textColors.length];
 
     return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const ManageLocationSharingScreen(),
-          ),
-        );
-      },
+      onTap: () => state.navigateTo('sharing'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(16),

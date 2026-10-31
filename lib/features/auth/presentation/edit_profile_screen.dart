@@ -40,7 +40,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           duration: Duration(seconds: 2),
         ),
       );
-      Navigator.pop(context);
+      if (state.canPopPage) {
+        state.popPage();
+      } else if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -53,11 +57,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: Navigator.canPop(context)
+        leading: (Navigator.canPop(context) || state.canPopPage)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 color: AppColors.darkGreen,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (state.canPopPage) {
+                    state.popPage();
+                  } else if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
               )
             : null,
         title: const Text(
@@ -71,7 +81,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

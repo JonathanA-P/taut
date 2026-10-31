@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
@@ -88,7 +86,7 @@ class HomePage extends StatelessWidget {
                           if (onNavigateToProfile != null) {
                             onNavigateToProfile!();
                           } else {
-                            Navigator.pushNamed(context, AppRoutes.profile);
+                            state.navigateTo('profile');
                           }
                         },
                         child: _buildAvatar(state.userName, 0),
@@ -98,7 +96,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Hero Section: Saling Mengerti Tanpa Batas
-                  _buildHero(context),
+                  _buildHero(context, state),
                   const SizedBox(height: 24),
 
                   // 4 Fitur Utama Section Header
@@ -126,7 +124,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // 4 Features Grid
-                  _buildFeatureGrid(context),
+                  _buildFeatureGrid(context, state),
                   const SizedBox(height: 24),
 
                   // Teman Terhubung Section Header
@@ -144,7 +142,7 @@ class HomePage extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, AppConstants.routeFriends);
+                          state.navigateTo('friends');
                         },
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
@@ -181,7 +179,6 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          bottomNavigationBar: _buildBottomNav(context, state),
         );
       },
     );
@@ -222,7 +219,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BuildContext context) {
+  Widget _buildHero(BuildContext context, TautAppState state) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -283,7 +280,7 @@ class HomePage extends StatelessWidget {
                   if (onNavigateToCommunication != null) {
                     onNavigateToCommunication!();
                   } else {
-                    Navigator.pushNamed(context, AppRoutes.commHub);
+                    state.navigateTo('comm');
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -309,7 +306,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureGrid(BuildContext context) {
+  Widget _buildFeatureGrid(BuildContext context, TautAppState state) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -327,7 +324,7 @@ class HomePage extends StatelessWidget {
             if (onNavigateToCommunication != null) {
               onNavigateToCommunication!();
             } else {
-              Navigator.pushNamed(context, AppRoutes.commHub);
+              state.navigateTo('comm');
             }
           },
         ),
@@ -340,7 +337,7 @@ class HomePage extends StatelessWidget {
             if (onNavigateToCommunication != null) {
               onNavigateToCommunication!();
             } else {
-              Navigator.pushNamed(context, AppRoutes.commHub);
+              state.navigateTo('comm');
             }
           },
         ),
@@ -350,7 +347,7 @@ class HomePage extends StatelessWidget {
           subtitle: 'Temukan layanan sekitar',
           bgColor: const Color(0xFFE6EBF0),
           onTap: () {
-            Navigator.pushNamed(context, AppConstants.routeHealthcare);
+            state.navigateTo('finder');
           },
         ),
         _buildFeatureTile(
@@ -359,7 +356,7 @@ class HomePage extends StatelessWidget {
           subtitle: 'Tetap dekat, tetap aman',
           bgColor: const Color(0xFFEDE8F0),
           onTap: () {
-            Navigator.pushNamed(context, AppRoutes.manageSharing);
+            state.navigateTo('sharing');
           },
         ),
       ],
@@ -440,7 +437,7 @@ class HomePage extends StatelessWidget {
           final isSharingWithFriend = state.sessions.any((s) => s.name == friendName);
 
           return GestureDetector(
-            onTap: () => Navigator.pushNamed(context, AppConstants.routeFriends),
+            onTap: () => state.navigateTo('friends'),
             child: Column(
               children: [
                 _buildAvatar(friendName, i),
@@ -519,7 +516,7 @@ class HomePage extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.manageSharing);
+                state.navigateTo('sharing');
               },
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -560,88 +557,6 @@ class HomePage extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context, TautAppState state) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE6EBE3))),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0C263D2F),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: NavigationBar(
-        selectedIndex: 0,
-        backgroundColor: Colors.white,
-        indicatorColor: AppColors.lightGreen,
-        elevation: 0,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              break; // Already at home
-            case 1:
-              if (onNavigateToCommunication != null) {
-                onNavigateToCommunication!();
-              } else {
-                Navigator.pushNamed(context, AppRoutes.commHub);
-              }
-              break;
-            case 2:
-              if (onNavigateToLocation != null) {
-                onNavigateToLocation!();
-              } else {
-                Navigator.pushNamed(context, AppRoutes.location);
-              }
-              break;
-            case 3:
-              if (onNavigateToProfile != null) {
-                onNavigateToProfile!();
-              } else {
-                Navigator.pushNamed(context, AppRoutes.profile);
-              }
-              break;
-          }
-        },
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Beranda',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Komunikasi',
-          ),
-          NavigationDestination(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.location_on_outlined),
-                if (state.isSharingLocation)
-                  const Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Icon(Icons.circle, size: 8, color: Color(0xFF8B4435)),
-                  ),
-              ],
-            ),
-            selectedIcon: const Icon(Icons.location_on_rounded),
-            label: 'Lokasi',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profil',
           ),
         ],
       ),

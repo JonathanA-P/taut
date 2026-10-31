@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../communication/presentation/communication_hub_screen.dart';
-import '../../location_sharing/presentation/location_sharing_screen.dart';
+import '../../auth/presentation/edit_profile_screen.dart';
 import '../../auth/presentation/profile_screen.dart';
+import '../../auth/presentation/settings_accessibility_screen.dart';
+import '../../communication/presentation/communication_hub_screen.dart';
+import '../../friends/presentation/add_friend_screen.dart';
+import '../../friends/presentation/friends_list_screen.dart';
+import '../../friends/presentation/live_location_screen.dart';
+import '../../friends/presentation/manage_location_sharing_screen.dart';
+import '../../healthcare/presentation/healthcare_detail_screen.dart';
+import '../../healthcare/presentation/healthcare_finder_screen.dart';
+import '../../location_sharing/presentation/location_sharing_screen.dart';
+import '../../privacy/presentation/privacy_policy_screen.dart';
 import 'home_page.dart';
 
 /// Main Application Shell containing the 4 primary feature destinations:
@@ -13,114 +21,210 @@ import 'home_page.dart';
 /// 2. Komunikasi
 /// 3. Lokasi
 /// 4. Profil
-/// Preserves the established four-item bottom navigation from the prototype.
-class HomeShellScreen extends StatefulWidget {
+/// Preserves the persistent floating navigation bar across all internal screens.
+class HomeShellScreen extends StatelessWidget {
   final int initialIndex;
 
   const HomeShellScreen({super.key, this.initialIndex = 0});
 
-  @override
-  State<HomeShellScreen> createState() => _HomeShellScreenState();
-}
-
-class _HomeShellScreenState extends State<HomeShellScreen> {
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-  }
-
-  void _switchDestination(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+  Widget _resolveScreen(String page) {
+    switch (page) {
+      case 'home':
+        return const HomePage();
+      case 'comm':
+      case 'hub':
+        return const CommunicationHubScreen();
+      case 'location':
+        return const LocationSharingScreen();
+      case 'finder':
+        return const HealthcareFinderScreen();
+      case 'detail':
+        return const HealthcareDetailScreen();
+      case 'friends':
+        return const FriendsListScreen();
+      case 'add':
+        return const AddFriendScreen();
+      case 'sharing':
+        return const ManageLocationSharingScreen();
+      case 'live':
+        return const LiveLocationScreen();
+      case 'profile':
+        return const ProfileScreen();
+      case 'edit':
+        return const EditProfileScreen();
+      case 'settings':
+        return const SettingsAccessibilityScreen();
+      case 'privacy':
+        return const PrivacyPolicyScreen();
+      default:
+        return const HomePage();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = TautAppState();
 
-    final destinations = [
-      HomePage(
-        onNavigateToCommunication: () => _switchDestination(1),
-        onNavigateToHealthcare: () =>
-            Navigator.pushNamed(context, AppConstants.routeHealthcare),
-        onNavigateToLocation: () => _switchDestination(2),
-        onNavigateToProfile: () => _switchDestination(3),
-      ),
-      const CommunicationHubScreen(),
-      const LocationSharingScreen(),
-      const ProfileScreen(),
-    ];
-
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
-        return Scaffold(
-          body: IndexedStack(index: _currentIndex, children: destinations),
-          bottomNavigationBar: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Color(0xFFE6EBE3), width: 1.0),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x0C263D2F),
-                  blurRadius: 20,
-                  offset: Offset(0, -4),
-                ),
-              ],
-            ),
-            child: NavigationBar(
-              selectedIndex: _currentIndex,
-              backgroundColor: Colors.white,
-              indicatorColor: AppColors.lightGreen,
-              elevation: 0,
-              onDestinationSelected: _switchDestination,
-              destinations: [
-                const NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Beranda',
-                ),
-                const NavigationDestination(
-                  icon: Icon(Icons.chat_bubble_outline_rounded),
-                  selectedIcon: Icon(Icons.chat_bubble_rounded),
-                  label: 'Komunikasi',
-                ),
-                NavigationDestination(
-                  icon: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Icon(Icons.location_on_outlined),
-                      if (state.isSharingLocation)
-                        const Positioned(
-                          right: -2,
-                          top: -2,
-                          child: Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Color(0xFF8B4435),
-                          ),
-                        ),
-                    ],
+        final activeNavIndex = state.currentNavIndex;
+
+        return PopScope(
+          canPop: !state.canPopPage,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) {
+              state.popPage();
+            }
+          },
+          child: Scaffold(
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: state.isNavbarVisible ? 86 : 0,
+                    ),
+                    child: _resolveScreen(state.currentPage),
                   ),
-                  selectedIcon: const Icon(Icons.location_on_rounded),
-                  label: 'Lokasi',
                 ),
-                const NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profil',
-                ),
+                if (state.isNavbarVisible)
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: 16,
+                    child: SafeArea(
+                      bottom: true,
+                      child: _buildFloatingNavBar(context, state, activeNavIndex),
+                    ),
+                  ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFloatingNavBar(
+    BuildContext context,
+    TautAppState state,
+    int activeIndex,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFAFFFFFF),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE6EBE3), width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18263D2F),
+            blurRadius: 30,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildNavItem(
+            index: 0,
+            label: 'Beranda',
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
+            isActive: activeIndex == 0,
+            onTap: () => state.switchToTab(0),
+          ),
+          _buildNavItem(
+            index: 1,
+            label: 'Komunikasi',
+            icon: Icons.chat_bubble_outline_rounded,
+            activeIcon: Icons.chat_bubble_rounded,
+            isActive: activeIndex == 1,
+            onTap: () => state.switchToTab(1),
+          ),
+          _buildNavItem(
+            index: 2,
+            label: 'Lokasi',
+            icon: Icons.location_on_outlined,
+            activeIcon: Icons.location_on_rounded,
+            isActive: activeIndex == 2,
+            hasBadge: state.isSharingLocation,
+            onTap: () => state.switchToTab(2),
+          ),
+          _buildNavItem(
+            index: 3,
+            label: 'Profil',
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
+            isActive: activeIndex == 3,
+            onTap: () => state.switchToTab(3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required String label,
+    required IconData icon,
+    required IconData activeIcon,
+    required bool isActive,
+    required VoidCallback onTap,
+    bool hasBadge = false,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.lightGreen : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    isActive ? activeIcon : icon,
+                    size: 22,
+                    color: isActive
+                        ? AppColors.darkGreen
+                        : const Color(0xFF66756B),
+                  ),
+                  if (hasBadge)
+                    const Positioned(
+                      right: -3,
+                      top: -1,
+                      child: Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: Color(0xFF8B4435),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive
+                      ? AppColors.darkGreen
+                      : const Color(0xFF66756B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

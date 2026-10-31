@@ -19,6 +19,84 @@ class TautAppState extends ChangeNotifier {
     // Timers are started on demand when active sessions exist
   }
 
+  // Persistent Shell Navigation State
+  String _currentPage = 'home';
+  String get currentPage => _currentPage;
+
+  final List<String> _pageHistory = ['home'];
+  List<String> get pageHistory => List.unmodifiable(_pageHistory);
+
+  bool get canPopPage => _pageHistory.length > 1;
+
+  void navigateTo(String page) {
+    if (_currentPage == page) return;
+    if (_currentPage == 'comm' && page != 'comm') {
+      stopHardwareTracks();
+    }
+    _pageHistory.add(page);
+    _currentPage = page;
+    notifyListeners();
+  }
+
+  bool popPage() {
+    if (_pageHistory.length > 1) {
+      if (_currentPage == 'comm') {
+        stopHardwareTracks();
+      }
+      _pageHistory.removeLast();
+      _currentPage = _pageHistory.last;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  void switchToTab(int navIndex) {
+    switch (navIndex) {
+      case 0:
+        navigateTo('home');
+        break;
+      case 1:
+        navigateTo('comm');
+        break;
+      case 2:
+        navigateTo('location');
+        break;
+      case 3:
+        navigateTo('profile');
+        break;
+    }
+  }
+
+  int get currentNavIndex {
+    switch (_currentPage) {
+      case 'home':
+        return 0;
+      case 'comm':
+      case 'hub':
+        return 1;
+      case 'location':
+      case 'finder':
+      case 'detail':
+      case 'friends':
+      case 'add':
+      case 'sharing':
+      case 'live':
+        return 2;
+      case 'profile':
+      case 'edit':
+      case 'settings':
+      case 'privacy':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  bool get isNavbarVisible {
+    return !const ['onboard', 'login', 'register', 'splash'].contains(_currentPage);
+  }
+
   // User Profile
   String _userName = 'Adriel';
   String get userName => _userName;
@@ -288,6 +366,9 @@ class TautAppState extends ChangeNotifier {
     _friends = ['Nadia', 'Raka', 'Dinda'];
     _sessions.clear();
     cancelTimers();
+    _currentPage = 'home';
+    _pageHistory.clear();
+    _pageHistory.add('home');
     _messages.clear();
     _signText = '';
     _transcriptText = 'Ucapan teman dengar akan tampil di sini.';

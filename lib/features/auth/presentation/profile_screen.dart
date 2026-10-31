@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../friends/presentation/friends_list_screen.dart';
-import '../../privacy/presentation/privacy_policy_screen.dart';
-import 'edit_profile_screen.dart';
-import 'settings_accessibility_screen.dart';
 
 /// Profile Screen strictly implementing the TAUT HTML prototype:
 /// - Screen title: "Profil"
@@ -32,11 +28,17 @@ class ProfileScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: Navigator.canPop(context)
+            leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_rounded),
                     color: AppColors.darkGreen,
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      if (state.canPopPage) {
+                        state.popPage();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
                   )
                 : null,
             title: const Text(
@@ -50,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 children: [
                   // Profile Hero (Sage green)
@@ -62,42 +64,21 @@ class ProfileScreen extends StatelessWidget {
                     context: context,
                     icon: Icons.settings_outlined,
                     title: 'Pengaturan & aksesibilitas',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsAccessibilityScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('settings'),
                   ),
                   const SizedBox(height: 12),
                   _buildMenuButton(
                     context: context,
                     icon: Icons.shield_outlined,
                     title: 'Privasi & izin',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PrivacyPolicyScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('privacy'),
                   ),
                   const SizedBox(height: 12),
                   _buildMenuButton(
                     context: context,
                     icon: Icons.people_outline_rounded,
                     title: 'Teman terhubung',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const FriendsListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('friends'),
                   ),
                   const SizedBox(height: 24),
 
@@ -198,14 +179,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           OutlinedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const EditProfileScreen(),
-                ),
-              );
-            },
+            onPressed: () => state.navigateTo('edit'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: Color(0xFFB9C9B6)),

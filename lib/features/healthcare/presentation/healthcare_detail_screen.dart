@@ -46,11 +46,18 @@ class HealthcareDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: Navigator.canPop(context)
+        leading: (Navigator.canPop(context) || TautAppState().canPopPage)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 color: AppColors.darkGreen,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  final state = TautAppState();
+                  if (state.canPopPage) {
+                    state.popPage();
+                  } else if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
               )
             : null,
         title: const Text(
@@ -64,7 +71,7 @@ class HealthcareDetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

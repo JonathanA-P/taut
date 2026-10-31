@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../friends/presentation/friends_list_screen.dart';
-import '../../friends/presentation/manage_location_sharing_screen.dart';
-import '../../healthcare/presentation/healthcare_finder_screen.dart';
 
 /// Location Sharing / Ruang Lokasi Screen strictly implementing the TAUT HTML prototype:
 /// - Screen title: "Ruang lokasi"
@@ -29,11 +26,17 @@ class LocationSharingScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: Navigator.canPop(context)
+            leading: (Navigator.canPop(context) || state.canPopPage)
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_rounded),
                     color: AppColors.darkGreen,
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      if (state.canPopPage) {
+                        state.popPage();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
                   )
                 : null,
             title: const Text(
@@ -47,7 +50,7 @@ class LocationSharingScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -61,14 +64,7 @@ class LocationSharingScreen extends StatelessWidget {
                     icon: Icons.local_hospital_rounded,
                     title: 'Fasilitas kesehatan',
                     subtitle: 'Cari klinik dan rumah sakit',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HealthcareFinderScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('finder'),
                   ),
                   const SizedBox(height: 12),
                   _buildListButton(
@@ -76,14 +72,7 @@ class LocationSharingScreen extends StatelessWidget {
                     icon: Icons.people_outline_rounded,
                     title: 'Teman terhubung',
                     subtitle: '${state.friends.length} teman contoh',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const FriendsListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('friends'),
                   ),
                   const SizedBox(height: 12),
                   _buildListButton(
@@ -91,14 +80,7 @@ class LocationSharingScreen extends StatelessWidget {
                     icon: Icons.location_on_outlined,
                     title: 'Berbagi lokasi',
                     subtitle: '${state.sessions.length} sesi demo aktif',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ManageLocationSharingScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => state.navigateTo('sharing'),
                   ),
                   const SizedBox(height: 24),
 
