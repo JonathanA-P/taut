@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import 'widgets/friend_location_detail_sheet.dart';
 
 class ManageLocationSharingScreen extends StatefulWidget {
   const ManageLocationSharingScreen({super.key});
@@ -380,7 +381,71 @@ class _ManageLocationSharingScreenState
 
                   const SizedBox(height: 28),
 
-                  // Lokasi Teman yang Dibagikan ke Kita
+                  // Permintaan Berbagi Lokasi Masuk (Perlu Persetujuan)
+                  if (state.pendingIncomingSessions.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Permintaan berbagi lokasi masuk',
+                            maxLines: 2,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.darkGreen,
+                              height: 1.25,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(color: const Color(0xFFFFE0B2)),
+                          ),
+                          child: Text(
+                            '${state.pendingIncomingSessions.length} baru',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Teman ingin membagikan lokasinya kepadamu. Kamu diberikan pilihan untuk setuju atau menolak menerima lokasi tersebut.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: state.pendingIncomingSessions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final incoming = state.pendingIncomingSessions[index];
+                        return _buildPendingIncomingCard(context, state, incoming);
+                      },
+                    ),
+                    const SizedBox(height: 28),
+                  ],
+
+                  // Lokasi Teman yang Dibagikan ke Kita (Disetujui)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -409,7 +474,7 @@ class _ManageLocationSharingScreenState
                           borderRadius: BorderRadius.circular(9),
                         ),
                         child: Text(
-                          '${state.incomingSessions.length} teman',
+                          '${state.acceptedIncomingSessions.length} teman',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -421,7 +486,7 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 14),
 
-                  if (state.incomingSessions.isEmpty)
+                  if (state.acceptedIncomingSessions.isEmpty)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
@@ -432,7 +497,7 @@ class _ManageLocationSharingScreenState
                       ),
                       child: const Center(
                         child: Text(
-                          'Belum ada teman yang membagikan lokasinya kepadamu.',
+                          'Belum ada lokasi teman yang aktif diterima.\nSetujui permintaan masuk untuk melihat lokasi teman.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -446,16 +511,320 @@ class _ManageLocationSharingScreenState
                     ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: state.incomingSessions.length,
+                      itemCount: state.acceptedIncomingSessions.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        final incoming = state.incomingSessions[index];
+                        final incoming = state.acceptedIncomingSessions[index];
                         return _buildIncomingSessionCard(context, state, incoming, index);
                       },
                     ),
+
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        state.simulateNewIncomingSharing();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Simulasi permintaan berbagi lokasi baru dari Raka ditambahkan.'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
+                      label: const Text(
+                        'Simulasi permintaan teman baru',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+    Widget _buildPendingIncomingCard(
+    BuildContext context,
+    TautAppState state,
+    IncomingSharingSession incoming,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 340;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFFFE0B2)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0AE65100),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFE0B2),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      incoming.friendName.isNotEmpty ? incoming.friendName[0] : '?',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          incoming.friendName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkGreen,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          incoming.subtitle,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Menunggu Persetujuan',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFE65100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAFBF9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEF2EB)),
+                ),
+                child: Text(
+                  '${incoming.friendName} ingin membagikan lokasinya kepadamu (${incoming.remainingText()}). Apakah kamu setuju untuk menerima lokasi ini?',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF4C5D48),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (isNarrow)
+                Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 42,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          state.acceptIncomingSession(incoming.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Kamu setuju menerima lokasi dari ${incoming.friendName}.'),
+                              duration: const Duration(seconds: 4),
+                              action: SnackBarAction(
+                                label: 'Lihat Lokasi',
+                                onPressed: () {
+                                  FriendLocationDetailSheet.show(
+                                    context,
+                                    incoming: incoming,
+                                    onStopSharing: () => state.stopIncomingSessionById(incoming.id),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.check_circle_rounded, size: 16),
+                        label: const Text(
+                          'Setuju & Terima',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 40,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          state.rejectIncomingSession(incoming.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        label: const Text(
+                          'Tolak',
+                          style: TextStyle(fontSize: 12.5),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF944838),
+                          side: const BorderSide(color: Color(0xFFECCDC7)),
+                          backgroundColor: const Color(0xFFFDF6F5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: SizedBox(
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            state.acceptIncomingSession(incoming.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Kamu setuju menerima lokasi dari ${incoming.friendName}.'),
+                                duration: const Duration(seconds: 4),
+                                action: SnackBarAction(
+                                  label: 'Lihat Lokasi',
+                                  onPressed: () {
+                                    FriendLocationDetailSheet.show(
+                                      context,
+                                      incoming: incoming,
+                                      onStopSharing: () => state.stopIncomingSessionById(incoming.id),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.check_circle_rounded, size: 16),
+                          label: const Text(
+                            'Setuju & Terima',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 42,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            state.rejectIncomingSession(incoming.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          label: const Text(
+                            'Tolak',
+                            style: TextStyle(fontSize: 12.5),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF944838),
+                            side: const BorderSide(color: Color(0xFFECCDC7)),
+                            backgroundColor: const Color(0xFFFDF6F5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
         );
       },
@@ -470,7 +839,7 @@ class _ManageLocationSharingScreenState
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 310;
+        final isNarrow = constraints.maxWidth < 340;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -585,7 +954,21 @@ class _ManageLocationSharingScreenState
                       width: double.infinity,
                       height: 42,
                       child: ElevatedButton.icon(
-                        onPressed: () => state.navigateTo('live'),
+                        onPressed: () {
+                          FriendLocationDetailSheet.show(
+                            context,
+                            incoming: incoming,
+                            onStopSharing: () {
+                              state.stopIncomingSessionById(incoming.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                          );
+                        },
                         icon: const Icon(Icons.map_rounded, size: 16),
                         label: const Text(
                           'Lihat di Peta',
@@ -645,7 +1028,21 @@ class _ManageLocationSharingScreenState
                       child: SizedBox(
                         height: 42,
                         child: ElevatedButton.icon(
-                          onPressed: () => state.navigateTo('live'),
+                          onPressed: () {
+                          FriendLocationDetailSheet.show(
+                            context,
+                            incoming: incoming,
+                            onStopSharing: () {
+                              state.stopIncomingSessionById(incoming.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                          );
+                        },
                           icon: const Icon(Icons.map_rounded, size: 16),
                           label: const Text(
                             'Lihat di Peta',
@@ -716,7 +1113,7 @@ class _ManageLocationSharingScreenState
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 310;
+        final isNarrow = constraints.maxWidth < 340;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -897,7 +1294,7 @@ class _ManageLocationSharingScreenState
                       child: SizedBox(
                         height: 42,
                         child: ElevatedButton(
-                          onPressed: () => state.navigateTo('live'),
+                        onPressed: () => state.navigateTo('live'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.lightGreen,
                             foregroundColor: AppColors.darkGreen,

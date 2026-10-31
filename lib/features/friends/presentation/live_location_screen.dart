@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_open_street_map.dart';
+import 'widgets/friend_location_detail_sheet.dart';
 
 class LiveLocationScreen extends StatelessWidget {
   const LiveLocationScreen({super.key});
@@ -24,7 +25,7 @@ class LiveLocationScreen extends StatelessWidget {
             isUser: true,
           ),
           // Incoming Friend positions
-          ...state.incomingSessions.map((incoming) {
+          ...state.acceptedIncomingSessions.map((incoming) {
             return TautMapMarker(
               point: LatLng(incoming.latitude, incoming.longitude),
               label: incoming.friendName,
@@ -328,7 +329,48 @@ class LiveLocationScreen extends StatelessWidget {
     IncomingSharingSession incoming,
     int index,
   ) {
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: () {
+        if (incoming.isPending) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text('Persetujuan Berbagi Lokasi'),
+              content: Text('\${incoming.friendName} ingin membagikan lokasinya kepadamu (\${incoming.remainingText()}). Apakah kamu setuju untuk menerima lokasi ini?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    state.rejectIncomingSession(incoming.id);
+                  },
+                  child: const Text('Tolak', style: TextStyle(color: Color(0xFF8B4435))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    state.acceptIncomingSession(incoming.id);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Setuju & Terima'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          FriendLocationDetailSheet.show(
+            context,
+            incoming: incoming,
+            onStopSharing: () => state.stopIncomingSessionById(incoming.id),
+          );
+        }
+      },
+      child: Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -402,6 +444,7 @@ class LiveLocationScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
