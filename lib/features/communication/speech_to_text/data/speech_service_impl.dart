@@ -36,7 +36,7 @@ class SpeechServiceImpl implements SpeechService {
   Future<bool> initialize() async {
     if (_isAvailable) return true;
 
-    // Masalah 1 Fix: Guard against race condition with Completer
+    // Guard against concurrent race condition
     if (_initCompleter != null) {
       return _initCompleter!.future;
     }
@@ -50,14 +50,13 @@ class SpeechServiceImpl implements SpeechService {
       );
 
       if (_isAvailable) {
-        // Masalah 2 Fix: Dynamically resolve verified Indonesian locale ID from device
         await _resolveIndonesianLocale();
       }
 
       _stateController.add(
         SpeechRecognitionState(
           status: _isAvailable ? SpeechStatus.ready : SpeechStatus.error,
-          errorMessage: _isAvailable ? null : 'Fitur pengenalan suara tidak tersedia atau izin mikrofon belum diberikan.',
+          errorMessage: _isAvailable ? null : 'Layanan Pengenalan Suara (Google Speech Services) belum aktif di HP ini. Buka Pengaturan HP -> Input Suara -> Aktifkan Google Voice Typing.',
         ),
       );
       _initCompleter!.complete(_isAvailable);
@@ -65,11 +64,12 @@ class SpeechServiceImpl implements SpeechService {
     } catch (e) {
       debugPrint('Speech recognition initialization error: $e');
       _isAvailable = false;
+      final errStr = e.toString();
+      final msg = errStr.contains('recognizerNotAvailable')
+          ? 'Layanan Pengenalan Suara (Google Speech Services) belum aktif di HP ini. Buka Pengaturan HP -> Input Suara -> Aktifkan Google Voice Typing.'
+          : errStr;
       _stateController.add(
-        SpeechRecognitionState(
-          status: SpeechStatus.error,
-          errorMessage: e.toString(),
-        ),
+        SpeechRecognitionState(status: SpeechStatus.error, errorMessage: msg),
       );
       _initCompleter!.complete(false);
       return false;
@@ -156,7 +156,6 @@ class SpeechServiceImpl implements SpeechService {
     }
 
     try {
-      // Masalah 2 Fix: Prioritize verified resolved Indonesian locale ID
       final localeId =
           _resolvedIndonesianLocaleId ?? _currentLanguage.replaceAll('-', '_');
 
@@ -186,7 +185,6 @@ class SpeechServiceImpl implements SpeechService {
         ),
       );
 
-      // Masalah 3 Fix: Handle silent listen() rejection
       if (started == false) {
         debugPrint('SpeechToText.listen() returned false');
         _stateController.add(

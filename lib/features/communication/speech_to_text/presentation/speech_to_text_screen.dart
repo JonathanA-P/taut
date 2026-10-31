@@ -14,7 +14,7 @@ import '../domain/speech_state.dart';
 /// 1. Real-time live caption with extra-large high-contrast text and zero confirmation step.
 /// 2. Continuous listening with auto-recovery and multi-sentence aggregation.
 /// 3. One-tap "Bersihkan Layar" (Clear Screen) button.
-/// 4. Fast manual typing fallback for noisy environments.
+/// 4. Fast manual typing fallback for noisy environments or offline scenarios.
 /// 5. Reactive synchronization with native speech recognition engine status stream.
 ///
 /// Feature Owner: Roganda Tua Tampubolon (Branch: feature/speech-to-text).
@@ -51,7 +51,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   }
 
   void _initSpeechPipeline() {
-    // Masalah 4 Fix: Sync UI state reactively with engine's statusStream
     _statusSubscription = _speechService.statusStream.listen((state) {
       if (!mounted) return;
       setState(() {
@@ -68,7 +67,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
       });
     });
 
-    // Masalah 1 Fix: Safe async initialization handled with Completer in service
     _speechService.initialize().catchError((e) {
       debugPrint('Screen initialization catchError: $e');
       return false;
@@ -140,7 +138,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         });
       }
     } else {
-      // Masalah 4 Fix: Engine statusStream will drive _isListening
       await _speechService.startListening(
         onResult: _onSpeechResult,
         language: 'id_ID',
@@ -172,6 +169,83 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     _scrollToBottom();
   }
 
+  void _showTroubleshootingDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.settings_voice_rounded, color: AppColors.primary),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Layanan Suara Google Belum Aktif',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'HP Samsung dan beberapa merek Android memerlukan Google Speech Services aktif agar fitur Speech-to-Text dapat berjalan:\n',
+                style: TextStyle(fontSize: 13, height: 1.4),
+              ),
+              Text(
+                '1. Buka Play Store -> Cari "Speech Services by Google" (Layanan Suara Google) atau aplikasi "Google". Pastikan sudah terpasang dan di-update.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '2. Buka Pengaturan HP -> Manajemen Umum -> Daftar dan default keyboard -> Input Suara -> Pilih "Google Voice Typing" (Pengetikan suara Google).',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '3. Buka Pengaturan HP -> Aplikasi -> Aplikasi Default -> Asisten Digital -> Pilih "Google".',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Catatan: Anda tetap dapat menggunakan tombol "Ketik Manual" di bawah jika sedang tidak dapat mengaktifkan suara.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Tutup',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String get _displayCaption {
     if (_accumulatedText.isEmpty && _currentSentenceWords.isEmpty) {
       return '';
@@ -190,6 +264,8 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     final hasContent = _displayCaption.isNotEmpty;
 
     return Scaffold(
+      resizeToAvoidBottomInset:
+          false, // Prevents RenderFlex overflow on software keyboard open
       backgroundColor: const Color(0xFFF1F5F9), // Slate 100 soft background
       appBar: AppBar(
         title: const Text(
@@ -259,7 +335,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                         )
                       : Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 60.0),
+                            padding: const EdgeInsets.symmetric(vertical: 40.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -279,7 +355,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                                       : 'Ketuk tombol mikrofon di bawah untuk mulai merekam ucapan lawan bicara.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     height: 1.5,
                                     color: Colors.grey.shade600,
                                     fontWeight: FontWeight.w500,
@@ -306,8 +382,8 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
 
   Widget _buildStatusHeader() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: _isListening
             ? const Color(0xFFDCFCE7) // Mint 100
@@ -373,6 +449,13 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   }
 
   Widget _buildErrorNotice() {
+    final isRecognizerUnavailable =
+        _errorMessage != null &&
+        (_errorMessage!.contains('tidak tersedia') ||
+            _errorMessage!.contains('not available') ||
+            _errorMessage!.contains('recognizerNotAvailable') ||
+            _errorMessage!.contains('Google Speech'));
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -381,35 +464,67 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF87171)), // Red 400
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFFB91C1C),
-            size: 20,
+          Row(
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFB91C1C),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF991B1B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 16),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                color: const Color(0xFF991B1B),
+                onPressed: () {
+                  setState(() {
+                    _errorMessage = null;
+                  });
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _errorMessage!,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF991B1B),
-                fontWeight: FontWeight.w600,
+          if (isRecognizerUnavailable) ...[
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: _showTroubleshootingDialog,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.help_outline_rounded,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Cara Mengaktifkan di HP Samsung / Android Anda',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 16),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            color: const Color(0xFF991B1B),
-            onPressed: () {
-              setState(() {
-                _errorMessage = null;
-              });
-            },
-          ),
+          ],
         ],
       ),
     );
@@ -429,6 +544,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
           Expanded(
             child: TextField(
               controller: _manualInputController,
+              autofocus: true,
               decoration: const InputDecoration(
                 hintText: 'Ketik pesan cepat di sini...',
                 border: InputBorder.none,
@@ -450,7 +566,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
 
   Widget _buildBottomControls() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -489,12 +605,12 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           // Large Microphone Control Button (Satu Sentuhan Teman Tuli)
           Center(
             child: SizedBox(
               width: double.infinity,
-              height: 64,
+              height: 60,
               child: ElevatedButton.icon(
                 onPressed: _toggleListening,
                 style: ElevatedButton.styleFrom(
@@ -509,14 +625,14 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                 ),
                 icon: Icon(
                   _isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                  size: 32,
+                  size: 30,
                 ),
                 label: Text(
                   _isListening
                       ? 'Hentikan Mendengarkan'
                       : 'Mulai Mendengarkan Suara',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.3,
                   ),
