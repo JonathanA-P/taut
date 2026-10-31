@@ -45,7 +45,14 @@ void main() {
       expect(find.text('OpenStreetMap'), findsOneWidget);
     });
 
-    testWidgets('ManageLocationSharingScreen displays incoming friend locations card', (tester) async {
+    testWidgets('ManageLocationSharingScreen displays incoming friend locations card on narrow phone screen without overflow', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -54,10 +61,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(tester.takeException(), isNull);
       expect(find.text('Lokasi teman yang dibagikan'), findsOneWidget);
       expect(find.text('Nadia'), findsWidgets);
       expect(find.text('Budi Setiawan'), findsOneWidget);
       expect(find.text('Lihat di Peta'), findsWidgets);
+      expect(find.text('Sembunyikan'), findsWidgets);
     });
 
     testWidgets('LiveLocationScreen displays OpenStreetMap and incoming friend locations', (tester) async {

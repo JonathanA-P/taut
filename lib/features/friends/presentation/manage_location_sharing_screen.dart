@@ -105,7 +105,7 @@ class _ManageLocationSharingScreenState
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 130),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -308,14 +308,17 @@ class _ManageLocationSharingScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Sesi aktif',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
+                      const Expanded(
+                        child: Text(
+                          'Sesi aktif',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkGreen,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 9,
@@ -377,14 +380,17 @@ class _ManageLocationSharingScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Lokasi teman yang dibagikan',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
+                      const Expanded(
+                        child: Text(
+                          'Lokasi teman yang dibagikan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkGreen,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 9,
@@ -535,6 +541,7 @@ class _ManageLocationSharingScreenState
           Row(
             children: [
               Expanded(
+                flex: 3,
                 child: SizedBox(
                   height: 42,
                   child: ElevatedButton.icon(
@@ -546,6 +553,8 @@ class _ManageLocationSharingScreenState
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -559,29 +568,34 @@ class _ManageLocationSharingScreenState
                 ),
               ),
               const SizedBox(width: 10),
-              SizedBox(
-                width: 114,
-                height: 42,
-                child: OutlinedButton(
-                  onPressed: () {
-                    state.stopIncomingSession(index);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
-                        duration: const Duration(seconds: 2),
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 42,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      state.stopIncomingSession(index);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      side: const BorderSide(color: Color(0xFFDCE2D8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    side: const BorderSide(color: Color(0xFFDCE2D8)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ),
-                  child: const Text(
-                    'Sembunyikan',
-                    style: TextStyle(fontSize: 13),
+                    child: const Text(
+                      'Sembunyikan',
+                      style: TextStyle(fontSize: 12.5),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ),
