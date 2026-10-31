@@ -1,33 +1,35 @@
+import '../../speech_to_text/data/flutter_text_to_speech_service.dart';
 import '../domain/tts_service.dart';
 
-/// Foundation implementation of [TtsService] for Stage 01.
-/// Full integration with `flutter_tts` package will be completed by Roganda.
+/// Implementation of [TtsService] utilizing [FlutterTextToSpeechService].
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
+/// Branch: feature/motion-to-sound / feature/speech-to-text.
 class TtsServiceImpl implements TtsService {
-  bool _isSpeaking = false;
+  final FlutterTextToSpeechService _delegate;
+
+  TtsServiceImpl({FlutterTextToSpeechService? delegate})
+    : _delegate = delegate ?? FlutterTextToSpeechService();
 
   @override
-  bool get isSpeaking => _isSpeaking;
+  bool get isSpeaking => _delegate.isSpeaking;
 
   @override
   Future<void> initialize({String language = 'id-ID'}) async {
-    // Stage 01: Engine placeholder
+    await _delegate.initialize(language: language);
   }
 
   @override
   Future<void> speakText(String text) async {
-    // Stage 01: Ready for flutter_tts integration
-    _isSpeaking = true;
-    await Future.delayed(const Duration(milliseconds: 300));
-    _isSpeaking = false;
+    await _delegate.speakText(text);
   }
 
   @override
   Future<void> stopSpeaking() async {
-    _isSpeaking = false;
+    await _delegate.stopSpeaking();
   }
 
   @override
   void dispose() {
-    _isSpeaking = false;
+    _delegate.dispose();
   }
 }
