@@ -321,6 +321,7 @@ class TautAppState extends ChangeNotifier {
       latitude: -7.9826,
       longitude: 112.6308,
       expiry: DateTime.now().add(const Duration(minutes: 42)),
+      status: IncomingSharingStatus.accepted,
     ),
     IncomingSharingSession(
       id: 'inc-2',
@@ -329,11 +330,41 @@ class TautAppState extends ChangeNotifier {
       latitude: -7.9526,
       longitude: 112.6144,
       expiry: DateTime.now().add(const Duration(minutes: 58)),
+      status: IncomingSharingStatus.pending,
     ),
   ];
 
   List<IncomingSharingSession> get incomingSessions =>
       List.unmodifiable(_incomingSessions);
+
+  List<IncomingSharingSession> get acceptedIncomingSessions =>
+      _incomingSessions.where((s) => s.isAccepted).toList();
+
+  List<IncomingSharingSession> get pendingIncomingSessions =>
+      _incomingSessions.where((s) => s.isPending).toList();
+
+  void acceptIncomingSession(String id) {
+    final session = _incomingSessions.cast<IncomingSharingSession?>().firstWhere(
+      (s) => s?.id == id,
+      orElse: () => null,
+    );
+    if (session != null) {
+      session.status = IncomingSharingStatus.accepted;
+      notifyListeners();
+    }
+  }
+
+  void rejectIncomingSession(String id) {
+    final session = _incomingSessions.cast<IncomingSharingSession?>().firstWhere(
+      (s) => s?.id == id,
+      orElse: () => null,
+    );
+    if (session != null) {
+      session.status = IncomingSharingStatus.rejected;
+      _incomingSessions.removeWhere((s) => s.id == id);
+      notifyListeners();
+    }
+  }
 
   void stopIncomingSession(int index) {
     if (index >= 0 && index < _incomingSessions.length) {
@@ -344,6 +375,29 @@ class TautAppState extends ChangeNotifier {
 
   void stopIncomingSessionById(String id) {
     _incomingSessions.removeWhere((s) => s.id == id);
+    notifyListeners();
+  }
+
+  void simulateNewIncomingSharing({
+    String? friendName,
+    String? subtitle,
+    double? latitude,
+    double? longitude,
+    int durationMinutes = 30,
+  }) {
+    final name = friendName ?? 'Raka';
+    _incomingSessions.removeWhere((s) => s.friendName == name);
+    _incomingSessions.add(
+      IncomingSharingSession(
+        id: 'inc-${DateTime.now().millisecondsSinceEpoch}',
+        friendName: name,
+        subtitle: subtitle ?? 'Dekat Stasiun Malang • 1,4 km',
+        latitude: latitude ?? -7.9772,
+        longitude: longitude ?? 112.6375,
+        expiry: DateTime.now().add(Duration(minutes: durationMinutes)),
+        status: IncomingSharingStatus.pending,
+      ),
+    );
     notifyListeners();
   }
 
@@ -600,6 +654,12 @@ class SharingSession {
   }
 }
 
+enum IncomingSharingStatus {
+  pending,
+  accepted,
+  rejected,
+}
+
 class IncomingSharingSession {
   final String id;
   final String friendName;
@@ -607,6 +667,7 @@ class IncomingSharingSession {
   final double latitude;
   final double longitude;
   final DateTime expiry;
+  IncomingSharingStatus status;
 
   IncomingSharingSession({
     required this.id,
@@ -615,7 +676,12 @@ class IncomingSharingSession {
     required this.latitude,
     required this.longitude,
     required this.expiry,
+    this.status = IncomingSharingStatus.accepted,
   });
+
+  bool get isAccepted => status == IncomingSharingStatus.accepted;
+  bool get isPending => status == IncomingSharingStatus.pending;
+  bool get isRejected => status == IncomingSharingStatus.rejected;
 
   String remainingText() {
     final diff = expiry.difference(DateTime.now());
