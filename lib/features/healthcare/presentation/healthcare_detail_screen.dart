@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../../shared/widgets/taut_illustrations.dart';
+import '../../../shared/widgets/taut_open_street_map.dart';
+import '../data/healthcare_repository_impl.dart';
 import '../domain/healthcare_facility.dart';
 
 class HealthcareDetailScreen extends StatelessWidget {
@@ -31,6 +33,13 @@ class HealthcareDetailScreen extends StatelessWidget {
         (facility != null
             ? '${(facility!.distanceMeters / 1000).toStringAsFixed(1)} km'
             : TautAppState().selectedFacility.distance);
+
+    final lat = facilityItem?.latitude ??
+        facility?.latitude ??
+        TautAppState().selectedFacility.latitude;
+    final lon = facilityItem?.longitude ??
+        facility?.longitude ??
+        TautAppState().selectedFacility.longitude;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -69,13 +78,13 @@ class HealthcareDetailScreen extends StatelessWidget {
               _buildProfileHero(name, type, distance),
               const SizedBox(height: 20),
 
-              _buildMapPreview(),
+              _buildMapPreview(lat: lat, lon: lon, label: name),
               const SizedBox(height: 20),
 
               _buildInfoCard(address),
               const SizedBox(height: 24),
 
-              _buildActionButtons(context, name, address),
+              _buildActionButtons(context, name, address, lat, lon),
             ],
           ),
         ),
@@ -164,44 +173,23 @@ class HealthcareDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMapPreview() {
-    return Container(
-      height: 170,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE9EEE3),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFDAE3D3)),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: TautIllustration.mapPlaceholder(),
-            ),
-          ),
-          Positioned(
-            left: 12,
-            top: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xF0FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Peta ilustrasi - bukan posisi nyata',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkGreen,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildMapPreview({
+    double lat = -7.9723,
+    double lon = 112.6318,
+    String label = 'Fasilitas Kesehatan',
+  }) {
+    return TautOpenStreetMap(
+      initialCenter: LatLng(lat, lon),
+      initialZoom: 15.2,
+      height: 180,
+      markers: [
+        TautMapMarker(
+          point: LatLng(lat, lon),
+          label: label,
+          icon: Icons.local_hospital_rounded,
+          color: AppColors.primary,
+        ),
+      ],
     );
   }
 
@@ -285,6 +273,8 @@ class HealthcareDetailScreen extends StatelessWidget {
     BuildContext context,
     String name,
     String address,
+    double lat,
+    double lon,
   ) {
     return Column(
       children: [
@@ -292,7 +282,7 @@ class HealthcareDetailScreen extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton.icon(
-            onPressed: () => _showDirectionsModal(context),
+            onPressed: () => _showDirectionsModal(context, name, lat, lon),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -333,7 +323,7 @@ class HealthcareDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showDirectionsModal(BuildContext context) {
+  void _showDirectionsModal(BuildContext context, String name, double lat, double lon) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -347,26 +337,44 @@ class HealthcareDetailScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Pratinjau rute',
-                style: TextStyle(
-                  fontSize: 20,
+              Text(
+                'Rute ke $name',
+                style: const TextStyle(
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.darkGreen,
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildMapPreview(),
-              const SizedBox(height: 12),
-              const Text(
-                'Fasilitas ini fiktif. Rute nyata tidak tersedia dalam demo.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
+              const SizedBox(height: 14),
+              _buildMapPreview(lat: lat, lon: lon, label: name),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    const HealthcareRepositoryImpl().openDirections(
+                      destinationLat: lat,
+                      destinationLon: lon,
+                      label: name,
+                    );
+                    Navigator.pop(ctx);
+                  },
+                  icon: const Icon(Icons.navigation_rounded, size: 18),
+                  label: const Text(
+                    'Buka Navigasi Google Maps',
+                    style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(

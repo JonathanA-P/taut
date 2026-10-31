@@ -476,6 +476,37 @@ class TautAppState extends ChangeNotifier {
     ),
   ];
 
+  bool _isRealHealthcareLoaded = false;
+  bool get isRealHealthcareLoaded => _isRealHealthcareLoaded;
+
+  bool _isSearchingHealthcare = false;
+  bool get isSearchingHealthcare => _isSearchingHealthcare;
+
+  double? _userGpsLatitude;
+  double? get userGpsLatitude => _userGpsLatitude;
+
+  double? _userGpsLongitude;
+  double? get userGpsLongitude => _userGpsLongitude;
+
+  void setRealHealthcareFacilities(
+    List<FacilityItem> realFacilities, {
+    required double lat,
+    required double lon,
+  }) {
+    _facilities.clear();
+    _facilities.addAll(realFacilities);
+    _isRealHealthcareLoaded = true;
+    _userGpsLatitude = lat;
+    _userGpsLongitude = lon;
+    _selectedFacilityIndex = 0;
+    notifyListeners();
+  }
+
+  void setSearchingHealthcare(bool searching) {
+    _isSearchingHealthcare = searching;
+    notifyListeners();
+  }
+
   List<FacilityItem> get allFacilities => _facilities;
 
   String _facilityCategoryFilter = 'Semua';
@@ -612,12 +643,20 @@ class FacilityItem {
   final String type;
   final String address;
   final String distance;
+  final double latitude;
+  final double longitude;
+  final bool isReal;
+  final bool isWheelchairAccessible;
 
   const FacilityItem({
     required this.name,
     required this.type,
     required this.address,
     required this.distance,
+    this.latitude = -7.9723,
+    this.longitude = 112.6318,
+    this.isReal = false,
+    this.isWheelchairAccessible = true,
   });
 }
 
