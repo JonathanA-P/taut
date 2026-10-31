@@ -3,13 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-<<<<<<< HEAD
-  speech_to_text_windows
-=======
-  flutter_tts
   app_links
+  speech_to_text_windows
   url_launcher_windows
->>>>>>> origin/feature/speech-to-text
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

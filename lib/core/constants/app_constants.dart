@@ -1,16 +1,38 @@
 /// Global constants for the TAUT platform.
+/// Standardized routes for all 20 screens and application parameters.
 class AppConstants {
   AppConstants._();
 
-  // Route Names
+  // Route Names - 20 Main Screens & Navigation Flow
   static const String routeHome = '/';
+  static const String routeSplash = '/splash';
+  static const String routeOnboarding = '/onboarding';
+  static const String routeLogin = '/login';
+  static const String routeRegister = '/register';
+  static const String routeHomeDashboard = '/dashboard';
+
+  // Communication Pipelines
   static const String routeCommunication = '/communication';
   static const String routeSpeechToText = '/communication/speech-to-text';
   static const String routeMotionToSound = '/communication/motion-to-sound';
+
+  // Location Hub & Healthcare Finder
+  static const String routeLocationHub = '/location-hub';
   static const String routeHealthcare = '/healthcare';
-  static const String routeLocationSharing = '/location-sharing';
+  static const String routeHealthcareDetail = '/healthcare/detail';
+  static const String routeShareHealthcare = '/healthcare/share-location';
+  static const String routeLocationSharing = '/location-sharing'; // Alias for compatibility
+
+  // Friends & Live Sharing
   static const String routeFriends = '/friends';
+  static const String routeAddFriend = '/friends/add';
+  static const String routeLiveLocation = '/friends/live-location';
+  static const String routeManageLocationSharing = '/friends/manage-sharing';
+
+  // Profile & Settings
   static const String routeProfile = '/profile';
+  static const String routeEditProfile = '/profile/edit';
+  static const String routeSettings = '/settings';
   static const String routePrivacy = '/privacy';
 
   // Healthcare Tags (OpenStreetMap Overpass)
@@ -21,7 +43,7 @@ class AppConstants {
     'pharmacy',
   ];
 
-  // Default Search Radius
+  // Default Search Radius (10 km)
   static const double defaultSearchRadiusMeters = 10000.0;
 
   // BISINDO Confidence Threshold

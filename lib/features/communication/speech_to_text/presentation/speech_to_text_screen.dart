@@ -1,21 +1,21 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/status_badge.dart';
 import '../data/speech_service_impl.dart';
 import '../domain/speech_service.dart';
 
 /// Production Live Speech-to-Text screen for Teman Tuli accessibility.
-///
-/// Features:
-/// 1. Real-time live caption with extra-large high-contrast text and zero confirmation step.
-/// 2. Continuous listening with auto-recovery and multi-sentence aggregation.
-/// 3. One-tap "Bersihkan Layar" (Clear Screen) button.
-/// 4. Fast manual typing fallback for noisy environments.
-///
-/// Feature Owner: Roganda Tua Tampubolon (Branch: feature/speech-to-text).
+/// Adopts the Dribbble-inspired healthcare aesthetic & sage green identity:
+/// - Real-time live caption with extra-large high-contrast text (#263D2F) and zero confirmation step
+/// - Continuous listening with auto-recovery and multi-sentence aggregation
+/// - Spacious transcription viewport with auto-scroll
+/// - Large, accessible microphone control
+/// - One-tap "Bersihkan Layar" (Clear Screen) button
+/// - Fast manual typing fallback for noisy environments
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechToTextScreen extends StatefulWidget {
   final SpeechService? speechService;
 
@@ -158,110 +158,103 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     final hasContent = _displayCaption.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slate 100 soft background
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Live Speech-to-Text',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Live Speech-to-Text'),
         actions: [
           IconButton(
+            tooltip: 'Ketik Manual',
             icon: Icon(
-              _isManualInputVisible ? Icons.keyboard_hide : Icons.keyboard,
-              color: AppColors.primary,
+              _isManualInputVisible ? Icons.keyboard_hide_rounded : Icons.keyboard_rounded,
+              color: AppColors.darkGreen,
             ),
-            tooltip: 'Ketik Manual Cepat',
             onPressed: () {
               setState(() {
                 _isManualInputVisible = !_isManualInputVisible;
               });
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Status Banner: Guides Deaf user on microphone state
+            // Status Header
             _buildStatusHeader(),
 
-            // Main Live Caption Display Area
+            // Manual Typing Input (collapsible)
+            if (_isManualInputVisible) _buildManualInputField(),
+
+            // Spacious Transcription Area
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _isListening
-                        ? AppColors.primary
-                        : AppColors.outline.withValues(alpha: 0.5),
-                    width: _isListening ? 2.5 : 1.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  child: hasContent
-                      ? SelectableText(
+              child: AppCard(
+                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.all(20.0),
+                backgroundColor: AppColors.white,
+                borderColor: _isListening
+                    ? AppColors.primary
+                    : AppColors.lightGreen,
+                child: hasContent
+                    ? SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        child: Text(
                           _displayCaption,
                           style: const TextStyle(
-                            fontSize: 28,
+                            fontSize: 26,
+                            height: 1.5,
                             fontWeight: FontWeight.w700,
-                            height: 1.45,
-                            color: Color(0xFF0F172A), // Slate 900 high contrast
+                            color: AppColors.darkGreen,
                             letterSpacing: -0.3,
                           ),
-                        )
-                      : Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 60.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _isListening
-                                      ? Icons.hearing_rounded
-                                      : Icons.mic_none_rounded,
-                                  size: 64,
-                                  color: _isListening
-                                      ? AppColors.primary
-                                      : Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _isListening
-                                      ? 'Mendengarkan lawan bicara...\nSetiap kata akan langsung muncul di sini.'
-                                      : 'Ketuk tombol mikrofon di bawah untuk mulai merekam ucapan lawan bicara.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    height: 1.5,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
-                ),
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentSttBg,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.mic_rounded,
+                                size: 40,
+                                color: AppColors.accentStt,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Menunggu Ucapan Lawan Bicara',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.darkGreen,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 32.0),
+                              child: Text(
+                                'Tekan tombol mikrofon di bawah untuk mentranskripsi suara bahasa Indonesia secara langsung.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
             ),
 
-            // Quick Manual Typing Fallback (Shown when toggled)
-            if (_isManualInputVisible) _buildManualInputField(),
-
-            // Bottom Controls Bar: Clear Screen & Big Mic Toggle Button
+            // Bottom Controls Area
             _buildBottomControls(),
           ],
         ),
@@ -271,31 +264,25 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
 
   Widget _buildStatusHeader() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: _isListening
-            ? const Color(0xFFDCFCE7) // Mint 100
-            : AppColors.surfaceVariant,
+        color: _isListening ? AppColors.accentSttBg : AppColors.lightGreen,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isListening ? const Color(0xFF16A34A) : AppColors.outline,
+          color: _isListening
+              ? AppColors.accentStt.withValues(alpha: 0.3)
+              : AppColors.sageGreen,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 12,
+            height: 12,
             decoration: BoxDecoration(
-              color: _isListening
-                  ? const Color(0xFF16A34A)
-                  : Colors.grey.shade500,
+              color: _isListening ? AppColors.error : AppColors.primary,
               shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _isListening ? Icons.mic_rounded : Icons.mic_off_rounded,
-              color: Colors.white,
-              size: 20,
             ),
           ),
           const SizedBox(width: 12),
@@ -309,28 +296,28 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                       ? 'MIKROFON AKTIF (Bahasa Indonesia)'
                       : 'MIKROFON TIDAK AKTIF',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: _isListening
-                        ? const Color(0xFF166534)
-                        : AppColors.onSurfaceVariant,
+                    letterSpacing: 0.4,
+                    color: _isListening ? AppColors.error : AppColors.darkGreen,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   _isListening
-                      ? 'Arahkan mikrofon ke lawan bicara untuk transkripsi langsung'
-                      : 'Ketuk tombol biru besar di bawah untuk mulai mendengarkan',
+                      ? 'Mendengarkan ucapan langsung lawan bicara...'
+                      : 'Ketuk tombol di bawah untuk mulai mendengarkan',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: _isListening
-                        ? const Color(0xFF15803D)
-                        : Colors.grey.shade700,
+                    fontSize: 11.5,
+                    color: _isListening ? AppColors.onAccentStt : AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
+          ),
+          StatusBadge.category(
+            'id-ID',
+            bg: _isListening ? AppColors.white : AppColors.sageGreen,
+            fg: AppColors.darkGreen,
           ),
         ],
       ),
@@ -342,9 +329,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
@@ -354,9 +342,13 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
               decoration: const InputDecoration(
                 hintText: 'Ketik pesan cepat di sini...',
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
                 isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               ),
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
               onSubmitted: (_) => _submitManualText(),
             ),
           ),
@@ -374,26 +366,32 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0A263D2F),
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              // Clear Screen Button (Hapus / Bersihkan Layar)
               Expanded(
                 flex: 1,
                 child: AppButton(
                   label: 'Bersihkan Layar',
                   icon: Icons.delete_sweep_rounded,
                   isOutlined: true,
+                  height: 46,
                   onPressed: _displayCaption.isNotEmpty ? _clearScreen : null,
                 ),
               ),
               const SizedBox(width: 12),
-              // Fallback Manual Input Button
               Expanded(
                 flex: 1,
                 child: AppButton(
@@ -402,6 +400,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                       ? Icons.close_rounded
                       : Icons.keyboard_rounded,
                   isOutlined: true,
+                  height: 46,
                   onPressed: () {
                     setState(() {
                       _isManualInputVisible = !_isManualInputVisible;
@@ -411,37 +410,36 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
           // Large Microphone Control Button (Satu Sentuhan Teman Tuli)
-          Center(
-            child: SizedBox(
-              width: double.infinity,
-              height: 64,
-              child: ElevatedButton.icon(
-                onPressed: _toggleListening,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isListening
-                      ? AppColors.error
-                      : AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: _isListening ? 6 : 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
+          SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton.icon(
+              onPressed: _toggleListening,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isListening
+                    ? AppColors.error
+                    : AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(29),
                 ),
-                icon: Icon(
-                  _isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                  size: 32,
-                ),
-                label: Text(
-                  _isListening
-                      ? 'Hentikan Mendengarkan'
-                      : 'Mulai Mendengarkan Suara',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.3,
-                  ),
+              ),
+              icon: Icon(
+                _isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                size: 28,
+              ),
+              label: Text(
+                _isListening
+                    ? 'Hentikan Mendengarkan'
+                    : 'Mulai Mendengarkan Suara',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
