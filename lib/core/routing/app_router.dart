@@ -17,6 +17,7 @@ import '../../features/friends/presentation/live_location_screen.dart';
 import '../../features/friends/presentation/manage_location_sharing_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
+import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
@@ -29,6 +30,7 @@ class AppRoutes {
 
   static const String splash = '/';
   static const String onboarding = '/onboarding';
+  static const String welcome = '/welcome';
   static const String home = '/home';
   static const String commHub = '/comm-hub';
   static const String speechToText = '/stt';
@@ -58,6 +60,9 @@ class AppRouter {
 
       case AppConstants.routeOnboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+
+      case AppRoutes.welcome:
+        return MaterialPageRoute(builder: (_) => const WelcomeScreen());
 
       case AppConstants.routeLogin:
         return MaterialPageRoute(builder: (_) => const LoginScreen());

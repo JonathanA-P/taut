@@ -4,6 +4,7 @@ import 'package:taut/core/routing/app_router.dart';
 import 'package:taut/core/theme/app_theme.dart';
 import 'package:taut/features/auth/presentation/splash_screen.dart';
 import 'package:taut/features/auth/presentation/onboarding_screen.dart';
+import 'package:taut/features/auth/presentation/welcome_screen.dart';
 import 'package:taut/features/auth/presentation/login_screen.dart';
 import 'package:taut/features/auth/presentation/register_screen.dart';
 import 'package:taut/features/auth/presentation/edit_profile_screen.dart';
@@ -28,7 +29,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1600));
     });
 
-    testWidgets('OnboardingScreen renders title, illustration, and CTA', (tester) async {
+    testWidgets('OnboardingScreen renders 3-step intro slides, illustration, and CTA', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -37,13 +38,27 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('SALING MEMAHAMI'), findsOneWidget);
+      expect(find.textContaining('SALING MEMAHAMI'), findsOneWidget);
       expect(find.textContaining('Ceritamu layak'), findsOneWidget);
-      expect(find.text('Mulai bersama TAUT'), findsOneWidget);
+      expect(find.text('Lanjut'), findsOneWidget);
       expect(find.text('Lewati'), findsOneWidget);
     });
 
-    testWidgets('LoginScreen renders email and password fields and submit button', (tester) async {
+    testWidgets('WelcomeScreen renders brand, resonance waves, and Mulai Eksplorasi CTA', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const WelcomeScreen(),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('taut.', findRichText: true), findsOneWidget);
+      expect(find.text('Ruang untuk saling memahami'), findsOneWidget);
+      expect(find.text('Mulai Eksplorasi'), findsOneWidget);
+    });
+
+    testWidgets('LoginScreen renders email and password fields, SSO, and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -52,13 +67,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Selamat datang'), findsOneWidget);
+      expect(find.textContaining('Senang bertemu lagi'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(2));
-      expect(find.text('Masuk demo'), findsOneWidget);
-      expect(find.text('Jelajahi tanpa akun'), findsOneWidget);
+      expect(find.text('Masuk ke TAUT'), findsOneWidget);
+      expect(find.textContaining('Jelajahi tanpa Akun'), findsOneWidget);
     });
 
-    testWidgets('RegisterScreen renders form fields and submit button', (tester) async {
+    testWidgets('RegisterScreen renders form fields, terms, and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -67,9 +82,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Buat akun'), findsOneWidget);
+      expect(find.textContaining('Mulai perjalananmu'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(3));
-      expect(find.text('Daftar demo'), findsOneWidget);
+      expect(find.text('Daftar Akun Baru'), findsOneWidget);
+      expect(find.textContaining('Jelajahi tanpa Akun'), findsOneWidget);
     });
 
     testWidgets('EditProfileScreen renders profile inputs and submit button', (tester) async {

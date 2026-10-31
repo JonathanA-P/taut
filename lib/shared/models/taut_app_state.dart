@@ -81,7 +81,7 @@ class TautAppState extends ChangeNotifier {
   }
 
   bool get isNavbarVisible {
-    return !const ['onboard', 'login', 'register', 'splash'].contains(_currentPage);
+    return !const ['onboard', 'login', 'register', 'splash', 'welcome'].contains(_currentPage);
   }
 
   String _userName = 'Adriel';
