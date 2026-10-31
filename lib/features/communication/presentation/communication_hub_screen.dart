@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../speech_to_text/data/speech_service_impl.dart';
@@ -1036,7 +1037,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Masukkan kode unik ruangan atau gunakan kode demonstrasi:',
+                'Masukkan kode unik ruangan atau pindai kode QR host:',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),
@@ -1051,6 +1052,23 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _showQrScannerDialog(context, state);
+                  },
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                  label: const Text('Pindai Kode QR Kamera'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: Color(0xFFC7DBC5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
@@ -1083,6 +1101,166 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
               child: const Text('Gabung langsung'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  // Interactive QR Scanner Viewfinder Dialog
+  void _showQrScannerDialog(BuildContext context, TautAppState state) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16251D),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF385544)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pindai QR Ruangan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Arahkan kamera ke kode QR di layar pembuat ruangan.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11.5, color: Color(0xFFB4C9BB)),
+                ),
+                const SizedBox(height: 18),
+
+                // Viewfinder Frame with animated laser line
+                Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF48BB78), width: 2),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Viewfinder corner marks
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFF68D391), width: 3), left: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFF68D391), width: 3), right: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF68D391), width: 3), left: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF68D391), width: 3), right: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+
+                      // Scanning Laser Line
+                      AnimatedBuilder(
+                        animation: _landmarkAnimController,
+                        builder: (context, _) {
+                          final topOffset = 20 + _landmarkAnimController.value * 150;
+                          return Positioned(
+                            top: topOffset,
+                            left: 15,
+                            right: 15,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF48BB78),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF48BB78).withValues(alpha: 0.8),
+                                    blurRadius: 6,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const Center(
+                        child: Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 72,
+                          color: Color(0x3348BB78),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Auto detection action for test/demo
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final code = state.roomCode ?? 'TAUT-8921';
+                      final joined = state.joinRoomByCode(code);
+                      Navigator.pop(ctx);
+                      if (joined) {
+                        _showToast('Kode QR terdeteksi! Berhasil bergabung ke $code.');
+                      } else {
+                        _showToast('Kode QR $code terdeteksi! Menunggu persetujuan host.');
+                      }
+                    },
+                    icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                    label: Text(
+                      'Pindai Otomatis (${state.roomCode ?? "TAUT-8921"})',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -1882,7 +2060,7 @@ class _BisindoLandmarkPainter extends CustomPainter {
 }
 
 // ==========================================
-// VECTOR QR WIDGET
+// SCANNABLE QR WIDGET (ISO/IEC 18004 STANDARD)
 // ==========================================
 class TautQrWidget extends StatelessWidget {
   final String code;
@@ -1901,62 +2079,20 @@ class TautQrWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E9E1)),
       ),
-      child: CustomPaint(
-        size: Size(size, size),
-        painter: _TautQrPainter(),
+      child: QrImageView(
+        data: code,
+        version: QrVersions.auto,
+        size: size - 16,
+        padding: EdgeInsets.zero,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF263D2F),
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF263D2F),
+        ),
       ),
     );
   }
-}
-
-class _TautQrPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF263D2F)
-      ..style = PaintingStyle.fill;
-
-    final w = size.width;
-    final h = size.height;
-    final unit = w / 21;
-
-    void drawFinder(double x, double y) {
-      canvas.drawRect(Rect.fromLTWH(x, y, 7 * unit, 7 * unit), paint);
-      canvas.drawRect(
-        Rect.fromLTWH(x + unit, y + unit, 5 * unit, 5 * unit),
-        Paint()..color = Colors.white,
-      );
-      canvas.drawRect(
-        Rect.fromLTWH(x + 2 * unit, y + 2 * unit, 3 * unit, 3 * unit),
-        paint,
-      );
-    }
-
-    drawFinder(0, 0);
-    drawFinder(w - 7 * unit, 0);
-    drawFinder(0, h - 7 * unit);
-
-    for (int i = 8; i <= 12; i += 2) {
-      canvas.drawRect(Rect.fromLTWH(i * unit, 6 * unit, unit, unit), paint);
-      canvas.drawRect(Rect.fromLTWH(6 * unit, i * unit, unit, unit), paint);
-    }
-
-    final dataCoords = [
-      [8, 8], [9, 8], [11, 9], [13, 8], [14, 9], [16, 8],
-      [8, 10], [10, 11], [12, 10], [14, 11], [17, 10],
-      [9, 13], [11, 13], [13, 13], [15, 14], [17, 13],
-      [8, 16], [10, 17], [12, 16], [14, 17], [16, 16],
-      [9, 19], [11, 18], [13, 19], [15, 19], [17, 18],
-    ];
-
-    for (final coord in dataCoords) {
-      canvas.drawRect(
-        Rect.fromLTWH(coord[0] * unit, coord[1] * unit, unit, unit),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
