@@ -1,205 +1,991 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/permissions/permission_service.dart';
 import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
+import '../data/bisindo_detector_service.dart';
+import '../data/bisindo_model_manager.dart';
+import '../data/tts_service_impl.dart';
+import '../domain/bisindo_labels.dart';
+import '../domain/tts_service.dart';
 
-/// Screen for Motion-to-Sound (BISINDO to Speech).
-/// Captures hand signs using the camera and converts recognized words to spoken audio.
-/// Feature Owner: Roganda Tua Tampubolon (Branch: feature/motion-to-sound).
+/// Screen for Modul 2: Motion-to-Sound (Isyarat BISINDO ke Suara).
+/// High-contrast, accessibility-focused interface designed for Deaf/Hard-of-Hearing users.
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class MotionToSoundScreen extends StatefulWidget {
-  const MotionToSoundScreen({super.key});
+  final PermissionService? permissionService;
+  final BisindoDetectorService? detectorService;
+  final TtsService? ttsService;
+
+  const MotionToSoundScreen({
+    super.key,
+    this.permissionService,
+    this.detectorService,
+    this.ttsService,
+  });
 
   @override
   State<MotionToSoundScreen> createState() => _MotionToSoundScreenState();
 }
 
-class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
-  bool _isCameraActive = false;
+class _MotionToSoundScreenState extends State<MotionToSoundScreen>
+    with WidgetsBindingObserver {
+  late final PermissionService _permissionService;
+  late final BisindoDetectorService _detectorService;
+  late final TtsService _ttsService;
 
-  void _toggleCamera() {
-    setState(() {
-      _isCameraActive = !_isCameraActive;
+  List<CameraDescription> _availableCameras = [];
+  CameraController? _cameraController;
+  int _selectedCameraIndex = 0;
+  bool _isCameraActive = false;
+  bool _isCameraInitializing = false;
+  AppPermissionStatus _cameraPermission = AppPermissionStatus.unknown;
+
+  BisindoMode _activeMode = BisindoMode.kata;
+  bool _isAutoSpeakKata = true;
+
+  // Sentence Builder State
+  String _sentenceBuffer = '';
+  String _currentLiveLabel = '';
+  double _currentConfidence = 0.0;
+  BoundingBox? _currentBox;
+  bool _isProlongedUnrecognized = false;
+
+  StreamSubscription<BisindoDetectionEvent>? _detectionSubscription;
+  StreamSubscription<ModelState>? _modelStateSubscription;
+  ModelState? _modelState;
+
+  // Emergency / Common Quick Preset Chips
+  static const List<String> _quickPresets = [
+    'Halo, saya Tuli',
+    'Tolong bantu saya',
+    'Saya butuh ke fasilitas kesehatan terdekat',
+    'Terima kasih',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _permissionService =
+        widget.permissionService ?? const PermissionServiceImpl();
+    _detectorService = widget.detectorService ?? BisindoDetectorService();
+    _ttsService = widget.ttsService ?? TtsServiceImpl();
+
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    // 1. Initialize TTS
+    await _ttsService.initialize(language: 'id-ID');
+
+    // 2. Initialize Model Engine
+    _modelStateSubscription = BisindoModelManager().stateStream.listen((state) {
+      if (mounted) {
+        setState(() => _modelState = state);
+      }
     });
 
+    try {
+      await _detectorService.initializeModel(initialMode: _activeMode);
+    } catch (e) {
+      debugPrint('[MotionToSoundScreen] Model load error: $e');
+    }
+
+    // 3. Listen to Detection Events
+    _detectionSubscription = _detectorService.detectionStream.listen(
+      _handleDetectionEvent,
+    );
+
+    // 4. Check Camera Permission & Enumerate Cameras
+    await _checkPermissionAndCameras();
+  }
+
+  Future<void> _checkPermissionAndCameras() async {
+    final status = await _permissionService.checkPermission(
+      AppPermissionType.camera,
+    );
+    if (!mounted) return;
+
+    setState(() => _cameraPermission = status);
+
+    if (status == AppPermissionStatus.granted) {
+      await _fetchCameras();
+    }
+  }
+
+  Future<void> _fetchCameras() async {
+    try {
+      _availableCameras = await availableCameras();
+      if (_availableCameras.isNotEmpty) {
+        // Prefer front camera for sign language
+        _selectedCameraIndex = _availableCameras.indexWhere(
+          (c) => c.lensDirection == CameraLensDirection.front,
+        );
+        if (_selectedCameraIndex < 0) _selectedCameraIndex = 0;
+      }
+    } catch (e) {
+      debugPrint('[MotionToSoundScreen] Camera enumeration error: $e');
+      _availableCameras = [];
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _requestCameraPermission() async {
+    final status = await _permissionService.requestPermission(
+      AppPermissionType.camera,
+    );
+    if (!mounted) return;
+
+    setState(() => _cameraPermission = status);
+    if (status == AppPermissionStatus.granted) {
+      await _fetchCameras();
+      await _startCamera();
+    } else if (status == AppPermissionStatus.permanentlyDenied) {
+      _showPermissionSettingsDialog();
+    }
+  }
+
+  void _showPermissionSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Izin Kamera Diperlukan'),
+        content: const Text(
+          'Aplikasi TAUT membutuhkan izin kamera untuk mendeteksi isyarat BISINDO secara on-device. Silakan aktifkan izin di pengaturan perangkat.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _permissionService.openAppSettings();
+            },
+            child: const Text('Buka Pengaturan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startCamera() async {
+    if (_availableCameras.isEmpty) {
+      await _fetchCameras();
+      if (_availableCameras.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kamera tidak ditemukan pada perangkat.'),
+          ),
+        );
+        return;
+      }
+    }
+
+    setState(() => _isCameraInitializing = true);
+
+    try {
+      final camera = _availableCameras[_selectedCameraIndex];
+      final controller = CameraController(
+        camera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+      );
+
+      await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      await controller.startImageStream((CameraImage image) {
+        final isFront = camera.lensDirection == CameraLensDirection.front;
+        _detectorService.processCameraImage(image, isFrontCamera: isFront);
+      });
+
+      setState(() {
+        _cameraController = controller;
+        _isCameraActive = true;
+        _isCameraInitializing = false;
+      });
+    } catch (e) {
+      debugPrint('[MotionToSoundScreen] Error starting camera: $e');
+      if (mounted) {
+        setState(() {
+          _isCameraInitializing = false;
+          _isCameraActive = false;
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal memulai kamera: $e')));
+      }
+    }
+  }
+
+  Future<void> _stopCamera({bool updateUi = true}) async {
+    final controller = _cameraController;
+    _cameraController = null;
+
+    if (controller != null) {
+      try {
+        if (controller.value.isStreamingImages) {
+          await controller.stopImageStream();
+        }
+        await controller.dispose();
+      } catch (e) {
+        debugPrint('[MotionToSoundScreen] Error stopping camera: $e');
+      }
+    }
+
+    if (updateUi && mounted) {
+      setState(() {
+        _isCameraActive = false;
+        _isCameraInitializing = false;
+        _currentLiveLabel = '';
+        _currentConfidence = 0.0;
+        _currentBox = null;
+        _isProlongedUnrecognized = false;
+      });
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    if (_availableCameras.length < 2) return;
+
+    await _stopCamera();
+    _selectedCameraIndex =
+        (_selectedCameraIndex + 1) % _availableCameras.length;
+    await _startCamera();
+  }
+
+  void _handleDetectionEvent(BisindoDetectionEvent event) {
+    if (!mounted) return;
+
+    setState(() {
+      _currentConfidence = event.result.confidence;
+      _currentBox = event.boundingBox;
+      _isProlongedUnrecognized = event.isProlongedUnrecognized;
+
+      if (event.result.isRecognized) {
+        _currentLiveLabel = event.result.label;
+      } else {
+        _currentLiveLabel = '';
+      }
+
+      // Handle validated token (passed consecutive cycle stability)
+      if (event.isValidatedToken) {
+        _onTokenValidated(event.result.label);
+      }
+    });
+  }
+
+  void _onTokenValidated(String token) {
+    if (_activeMode == BisindoMode.kata) {
+      // In Kata Mode: Append word + space
+      final space = _sentenceBuffer.isEmpty || _sentenceBuffer.endsWith(' ')
+          ? ''
+          : ' ';
+      _sentenceBuffer += '$space$token ';
+
+      // Auto-speak if enabled
+      if (_isAutoSpeakKata) {
+        _ttsService.speakText(token);
+      }
+    } else {
+      // In Abjad & Angka Mode: Append single character/digit directly
+      _sentenceBuffer += token;
+    }
+  }
+
+  Future<void> _onModeChanged(BisindoMode newMode) async {
+    if (_activeMode == newMode) return;
+
+    setState(() {
+      _activeMode = newMode;
+      _currentLiveLabel = '';
+      _currentConfidence = 0.0;
+      _currentBox = null;
+      _isProlongedUnrecognized = false;
+    });
+
+    await _detectorService.switchMode(newMode);
+  }
+
+  void _addSpace() {
+    setState(() {
+      if (!_sentenceBuffer.endsWith(' ')) {
+        _sentenceBuffer += ' ';
+      }
+    });
+  }
+
+  void _backspace() {
+    setState(() {
+      if (_sentenceBuffer.isNotEmpty) {
+        _sentenceBuffer = _sentenceBuffer.substring(
+          0,
+          _sentenceBuffer.length - 1,
+        );
+      }
+    });
+  }
+
+  void _clearSentence() {
+    setState(() {
+      _sentenceBuffer = '';
+    });
+  }
+
+  Future<void> _speakCurrentSentence() async {
+    final text = _sentenceBuffer.trim();
+    if (text.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bilah kalimat masih kosong untuk disuarakan.'),
+        ),
+      );
+      return;
+    }
+    await _ttsService.speakText(text);
+  }
+
+  Future<void> _speakPreset(String presetText) async {
+    await _ttsService.speakText(presetText);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          _isCameraActive
-              ? 'Pratinjau kamera dibuka. Deteksi landmark MediaPipe aktif.'
-              : 'Kamera dinonaktifkan.',
+        content: Row(
+          children: [
+            const Icon(Icons.volume_up, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Menyuarakan: "$presetText"')),
+          ],
         ),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive) {
+      _stopCamera();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _detectionSubscription?.cancel();
+    _modelStateSubscription?.cancel();
+    _stopCamera(updateUi: false);
+    _ttsService.stopSpeaking();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Gerakan ke Suara (BISINDO)')),
+      appBar: AppBar(
+        title: const Text(
+          'Isyarat BISINDO ke Suara',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          if (_availableCameras.length > 1 && _isCameraActive)
+            IconButton(
+              icon: const Icon(Icons.flip_camera_ios_rounded),
+              tooltip: 'Ganti Kamera (Depan/Belakang)',
+              onPressed: _switchCamera,
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(child: StatusBadge.development()),
-            const SizedBox(height: 16),
-            // Camera Viewfinder Placeholder
-            Container(
-              height: 280,
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.outline),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _isCameraActive
-                              ? Icons.videocam_rounded
-                              : Icons.videocam_off_rounded,
-                          size: 48,
-                          color: Colors.white70,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          _isCameraActive
-                              ? 'Kamera Aktif\nMenunggu integrasi MediaPipe Hand Landmarker'
-                              : 'Pratinjau Kamera Belum Aktif\nTekan tombol di bawah untuk mengaktifkan',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Target: Tangan & Gerak BISINDO',
-                        style: TextStyle(color: Colors.white, fontSize: 11),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            // Status Badge & Privacy Banner
+            _buildPrivacyBanner(),
+
+            // Model Loading / Download Progress Indicator (if active)
+            if (_modelState != null && _modelState!.isLoading)
+              _buildModelLoadingBar(_modelState!),
+
+            // 1. Viewfinder & Camera Feed with Detection Overlay
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildCameraViewfinder(),
             ),
-            const SizedBox(height: 16),
-            AppButton(
-              label: _isCameraActive
-                  ? 'Tutup Kamera'
-                  : 'Buka Kamera & Mulai Deteksi',
-              icon: _isCameraActive ? Icons.videocam_off : Icons.videocam,
-              onPressed: _toggleCamera,
-            ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Kata Terdeteksi (Model BISINDO)',
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Belum Ada Gerakan Terdeteksi',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Tingkat Keyakinan (Confidence): 0.0%',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    label: 'Ucapkan Suara (TTS)',
-                    icon: Icons.volume_up_rounded,
-                    isOutlined: true,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Text-to-Speech (TTS) akan diaktifkan setelah integrasi flutter_tts.',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+
+            const SizedBox(height: 12),
+
+            // 2. Fallback Notice Banner (When prolonged unrecognized)
+            if (_isProlongedUnrecognized)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildUnrecognizedAlert(),
               ),
-            ),
+
             const SizedBox(height: 8),
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Kosakata BISINDO yang Direncanakan',
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Tahap awal MVP menguji model kata terisolasi (Word-Level BISINDO):',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: const [
-                      Chip(label: Text('HALO')),
-                      Chip(label: Text('TERIMA KASIH')),
-                      Chip(label: Text('TOLONG')),
-                      Chip(label: Text('SAMA-SAMA')),
-                      Chip(label: Text('MAAF')),
-                      Chip(label: Text('RUMAH SAKIT')),
-                      Chip(label: Text('DOKTER')),
-                      Chip(label: Text('DARURAT')),
-                    ],
-                  ),
-                ],
+
+            // 3. 3-Tab Detection Mode Selector (Kata, Abjad, Angka)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildModeSelector(),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 4. Bilah Kalimat & TTS Controls
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildSentenceBuilder(isDark),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 5. Fallback Quick Preset Chips
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildQuickPresets(),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModelLoadingBar(ModelState state) {
+    return Container(
+      color: AppColors.primaryContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              state.status == ModelLoadStatus.downloading
+                  ? 'Mengunduh model AI ${(state.downloadProgress * 100).toStringAsFixed(0)}%...'
+                  : 'Memuat model ke memori...',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrivacyBanner() {
+    return Container(
+      color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          StatusBadge.development(),
+          const SizedBox(width: 8),
+          const Spacer(),
+          const Icon(
+            Icons.lock_outline_rounded,
+            size: 14,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 4),
+          const Flexible(
+            child: Text(
+              'On-Device AI (Privasi Terjamin)',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCameraViewfinder() {
+    return Container(
+      height: 320,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _isProlongedUnrecognized
+              ? AppColors.error
+              : (_currentLiveLabel.isNotEmpty
+                    ? AppColors.primary
+                    : AppColors.outline),
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Camera Stream Preview or Inactive Placeholder
+            if (_isCameraActive &&
+                _cameraController != null &&
+                _cameraController!.value.isInitialized)
+              FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _cameraController!.value.previewSize?.height ?? 320,
+                  height: _cameraController!.value.previewSize?.width ?? 320,
+                  child: CameraPreview(_cameraController!),
+                ),
+              )
+            else
+              _buildCameraPlaceholder(),
+
+            // Target Guide Frame Overlay
+            if (_isCameraActive) _buildGuideFrame(),
+
+            // Dynamic Bounding Box from Object Detection
+            if (_isCameraActive &&
+                _currentBox != null &&
+                _currentBox!.isValid &&
+                _currentConfidence >= 0.65)
+              _buildBoundingBoxOverlay(_currentBox!),
+
+            // Top Status Badge (Live Detection Feedback)
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: _buildDetectionHeaderBadge(),
+            ),
+
+            // Bottom Camera Toggle Button
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: FloatingActionButton.small(
+                heroTag: 'camera_toggle',
+                backgroundColor: _isCameraActive
+                    ? AppColors.error
+                    : AppColors.primary,
+                foregroundColor: Colors.white,
+                onPressed: _isCameraActive ? _stopCamera : _startCamera,
+                child: Icon(
+                  _isCameraActive
+                      ? Icons.videocam_off_rounded
+                      : Icons.videocam_rounded,
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCameraPlaceholder() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isCameraInitializing) ...[
+              const CircularProgressIndicator(color: AppColors.primary),
+              const SizedBox(height: 16),
+              const Text(
+                'Menginisialisasi Kamera...',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ] else ...[
+              Icon(
+                _cameraPermission == AppPermissionStatus.granted
+                    ? Icons.videocam_outlined
+                    : Icons.no_photography_outlined,
+                size: 56,
+                color: Colors.white70,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _cameraPermission == AppPermissionStatus.granted
+                    ? 'Kamera Tidak Aktif\nTekan tombol untuk memulai deteksi gerakan'
+                    : 'Izin Kamera Belum Diberikan',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _cameraPermission == AppPermissionStatus.granted
+                    ? _startCamera
+                    : _requestCameraPermission,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                label: Text(
+                  _cameraPermission == AppPermissionStatus.granted
+                      ? 'Aktifkan Kamera'
+                      : 'Beri Izin Kamera',
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideFrame() {
+    return Center(
+      child: Container(
+        width: 220,
+        height: 220,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text(
+              'Arahkan Isyarat Tangan ke Sini',
+              style: TextStyle(color: Colors.white70, fontSize: 10),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBoundingBoxOverlay(BoundingBox box) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final top = box.ymin * constraints.maxHeight;
+        final left = box.xmin * constraints.maxWidth;
+        final width = (box.xmax - box.xmin) * constraints.maxWidth;
+        final height = (box.ymax - box.ymin) * constraints.maxHeight;
+
+        return Positioned(
+          top: top,
+          left: left,
+          width: width.clamp(20.0, constraints.maxWidth),
+          height: height.clamp(20.0, constraints.maxHeight),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.greenAccent, width: 2.5),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.greenAccent.withValues(alpha: 0.1),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetectionHeaderBadge() {
+    final hasDetection =
+        _currentLiveLabel.isNotEmpty && _currentConfidence >= 0.65;
+    final pct = (_currentConfidence * 100).toStringAsFixed(0);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: hasDetection
+            ? Colors.green.shade900.withValues(alpha: 0.9)
+            : Colors.black.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasDetection ? Colors.greenAccent : Colors.white24,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            hasDetection
+                ? Icons.check_circle_rounded
+                : Icons.motion_photos_on_rounded,
+            color: hasDetection ? Colors.greenAccent : Colors.white70,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              hasDetection
+                  ? 'Terdeteksi: $_currentLiveLabel ($pct%)'
+                  : (_isCameraActive
+                        ? 'Menunggu gerakan isyarat...'
+                        : 'Kamera Siaga'),
+              style: TextStyle(
+                color: hasDetection ? Colors.white : Colors.white70,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnrecognizedAlert() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.secondary),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: AppColors.secondary),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Isyarat belum dikenali — Gunakan Mode Eja Abjad atau Tombol Kalimat Cepat di bawah.',
+              style: TextStyle(
+                color: AppColors.onSecondaryContainer,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (_activeMode != BisindoMode.abjad)
+            TextButton(
+              onPressed: () => _onModeChanged(BisindoMode.abjad),
+              child: const Text('Mode Eja'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Mode Deteksi Gerakan',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+        SegmentedButton<BisindoMode>(
+          segments: const [
+            ButtonSegment(
+              value: BisindoMode.kata,
+              label: Text('Kata (23)'),
+              icon: Icon(Icons.chat_bubble_outline_rounded, size: 16),
+            ),
+            ButtonSegment(
+              value: BisindoMode.abjad,
+              label: Text('Abjad A–Z'),
+              icon: Icon(Icons.spellcheck_rounded, size: 16),
+            ),
+            ButtonSegment(
+              value: BisindoMode.angka,
+              label: Text('Angka 0–10'),
+              icon: Icon(Icons.pin_outlined, size: 16),
+            ),
+          ],
+          selected: {_activeMode},
+          onSelectionChanged: (set) => _onModeChanged(set.first),
+          style: SegmentedButton.styleFrom(
+            selectedBackgroundColor: AppColors.primaryContainer,
+            selectedForegroundColor: AppColors.onPrimaryContainer,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSentenceBuilder(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceVariant : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.article_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'Bilah Kalimat & Ejaan',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const Spacer(),
+              if (_activeMode == BisindoMode.kata)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Suara Otomatis',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    Switch(
+                      value: _isAutoSpeakKata,
+                      onChanged: (val) =>
+                          setState(() => _isAutoSpeakKata = val),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Sentence Display Box
+          Container(
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.black38 : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.outline),
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _sentenceBuffer.isEmpty
+                  ? 'Rangkaian kata atau ejaan akan tersusun di sini...'
+                  : _sentenceBuffer,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: _sentenceBuffer.isEmpty
+                    ? Colors.grey
+                    : (isDark ? Colors.white : Colors.black87),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Edit Controls: Space, Backspace, Clear
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _addSpace,
+                  icon: const Icon(Icons.space_bar_rounded, size: 16),
+                  label: const Text('Spasi', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _backspace,
+                  icon: const Icon(Icons.backspace_outlined, size: 16),
+                  label: const Text('Hapus 1', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                tooltip: 'Bersihkan Kalimat',
+                onPressed: _clearSentence,
+                icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Large High-Contrast "Suarakan Sekarang" Button
+          AppButton(
+            label: 'Suarakan Sekarang 🔊',
+            onPressed: _sentenceBuffer.trim().isEmpty
+                ? null
+                : _speakCurrentSentence,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickPresets() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tombol Cepat Pesan Ringkas (Darurat & Umum)',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _quickPresets.map((preset) {
+            return ActionChip(
+              avatar: const Icon(
+                Icons.volume_up,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              label: Text(
+                preset,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+              backgroundColor: AppColors.primaryContainer.withValues(
+                alpha: 0.5,
+              ),
+              side: const BorderSide(color: AppColors.primary, width: 1.2),
+              onPressed: () => _speakPreset(preset),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

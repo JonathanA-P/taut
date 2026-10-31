@@ -1,44 +1,39 @@
+import '../domain/bisindo_labels.dart';
 import '../domain/bisindo_recognition_service.dart';
 import '../domain/gesture_result.dart';
+import 'bisindo_detector_service.dart';
 
-/// Foundation implementation of [BisindoRecognitionService] for Stage 01.
-/// Does NOT invent fake predictions. Returns [GestureResult.unknown]
-/// until Roganda trains and connects the TFLite model in Stage 02.
+/// Concrete implementation of [BisindoRecognitionService] for Stage 02.
+/// Fully connects on-device TFLite inference via [BisindoDetectorService].
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class BisindoRecognitionServiceImpl implements BisindoRecognitionService {
-  bool _isLoaded = false;
+  final BisindoDetectorService _detectorService;
+
+  BisindoRecognitionServiceImpl({BisindoDetectorService? detectorService})
+    : _detectorService = detectorService ?? BisindoDetectorService();
+
+  BisindoDetectorService get detectorService => _detectorService;
 
   @override
-  bool get isModelLoaded => _isLoaded;
+  bool get isModelLoaded => _detectorService.isModelLoaded;
 
   @override
-  Future<void> initializeModel() async {
-    // Stage 01: Model asset is pending training and quantization.
-    _isLoaded = false;
+  Future<void> initializeModel({BisindoMode mode = BisindoMode.kata}) async {
+    await _detectorService.initializeModel(initialMode: mode);
   }
 
   @override
   Future<GestureResult> recognizeGesture(dynamic frameOrLandmarks) async {
-    // Never fabricate translations. Return unknown until model is connected.
-    return GestureResult.unknown(0.0);
+    return _detectorService.recognizeGesture(frameOrLandmarks);
   }
 
   @override
   List<String> getSupportedVocabulary() {
-    // Initial planned vocabulary for isolated word testing in Stage 02
-    return const [
-      'HALO',
-      'TERIMA KASIH',
-      'TOLONG',
-      'SAMA-SAMA',
-      'MAAF',
-      'RUMAH SAKIT',
-      'DOKTER',
-      'DARURAT',
-    ];
+    return _detectorService.getSupportedVocabulary();
   }
 
   @override
   void dispose() {
-    _isLoaded = false;
+    _detectorService.dispose();
   }
 }

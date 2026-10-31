@@ -1,33 +1,87 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+
 import '../domain/tts_service.dart';
 
-/// Foundation implementation of [TtsService] for Stage 01.
-/// Full integration with `flutter_tts` package will be completed by Roganda.
+/// Production implementation of [TtsService] utilizing [FlutterTts] for Indonesian speech output.
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class TtsServiceImpl implements TtsService {
+  final FlutterTts _flutterTts;
   bool _isSpeaking = false;
+  bool _isInitialized = false;
+
+  TtsServiceImpl({FlutterTts? flutterTts})
+    : _flutterTts = flutterTts ?? FlutterTts();
 
   @override
   bool get isSpeaking => _isSpeaking;
 
   @override
   Future<void> initialize({String language = 'id-ID'}) async {
-    // Stage 01: Engine placeholder
+    if (_isInitialized) return;
+
+    try {
+      await _flutterTts.setLanguage(language);
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.awaitSpeakCompletion(true);
+
+      _flutterTts.setStartHandler(() {
+        _isSpeaking = true;
+      });
+
+      _flutterTts.setCompletionHandler(() {
+        _isSpeaking = false;
+      });
+
+      _flutterTts.setCancelHandler(() {
+        _isSpeaking = false;
+      });
+
+      _flutterTts.setErrorHandler((msg) {
+        debugPrint('[TtsService] Speech synthesis error: $msg');
+        _isSpeaking = false;
+      });
+
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('[TtsService] Initialization failed: $e');
+    }
   }
 
   @override
   Future<void> speakText(String text) async {
-    // Stage 01: Ready for flutter_tts integration
-    _isSpeaking = true;
-    await Future.delayed(const Duration(milliseconds: 300));
-    _isSpeaking = false;
+    final cleanText = text.trim();
+    if (cleanText.isEmpty) return;
+
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    try {
+      _isSpeaking = true;
+      await _flutterTts.speak(cleanText);
+    } catch (e) {
+      debugPrint('[TtsService] speakText failed: $e');
+      _isSpeaking = false;
+    }
   }
 
   @override
   Future<void> stopSpeaking() async {
-    _isSpeaking = false;
+    try {
+      await _flutterTts.stop();
+      _isSpeaking = false;
+    } catch (e) {
+      debugPrint('[TtsService] stopSpeaking failed: $e');
+    }
   }
 
   @override
   void dispose() {
-    _isSpeaking = false;
+    stopSpeaking();
   }
 }
