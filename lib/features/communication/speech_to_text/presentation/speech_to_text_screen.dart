@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../data/speech_service_impl.dart';
 import '../domain/speech_service.dart';
+import '../domain/speech_state.dart';
 
 /// Production Live Speech-to-Text screen for Teman Tuli accessibility.
 ///
@@ -14,6 +15,7 @@ import '../domain/speech_service.dart';
 /// 2. Continuous listening with auto-recovery and multi-sentence aggregation.
 /// 3. One-tap "Bersihkan Layar" (Clear Screen) button.
 /// 4. Fast manual typing fallback for noisy environments.
+/// 5. Reactive synchronization with native speech recognition engine status stream.
 ///
 /// Feature Owner: Roganda Tua Tampubolon (Branch: feature/speech-to-text).
 class SpeechToTextScreen extends StatefulWidget {
@@ -30,8 +32,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _manualInputController = TextEditingController();
 
+  StreamSubscription<SpeechRecognitionState>? _statusSubscription;
   bool _isListening = false;
   bool _isManualInputVisible = false;
+  String? _errorMessage;
 
   /// Accumulated committed sentences from previous speech segments.
   String _accumulatedText = '';
@@ -43,11 +47,37 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   void initState() {
     super.initState();
     _speechService = widget.speechService ?? SpeechServiceImpl();
-    _speechService.initialize();
+    _initSpeechPipeline();
+  }
+
+  void _initSpeechPipeline() {
+    // Masalah 4 Fix: Sync UI state reactively with engine's statusStream
+    _statusSubscription = _speechService.statusStream.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        if (state.status == SpeechStatus.listening) {
+          _isListening = true;
+          _errorMessage = null;
+        } else if (state.status == SpeechStatus.ready ||
+            state.status == SpeechStatus.uninitialized) {
+          _isListening = false;
+        } else if (state.status == SpeechStatus.error) {
+          _isListening = false;
+          _errorMessage = state.errorMessage;
+        }
+      });
+    });
+
+    // Masalah 1 Fix: Safe async initialization handled with Completer in service
+    _speechService.initialize().catchError((e) {
+      debugPrint('Screen initialization catchError: $e');
+      return false;
+    });
   }
 
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     _speechService.dispose();
     _scrollController.dispose();
     _manualInputController.dispose();
@@ -70,6 +100,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     if (!mounted) return;
 
     setState(() {
+      _errorMessage = null;
       if (isFinal) {
         final trimmed = text.trim();
         if (trimmed.isNotEmpty) {
@@ -89,6 +120,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   }
 
   Future<void> _toggleListening() async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     if (_isListening) {
       await _speechService.stopListening();
       if (mounted) {
@@ -105,10 +140,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         });
       }
     } else {
-      setState(() {
-        _isListening = true;
-      });
-
+      // Masalah 4 Fix: Engine statusStream will drive _isListening
       await _speechService.startListening(
         onResult: _onSpeechResult,
         language: 'id_ID',
@@ -183,8 +215,11 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Status Banner: Guides Deaf user on microphone state
+            // Top Status Banner: Guides Deaf user on microphone and engine state
             _buildStatusHeader(),
+
+            // Error notice banner if recognition encounters an issue
+            if (_errorMessage != null) _buildErrorNotice(),
 
             // Main Live Caption Display Area
             Expanded(
@@ -240,7 +275,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _isListening
-                                      ? 'Mendengarkan lawan bicara...\nSetiap kata akan langsung muncul di sini.'
+                                      ? 'Mendengarkan ucapan lawan bicara...\nSetiap kata akan langsung muncul di sini.'
                                       : 'Ketuk tombol mikrofon di bawah untuk mulai merekam ucapan lawan bicara.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -331,6 +366,49 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorNotice() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2), // Red 50
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF87171)), // Red 400
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: Color(0xFFB91C1C),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF991B1B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, size: 16),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            color: const Color(0xFF991B1B),
+            onPressed: () {
+              setState(() {
+                _errorMessage = null;
+              });
+            },
           ),
         ],
       ),

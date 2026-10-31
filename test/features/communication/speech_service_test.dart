@@ -27,6 +27,14 @@ class FakeSpeechToText extends Fake implements SpeechToText {
   }
 
   @override
+  Future<List<LocaleName>> locales() async {
+    return [
+      LocaleName('en_US', 'English'),
+      LocaleName('id_ID', 'Bahasa Indonesia'),
+    ];
+  }
+
+  @override
   Future<void> stop() async {
     isListeningValue = false;
     onStatusCallback?.call('notListening');
@@ -62,6 +70,19 @@ void main() {
       expect(state.status, equals(SpeechStatus.ready));
       expect(state.errorMessage, isNull);
     });
+
+    test(
+      'Handles concurrent initialize calls without race condition',
+      () async {
+        final results = await Future.wait([
+          service.initialize(),
+          service.initialize(),
+        ]);
+
+        expect(results[0], isTrue);
+        expect(results[1], isTrue);
+      },
+    );
 
     test('Emits error when speech engine fails to initialize', () async {
       fakeSpeechToText.initSuccess = false;
