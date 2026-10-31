@@ -298,11 +298,7 @@ class HomePage extends StatelessWidget {
           subtitle: 'Dengar lewat tulisan',
           bgColor: const Color(0xFFE9EEE6),
           onTap: () {
-            if (onNavigateToCommunication != null) {
-              onNavigateToCommunication!();
-            } else {
-              state.navigateTo('hub');
-            }
+            state.navigateTo('stt');
           },
         ),
         _buildFeatureTile(
@@ -311,11 +307,7 @@ class HomePage extends StatelessWidget {
           subtitle: 'Sampaikan dengan isyarat',
           bgColor: const Color(0xFFF1E9DE),
           onTap: () {
-            if (onNavigateToCommunication != null) {
-              onNavigateToCommunication!();
-            } else {
-              state.navigateTo('hub');
-            }
+            state.navigateTo('motion');
           },
         ),
         _buildFeatureTile(

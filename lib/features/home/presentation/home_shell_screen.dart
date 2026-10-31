@@ -7,6 +7,8 @@ import '../../auth/presentation/profile_screen.dart';
 import '../../auth/presentation/settings_accessibility_screen.dart';
 import '../../communication/presentation/communication_hub_screen.dart';
 import '../../communication/presentation/communication_landing_screen.dart';
+import '../../communication/motion_to_sound/presentation/motion_to_sound_screen.dart';
+import '../../communication/speech_to_text/presentation/speech_to_text_screen.dart';
 import '../../friends/presentation/add_friend_screen.dart';
 import '../../friends/presentation/friends_list_screen.dart';
 import '../../friends/presentation/live_location_screen.dart';
@@ -30,6 +32,10 @@ class HomeShellScreen extends StatelessWidget {
         return const CommunicationLandingScreen();
       case 'comm':
         return const CommunicationHubScreen();
+      case 'motion':
+        return const MotionToSoundScreen();
+      case 'stt':
+        return const SpeechToTextScreen();
       case 'location':
         return const LocationSharingScreen();
       case 'finder':

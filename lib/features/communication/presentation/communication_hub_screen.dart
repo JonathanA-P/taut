@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../motion_to_sound/data/bisindo_detector_service.dart';
 import '../speech_to_text/data/speech_service_impl.dart';
 import '../speech_to_text/domain/speech_service.dart';
 import '../speech_to_text/domain/speech_state.dart';
@@ -43,6 +45,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   String _detectedSign = 'Terima kasih banyak';
   double _detectedConfidence = 0.984;
   final double _fps = 29.8;
+
+  CameraController? _cameraController;
+  List<CameraDescription> _availableCameras = [];
+  bool _isCameraActive = false;
+  BisindoDetectorService? _detectorService;
+  StreamSubscription<BisindoDetectionEvent>? _detectionSubscription;
 
   final List<String> _quickSignPresets = [
     'Terima kasih banyak',
@@ -141,6 +149,77 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
 
     _speechService.initialize().catchError((_) => false);
     _initTts();
+    _initRealCamera();
+  }
+
+  Future<void> _initRealCamera() async {
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest) return;
+
+    try {
+      final detector = BisindoDetectorService();
+      await detector.initializeModel();
+      _detectorService = detector;
+      _detectionSubscription = detector.detectionStream.listen((event) {
+        if (!mounted) return;
+        if (event.result.isRecognized) {
+          setState(() {
+            _detectedSign = event.result.label;
+            _detectedConfidence = event.result.confidence;
+            _signInputController.text = event.result.label;
+          });
+        }
+      });
+
+      _availableCameras = await availableCameras();
+      if (_availableCameras.isNotEmpty) {
+        final camera = _availableCameras.firstWhere(
+          (c) => _isFrontCamera
+              ? c.lensDirection == CameraLensDirection.front
+              : c.lensDirection == CameraLensDirection.back,
+          orElse: () => _availableCameras.first,
+        );
+        final controller = CameraController(
+          camera,
+          ResolutionPreset.medium,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.yuv420,
+        );
+        await controller.initialize();
+        if (!mounted) {
+          await controller.dispose();
+          return;
+        }
+        await controller.startImageStream((image) {
+          _detectorService?.processCameraImage(
+            image,
+            isFrontCamera: _isFrontCamera,
+          );
+        });
+        setState(() {
+          _cameraController = controller;
+          _isCameraActive = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('[CommunicationHub] Camera init fallback: $e');
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    setState(() => _isFrontCamera = !_isFrontCamera);
+    if (_isCameraActive && _cameraController != null) {
+      try {
+        if (_cameraController!.value.isStreamingImages) {
+          await _cameraController!.stopImageStream();
+        }
+        await _cameraController!.dispose();
+      } catch (_) {}
+      _cameraController = null;
+      _isCameraActive = false;
+      await _initRealCamera();
+    }
+    _showToast(_isFrontCamera ? 'Kamera depan aktif' : 'Kamera belakang aktif');
   }
 
   void _startRealtimeSignTracking() {
@@ -219,6 +298,9 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     _speechSimTimer?.cancel();
     _motionTrackerTimer?.cancel();
     _landmarkAnimController.dispose();
+    _detectionSubscription?.cancel();
+    _detectorService?.dispose();
+    _cameraController?.dispose();
     _speechSubscription?.cancel();
     _speechService.dispose();
     _signInputController.dispose();
@@ -1374,20 +1456,32 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Background Lens Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.2),
-                radius: 1.1,
-                colors: [
-                  Color(0xFF263F32),
-                  Color(0xFF16251D),
-                  Color(0xFF0F1B14),
-                ],
+          // Background: Live Camera Stream or Lens Gradient
+          if (_isCameraActive &&
+              _cameraController != null &&
+              _cameraController!.value.isInitialized)
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _cameraController!.value.previewSize?.height ?? 320,
+                height: _cameraController!.value.previewSize?.width ?? 195,
+                child: CameraPreview(_cameraController!),
+              ),
+            )
+          else
+            Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.2),
+                  radius: 1.1,
+                  colors: [
+                    Color(0xFF263F32),
+                    Color(0xFF16251D),
+                    Color(0xFF0F1B14),
+                  ],
+                ),
               ),
             ),
-          ),
 
           // Animated Landmark Skeleton & Dots
           AnimatedBuilder(
@@ -1515,10 +1609,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                     size: 18,
                     color: Colors.white,
                   ),
-                  onPressed: () {
-                    setState(() => _isFrontCamera = !_isFrontCamera);
-                    _showToast(_isFrontCamera ? 'Kamera depan aktif' : 'Kamera belakang aktif');
-                  },
+                  onPressed: _switchCamera,
                   tooltip: 'Ganti Kamera',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),

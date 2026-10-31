@@ -13,7 +13,7 @@ class TautApp extends StatelessWidget {
       title: 'TAUT',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: initialRoute ?? AppRoutes.splash,
+      initialRoute: initialRoute ?? AppRoutes.welcome,
       onGenerateInitialRoutes: (route) => [
         AppRouter.onGenerateRoute(RouteSettings(name: route)),
       ],

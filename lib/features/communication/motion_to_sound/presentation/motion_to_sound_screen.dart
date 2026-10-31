@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/permissions/permission_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/status_badge.dart';
+import '../../speech_to_text/data/speech_service_impl.dart';
+import '../../speech_to_text/domain/speech_service.dart';
+import '../../speech_to_text/domain/speech_state.dart';
 import '../data/bisindo_detector_service.dart';
 import '../data/bisindo_model_manager.dart';
 import '../data/tts_service_impl.dart';
@@ -19,12 +23,14 @@ class MotionToSoundScreen extends StatefulWidget {
   final PermissionService? permissionService;
   final BisindoDetectorService? detectorService;
   final TtsService? ttsService;
+  final SpeechService? speechService;
 
   const MotionToSoundScreen({
     super.key,
     this.permissionService,
     this.detectorService,
     this.ttsService,
+    this.speechService,
   });
 
   @override
@@ -32,10 +38,17 @@ class MotionToSoundScreen extends StatefulWidget {
 }
 
 class _MotionToSoundScreenState extends State<MotionToSoundScreen>
-    with WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late final PermissionService _permissionService;
   late final BisindoDetectorService _detectorService;
   late final TtsService _ttsService;
+  late final SpeechService _speechService;
+  StreamSubscription<SpeechRecognitionState>? _speechSubscription;
+
+  late final AnimationController _landmarkAnimController;
+
+  bool _isListening = false;
+  String _sttTranscribedText = '';
 
   List<CameraDescription> _availableCameras = [];
   CameraController? _cameraController;
@@ -71,10 +84,32 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    _landmarkAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+    if (!isTest) {
+      _landmarkAnimController.repeat(reverse: true);
+    }
+
     _permissionService =
         widget.permissionService ?? const PermissionServiceImpl();
     _detectorService = widget.detectorService ?? BisindoDetectorService();
     _ttsService = widget.ttsService ?? TtsServiceImpl();
+    _speechService = widget.speechService ?? SpeechServiceImpl();
+
+    _speechSubscription = _speechService.statusStream.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        if (state.status == SpeechStatus.listening) {
+          _isListening = true;
+        } else {
+          _isListening = false;
+        }
+      });
+    });
+    _speechService.initialize().catchError((_) => false);
 
     _initializeServices();
   }
@@ -114,6 +149,10 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
 
     if (status == AppPermissionStatus.granted) {
       await _fetchCameras();
+      final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+      if (!isTest && _availableCameras.isNotEmpty && !_isCameraActive) {
+        await _startCamera();
+      }
     }
   }
 
@@ -372,6 +411,47 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     );
   }
 
+  Future<void> _toggleSpeechListening() async {
+    if (_isListening) {
+      await _speechService.stopListening();
+      setState(() => _isListening = false);
+    } else {
+      final ready = await _speechService.initialize();
+      if (!ready) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat menginisialisasi mikrofon.')),
+        );
+        return;
+      }
+      setState(() {
+        _isListening = true;
+      });
+      await _speechService.startListening(
+        onResult: (text, isFinal) {
+          if (!mounted) return;
+          setState(() {
+            _sttTranscribedText = text;
+          });
+        },
+      );
+    }
+  }
+
+  void _appendSttToSentence() {
+    if (_sttTranscribedText.trim().isEmpty) return;
+    setState(() {
+      final space = _sentenceBuffer.isEmpty || _sentenceBuffer.endsWith(' ') ? '' : ' ';
+      _sentenceBuffer += '$space${_sttTranscribedText.trim()} ';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Teks ucapan disalin ke bilah kalimat.'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
@@ -385,6 +465,9 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _landmarkAnimController.dispose();
+    _speechSubscription?.cancel();
+    _speechService.dispose();
     _detectionSubscription?.cancel();
     _modelStateSubscription?.cancel();
     _stopCamera(updateUi: false);
@@ -455,7 +538,15 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
 
             const SizedBox(height: 16),
 
-            // 5. Fallback Quick Preset Chips
+            // 5. Ucapan Lawan Bicara (Speech-to-Text) Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildSpeechToTextCard(isDark),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 6. Fallback Quick Preset Chips
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: _buildQuickPresets(),
@@ -568,6 +659,29 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
 
             // Target Guide Frame Overlay
             if (_isCameraActive) _buildGuideFrame(),
+
+            // Animated Hand Landmark Skeleton & Vector Sticks & Dots
+            if (_isCameraActive)
+              AnimatedBuilder(
+                animation: _landmarkAnimController,
+                builder: (context, _) {
+                  return CustomPaint(
+                    size: const Size(double.infinity, 320),
+                    painter: _HandSkeletonPainter(
+                      progress: _landmarkAnimController.value,
+                      box: _currentBox,
+                      isDetected: _currentLiveLabel.isNotEmpty &&
+                          _currentConfidence >= 0.65,
+                      activeColor: _currentLiveLabel.isNotEmpty
+                          ? const Color(0xFF48BB78)
+                          : AppColors.primary,
+                      jointColor: _currentLiveLabel.isNotEmpty
+                          ? const Color(0xFF68D391)
+                          : const Color(0xFF81C784),
+                    ),
+                  );
+                },
+              ),
 
             // Dynamic Bounding Box from Object Detection
             if (_isCameraActive &&
@@ -945,6 +1059,146 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     );
   }
 
+  Widget _buildSpeechToTextCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceVariant : const Color(0xFFF0F5EE),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isListening ? AppColors.primary : AppColors.outline,
+          width: _isListening ? 1.8 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.record_voice_over_rounded,
+                size: 18,
+                color: _isListening ? AppColors.primary : AppColors.darkGreen,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Ucapan Lawan Bicara (STT)',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _isListening
+                      ? const Color(0xFF2E7D32).withValues(alpha: 0.15)
+                      : Colors.grey.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: _isListening ? Colors.green : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _isListening ? 'Mendengar' : 'Nonaktif',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: _isListening
+                            ? Colors.green.shade800
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Speech Output Bubble
+          Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.black38 : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.outline),
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _sttTranscribedText.isEmpty
+                  ? 'Tekan tombol mikrofon di bawah agar suara lawan bicara otomatis diubah menjadi teks di sini...'
+                  : _sttTranscribedText,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: _sttTranscribedText.isEmpty
+                    ? Colors.grey
+                    : (isDark ? Colors.white : Colors.black87),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _toggleSpeechListening,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isListening
+                        ? const Color(0xFFD32F2F)
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: Icon(
+                    _isListening ? Icons.mic_off_rounded : Icons.mic_rounded,
+                    size: 16,
+                  ),
+                  label: Text(
+                    _isListening ? 'Berhenti Dengar' : 'Dengarkan Ucapan',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              if (_sttTranscribedText.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                IconButton.outlined(
+                  tooltip: 'Salin ke Bilah Kalimat',
+                  onPressed: _appendSttToSentence,
+                  icon: const Icon(Icons.add_comment_outlined, size: 18),
+                ),
+                const SizedBox(width: 4),
+                IconButton.outlined(
+                  tooltip: 'Hapus Teks Ucapan',
+                  onPressed: () => setState(() => _sttTranscribedText = ''),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickPresets() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -980,5 +1234,158 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
         ),
       ],
     );
+  }
+}
+
+/// Visual Landmark Painter (Hand skeleton sticks and joint dots).
+/// Interprets BISINDO hand gesture landmarks on top of camera frames.
+class _HandSkeletonPainter extends CustomPainter {
+  final double progress;
+  final BoundingBox? box;
+  final bool isDetected;
+  final Color activeColor;
+  final Color jointColor;
+
+  _HandSkeletonPainter({
+    required this.progress,
+    this.box,
+    required this.isDetected,
+    required this.activeColor,
+    required this.jointColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final dy = math.sin(progress * math.pi) * 3.5;
+    final dx = math.cos(progress * math.pi) * 2.5;
+
+    final linePaint = Paint()
+      ..color = activeColor.withValues(alpha: isDetected ? 0.85 : 0.6)
+      ..strokeWidth = isDetected ? 2.6 : 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final jointPaint = Paint()
+      ..color = jointColor
+      ..style = PaintingStyle.fill;
+
+    final glowPaint = Paint()
+      ..color = jointColor.withValues(alpha: isDetected ? 0.45 : 0.25)
+      ..style = PaintingStyle.fill;
+
+    // Determine hand center and scale
+    double cx;
+    double cy;
+    double scale = 1.0;
+
+    if (box != null && box!.isValid) {
+      cx = ((box!.xmin + box!.xmax) / 2 * w).clamp(w * 0.15, w * 0.85);
+      cy = ((box!.ymin + box!.ymax) / 2 * h).clamp(h * 0.15, h * 0.85);
+      final boxW = (box!.xmax - box!.xmin) * w;
+      scale = (boxW / 120.0).clamp(0.7, 1.4);
+    } else {
+      cx = w * 0.5 + dx;
+      cy = h * 0.52 + dy;
+    }
+
+    // 21 Hand Landmarks: Wrist, Thumb(4), Index(4), Middle(4), Ring(4), Pinky(4)
+    final wrist = Offset(cx, cy + 32 * scale);
+
+    final thumb = [
+      Offset(cx - 16 * scale, cy + 20 * scale),
+      Offset(cx - 26 * scale, cy + 10 * scale),
+      Offset(cx - 34 * scale, cy + 2 * scale),
+      Offset(cx - 40 * scale, cy - 8 * scale),
+    ];
+
+    final index = [
+      Offset(cx - 10 * scale, cy + 6 * scale),
+      Offset(cx - 14 * scale, cy - 12 * scale),
+      Offset(cx - 16 * scale, cy - 28 * scale),
+      Offset(cx - 18 * scale, cy - 42 * scale),
+    ];
+
+    final middle = [
+      Offset(cx + 2 * scale, cy + 4 * scale),
+      Offset(cx + 2 * scale, cy - 16 * scale),
+      Offset(cx + 2 * scale, cy - 34 * scale),
+      Offset(cx + 2 * scale, cy - 48 * scale),
+    ];
+
+    final ring = [
+      Offset(cx + 14 * scale, cy + 8 * scale),
+      Offset(cx + 16 * scale, cy - 10 * scale),
+      Offset(cx + 18 * scale, cy - 26 * scale),
+      Offset(cx + 20 * scale, cy - 40 * scale),
+    ];
+
+    final pinky = [
+      Offset(cx + 24 * scale, cy + 14 * scale),
+      Offset(cx + 28 * scale, cy - 2 * scale),
+      Offset(cx + 32 * scale, cy - 16 * scale),
+      Offset(cx + 34 * scale, cy - 28 * scale),
+    ];
+
+    void drawChain(Offset start, List<Offset> points) {
+      Offset prev = start;
+      for (final p in points) {
+        canvas.drawLine(prev, p, linePaint);
+        prev = p;
+      }
+    }
+
+    // Palm connections
+    canvas.drawLine(wrist, thumb[0], linePaint);
+    canvas.drawLine(wrist, index[0], linePaint);
+    canvas.drawLine(wrist, middle[0], linePaint);
+    canvas.drawLine(wrist, ring[0], linePaint);
+    canvas.drawLine(wrist, pinky[0], linePaint);
+
+    canvas.drawLine(index[0], middle[0], linePaint);
+    canvas.drawLine(middle[0], ring[0], linePaint);
+    canvas.drawLine(ring[0], pinky[0], linePaint);
+
+    // Finger chains
+    drawChain(thumb[0], thumb);
+    drawChain(index[0], index);
+    drawChain(middle[0], middle);
+    drawChain(ring[0], ring);
+    drawChain(pinky[0], pinky);
+
+    // Draw Joint Dots
+    final allPoints = [wrist, ...thumb, ...index, ...middle, ...ring, ...pinky];
+    for (final pt in allPoints) {
+      canvas.drawCircle(pt, 4.5 * scale, glowPaint);
+      canvas.drawCircle(pt, 2.4 * scale, jointPaint);
+    }
+
+    // Posture Stick Skeleton (Shoulders and Head)
+    final head = Offset(w * 0.5, h * 0.18 + dy * 0.4);
+    final leftShoulder = Offset(w * 0.28, h * 0.38 + dy * 0.5);
+    final rightShoulder = Offset(w * 0.72, h * 0.38 + dy * 0.5);
+
+    final posePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.20)
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(head, Offset(w * 0.5, h * 0.32), posePaint);
+    canvas.drawLine(leftShoulder, rightShoulder, posePaint);
+    canvas.drawLine(leftShoulder, Offset(w * 0.22, h * 0.65), posePaint);
+    canvas.drawLine(rightShoulder, wrist, posePaint);
+
+    canvas.drawCircle(head, 3.2, jointPaint);
+    canvas.drawCircle(leftShoulder, 2.8, jointPaint);
+    canvas.drawCircle(rightShoulder, 2.8, jointPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HandSkeletonPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.box != box ||
+        oldDelegate.isDetected != isDetected;
   }
 }

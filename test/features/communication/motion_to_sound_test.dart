@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taut/features/communication/motion_to_sound/bisindo_to_sound_module.dart';
 import 'package:taut/core/permissions/permission_service.dart';
+import 'package:taut/features/communication/speech_to_text/domain/speech_service.dart';
+import 'package:taut/features/communication/speech_to_text/domain/speech_state.dart';
 
 class MockPermissionService implements PermissionService {
   AppPermissionStatus status = AppPermissionStatus.granted;
@@ -96,6 +98,52 @@ class MockDetectorService implements BisindoDetectorService {
   @override
   void dispose() {
     _controller.close();
+  }
+}
+
+class MockSpeechService implements SpeechService {
+  final StreamController<SpeechRecognitionState> _statusCtrl =
+      StreamController<SpeechRecognitionState>.broadcast();
+  bool _isListening = false;
+  void Function(String text, bool isFinal)? onResultCallback;
+
+  @override
+  bool get isListening => _isListening;
+
+  @override
+  Stream<SpeechRecognitionState> get statusStream => _statusCtrl.stream;
+
+  @override
+  Future<bool> initialize() async {
+    _statusCtrl.add(const SpeechRecognitionState(status: SpeechStatus.ready));
+    return true;
+  }
+
+  @override
+  Future<void> startListening({
+    required void Function(String text, bool isFinal) onResult,
+    String language = 'id-ID',
+  }) async {
+    _isListening = true;
+    onResultCallback = onResult;
+    _statusCtrl.add(const SpeechRecognitionState(status: SpeechStatus.listening));
+  }
+
+  @override
+  Future<void> stopListening() async {
+    _isListening = false;
+    _statusCtrl.add(const SpeechRecognitionState(status: SpeechStatus.ready));
+  }
+
+  @override
+  Future<void> cancelListening() async {
+    _isListening = false;
+    _statusCtrl.add(const SpeechRecognitionState(status: SpeechStatus.ready));
+  }
+
+  @override
+  void dispose() {
+    _statusCtrl.close();
   }
 }
 
@@ -203,6 +251,44 @@ void main() {
       await tester.tap(abjadFinder);
       await tester.pumpAndSettle();
       expect(find.text('Abjad A–Z'), findsOneWidget);
+    });
+
+    testWidgets('Renders Speech-to-Text card and handles microphone listening', (
+      WidgetTester tester,
+    ) async {
+      final mockPermission = MockPermissionService();
+      final mockTts = MockTtsService();
+      final mockDetector = MockDetectorService();
+      final mockSpeech = MockSpeechService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MotionToSoundScreen(
+            permissionService: mockPermission,
+            detectorService: mockDetector,
+            ttsService: mockTts,
+            speechService: mockSpeech,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final sttTitleFinder = find.text('Ucapan Lawan Bicara (STT)');
+      expect(sttTitleFinder, findsOneWidget);
+
+      final listenBtn = find.text('Dengarkan Ucapan');
+      await tester.ensureVisible(listenBtn);
+      await tester.pumpAndSettle();
+      await tester.tap(listenBtn);
+      await tester.pumpAndSettle();
+
+      expect(mockSpeech.isListening, isTrue);
+
+      // Simulate hearing speech received
+      mockSpeech.onResultCallback?.call('Permisi mau tanya jalan', true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Permisi mau tanya jalan'), findsOneWidget);
     });
   });
 }
