@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../speech_to_text/data/speech_service_impl.dart';
@@ -49,6 +50,63 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     'Saya butuh bantuan medis',
     'Apakah dokter tersedia?',
     'Sama-sama',
+  ];
+
+  // Quick message template chips for Teman Tuli
+  final List<Map<String, String>> _quickMessageChips = const [
+    {'label': 'Tanya arah jalan', 'text': 'Permisi, boleh tanya arah jalan?'},
+    {'label': 'Saya Teman Tuli', 'text': 'Halo, saya Teman Tuli. Senang bertemu Anda.'},
+    {'label': 'Di mana toilet?', 'text': 'Permisi, di mana letak toilet terdekat?'},
+    {'label': 'Bisa tuliskan?', 'text': 'Bisa tolong tuliskan atau ketik pelan-pelan?'},
+    {'label': 'Ke dokter umum', 'text': 'Saya ingin periksa ke dokter umum.'},
+    {'label': 'Terima kasih banyak', 'text': 'Terima kasih banyak atas bantuannya!'},
+  ];
+
+  final List<Map<String, dynamic>> _messageTemplateCategories = const [
+    {
+      'category': 'Arah Jalan & Transportasi',
+      'icon': Icons.directions_walk_rounded,
+      'templates': [
+        'Permisi, boleh tanya arah jalan?',
+        'Di mana letak toilet terdekat?',
+        'Apakah angkutan atau bus ini menuju stasiun?',
+        'Berapa menit jalan kaki ke alamat ini?',
+        'Bisa tunjukkan lokasinya di peta ini?',
+      ],
+    },
+    {
+      'category': 'Percakapan Sehari-hari',
+      'icon': Icons.chat_bubble_outline_rounded,
+      'templates': [
+        'Halo, saya Teman Tuli. Senang bertemu Anda.',
+        'Bisa tolong tuliskan atau ketik pelan-pelan?',
+        'Terima kasih banyak atas bantuannya!',
+        'Maaf, boleh minta tolong sebentar?',
+        'Sama-sama, semoga hari Anda menyenangkan.',
+        'Saya mengerti, terima kasih informasinya.',
+      ],
+    },
+    {
+      'category': 'Kesehatan & Apotek',
+      'icon': Icons.local_hospital_outlined,
+      'templates': [
+        'Saya ingin periksa ke dokter umum.',
+        'Saya butuh bantuan untuk membeli obat ini.',
+        'Berapa dosis pemakaian obat ini per hari?',
+        'Tolong hubungi kontak darurat saya di profil.',
+        'Apakah puskesmas ini buka hari ini?',
+      ],
+    },
+    {
+      'category': 'Belanja & Transaksi',
+      'icon': Icons.shopping_bag_outlined,
+      'templates': [
+        'Berapa harga untuk barang ini?',
+        'Apakah bisa bayar menggunakan QRIS?',
+        'Boleh minta kantong belanjaan atau struknya?',
+        'Apakah barang ini ada ukuran yang lain?',
+      ],
+    },
   ];
 
   @override
@@ -1036,7 +1094,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Masukkan kode unik ruangan atau gunakan kode demonstrasi:',
+                'Masukkan kode unik ruangan atau pindai kode QR host:',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),
@@ -1051,6 +1109,23 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _showQrScannerDialog(context, state);
+                  },
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                  label: const Text('Pindai Kode QR Kamera'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: Color(0xFFC7DBC5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
@@ -1083,6 +1158,166 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
               child: const Text('Gabung langsung'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  // Interactive QR Scanner Viewfinder Dialog
+  void _showQrScannerDialog(BuildContext context, TautAppState state) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16251D),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF385544)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pindai QR Ruangan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Arahkan kamera ke kode QR di layar pembuat ruangan.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11.5, color: Color(0xFFB4C9BB)),
+                ),
+                const SizedBox(height: 18),
+
+                // Viewfinder Frame with animated laser line
+                Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF48BB78), width: 2),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Viewfinder corner marks
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFF68D391), width: 3), left: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFF68D391), width: 3), right: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF68D391), width: 3), left: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: Container(width: 16, height: 16, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF68D391), width: 3), right: BorderSide(color: Color(0xFF68D391), width: 3)))),
+                      ),
+
+                      // Scanning Laser Line
+                      AnimatedBuilder(
+                        animation: _landmarkAnimController,
+                        builder: (context, _) {
+                          final topOffset = 20 + _landmarkAnimController.value * 150;
+                          return Positioned(
+                            top: topOffset,
+                            left: 15,
+                            right: 15,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF48BB78),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF48BB78).withValues(alpha: 0.8),
+                                    blurRadius: 6,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const Center(
+                        child: Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 72,
+                          color: Color(0x3348BB78),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Auto detection action for test/demo
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final code = state.roomCode ?? 'TAUT-8921';
+                      final joined = state.joinRoomByCode(code);
+                      Navigator.pop(ctx);
+                      if (joined) {
+                        _showToast('Kode QR terdeteksi! Berhasil bergabung ke $code.');
+                      } else {
+                        _showToast('Kode QR $code terdeteksi! Menunggu persetujuan host.');
+                      }
+                    },
+                    icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                    label: Text(
+                      'Pindai Otomatis (${state.roomCode ?? "TAUT-8921"})',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -1638,12 +1873,171 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     );
   }
 
+  void _applyMessageTemplate(String text, {bool autoSend = false, TautAppState? state}) {
+    _manualInputController.text = text;
+    _manualInputController.selection = TextSelection.fromPosition(
+      TextPosition(offset: text.length),
+    );
+    if (autoSend && state != null) {
+      _handleSendManual(state);
+      _showToast('Pesan template terkirim.');
+    } else {
+      _showToast('Template disalin ke input. Ketuk kirim.');
+    }
+  }
+
+  void _showTemplatesBottomSheet(BuildContext context, TautAppState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD9E2D5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Template Pesan Sehari-hari',
+                        style: TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Pilih kalimat untuk langsung diketikkan ke percakapan.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _messageTemplateCategories.length,
+                  itemBuilder: (ctx, idx) {
+                    final cat = _messageTemplateCategories[idx];
+                    final String catName = cat['category'];
+                    final IconData catIcon = cat['icon'];
+                    final List<String> items = List<String>.from(cat['templates']);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAF8),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2EBE0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+                            child: Row(
+                              children: [
+                                Icon(catIcon, size: 16, color: AppColors.primary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  catName,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.darkGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFE5EDE3)),
+                          ...items.map(
+                            (templateText) => InkWell(
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                _applyMessageTemplate(templateText);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        templateText,
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          color: Color(0xFF263D2F),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    IconButton(
+                                      icon: const Icon(Icons.send_rounded, size: 16, color: AppColors.primary),
+                                      tooltip: 'Kirim langsung',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        _applyMessageTemplate(templateText, autoSend: true, state: state);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // ==========================================
-  // BOTTOM STICKY INPUT BAR (TEXT & MICROPHONE)
+  // BOTTOM STICKY INPUT BAR (TEXT, TEMPLATES & MICROPHONE)
   // ==========================================
   Widget _buildBottomInputBar(TautAppState state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(top: BorderSide(color: Color(0xFFE2EBE2))),
@@ -1655,86 +2049,157 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Manual Text Input Fallback (for Teman Tuli)
-          Expanded(
-            child: Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7FAF6),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFD6E4D4)),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _manualInputController,
-                      decoration: const InputDecoration(
-                        hintText: 'Tulis pesan...',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onSubmitted: (_) => _handleSendManual(state),
+          // Horizontal Message Template Suggestions (Saran Cepat untuk Teman Tuli)
+          SizedBox(
+            height: 30,
+            child: Row(
+              children: [
+                InkWell(
+                  onTap: () => _showTemplatesBottomSheet(context, state),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF5ED),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFC7DBC5)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, size: 13, color: AppColors.primary),
+                        SizedBox(width: 4),
+                        Text(
+                          'Template',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
-                    onPressed: () => _handleSendManual(state),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _quickMessageChips.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (ctx, idx) {
+                      final item = _quickMessageChips[idx];
+                      return ActionChip(
+                        label: Text(
+                          item['label']!,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: Color(0xFF2E4D36),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        backgroundColor: const Color(0xFFF7FAF6),
+                        side: const BorderSide(color: Color(0xFFD6E4D4)),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _applyMessageTemplate(item['text']!),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 8),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(height: 6),
 
-          // Microphone Button (for Teman Dengar)
-          Tooltip(
-            message: _micStatusText,
-            child: GestureDetector(
-              onTap: () => _toggleMic(state),
-              child: Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: _wantMic ? const Color(0xFF1E382B) : AppColors.primary,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    if (_wantMic)
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _wantMic ? Icons.mic_rounded : Icons.mic_none_rounded,
-                      color: Colors.white,
-                      size: 19,
+          // Text Input Field & Microphone Button
+          Row(
+            children: [
+              // Manual Text Input Fallback (for Teman Tuli)
+              Expanded(
+                child: TextField(
+                  controller: _manualInputController,
+                  textInputAction: TextInputAction.send,
+                  decoration: InputDecoration(
+                    hintText: 'Tulis pesan...',
+                    hintStyle: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      _wantMic ? 'Mendengarkan' : 'Bicara',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                    filled: true,
+                    fillColor: const Color(0xFFF7FAF6),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 10, 4, 10),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
                     ),
-                  ],
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                      onPressed: () => _handleSendManual(state),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  ),
+                  onSubmitted: (_) => _handleSendManual(state),
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+
+              // Microphone Button (for Teman Dengar)
+              Tooltip(
+                message: _micStatusText,
+                child: GestureDetector(
+                  onTap: () => _toggleMic(state),
+                  child: Container(
+                    height: 42,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: _wantMic ? const Color(0xFF1E382B) : AppColors.primary,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        if (_wantMic)
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _wantMic ? Icons.mic_rounded : Icons.mic_none_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          _wantMic ? 'Mendengarkan' : 'Bicara',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1882,7 +2347,7 @@ class _BisindoLandmarkPainter extends CustomPainter {
 }
 
 // ==========================================
-// VECTOR QR WIDGET
+// SCANNABLE QR WIDGET (ISO/IEC 18004 STANDARD)
 // ==========================================
 class TautQrWidget extends StatelessWidget {
   final String code;
@@ -1901,62 +2366,20 @@ class TautQrWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E9E1)),
       ),
-      child: CustomPaint(
-        size: Size(size, size),
-        painter: _TautQrPainter(),
+      child: QrImageView(
+        data: code,
+        version: QrVersions.auto,
+        size: size - 16,
+        padding: EdgeInsets.zero,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF263D2F),
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF263D2F),
+        ),
       ),
     );
   }
-}
-
-class _TautQrPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF263D2F)
-      ..style = PaintingStyle.fill;
-
-    final w = size.width;
-    final h = size.height;
-    final unit = w / 21;
-
-    void drawFinder(double x, double y) {
-      canvas.drawRect(Rect.fromLTWH(x, y, 7 * unit, 7 * unit), paint);
-      canvas.drawRect(
-        Rect.fromLTWH(x + unit, y + unit, 5 * unit, 5 * unit),
-        Paint()..color = Colors.white,
-      );
-      canvas.drawRect(
-        Rect.fromLTWH(x + 2 * unit, y + 2 * unit, 3 * unit, 3 * unit),
-        paint,
-      );
-    }
-
-    drawFinder(0, 0);
-    drawFinder(w - 7 * unit, 0);
-    drawFinder(0, h - 7 * unit);
-
-    for (int i = 8; i <= 12; i += 2) {
-      canvas.drawRect(Rect.fromLTWH(i * unit, 6 * unit, unit, unit), paint);
-      canvas.drawRect(Rect.fromLTWH(6 * unit, i * unit, unit, unit), paint);
-    }
-
-    final dataCoords = [
-      [8, 8], [9, 8], [11, 9], [13, 8], [14, 9], [16, 8],
-      [8, 10], [10, 11], [12, 10], [14, 11], [17, 10],
-      [9, 13], [11, 13], [13, 13], [15, 14], [17, 13],
-      [8, 16], [10, 17], [12, 16], [14, 17], [16, 16],
-      [9, 19], [11, 18], [13, 19], [15, 19], [17, 18],
-    ];
-
-    for (final coord in dataCoords) {
-      canvas.drawRect(
-        Rect.fromLTWH(coord[0] * unit, coord[1] * unit, unit, unit),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

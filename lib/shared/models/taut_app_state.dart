@@ -457,25 +457,6 @@ class TautAppState extends ChangeNotifier {
     }).toList();
   }
 
-  double _fontSize = 16.0;
-  double get fontSize => _fontSize;
-
-  void cycleFont() {
-    if (_fontSize == 16.0) {
-      _fontSize = 19.0;
-    } else if (_fontSize == 19.0) {
-      _fontSize = 22.0;
-    } else {
-      _fontSize = 16.0;
-    }
-    notifyListeners();
-  }
-
-  void setFontSize(double size) {
-    _fontSize = size;
-    notifyListeners();
-  }
-
   void resetDemo() {
     _userName = 'Adriel';
     _friends = ['Nadia', 'Raka', 'Dinda'];
@@ -490,7 +471,6 @@ class TautAppState extends ChangeNotifier {
     _facilityCategoryFilter = 'Semua';
     _facilitySearchQuery = '';
     _selectedFacilityIndex = 0;
-    _fontSize = 16.0;
     _isMicActive = false;
     _isCamActive = false;
     _isTtsActive = false;

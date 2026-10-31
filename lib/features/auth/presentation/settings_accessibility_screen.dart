@@ -81,85 +81,10 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Ukuran teks',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkGreen,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFD9E2D5)),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<double>(
-                              value: state.fontSize,
-                              isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  state.setFontSize(val);
-                                }
-                              },
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 16.0,
-                                  child: Text(
-                                    'Standar - 16px',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 19.0,
-                                  child: Text(
-                                    'Besar - 19px',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 22.0,
-                                  child: Text(
-                                    'Sangat besar - 22px',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F3EB),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Text(
-                            'Halo, senang bisa saling memahami.',
-                            style: TextStyle(
-                              fontSize: state.fontSize,
-                              color: const Color(0xFF5B6E55),
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Divider(color: Color(0xFFE4E9E1), height: 1),
-                        ),
-
-                        const Text(
+                        Text(
                           'Putar suara setelah konfirmasi',
                           style: TextStyle(
                             fontSize: 16,
@@ -167,8 +92,8 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                             color: AppColors.darkGreen,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
+                        SizedBox(height: 6),
+                        Text(
                           'Hasil isyarat dapat diperiksa dan disunting sebelum kamu menekan Putar.',
                           style: TextStyle(
                             fontSize: 12,
