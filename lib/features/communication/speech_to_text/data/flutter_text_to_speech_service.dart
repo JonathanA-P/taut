@@ -1,13 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-
 import '../domain/text_to_speech_service.dart';
 
-/// Production implementation of [TextToSpeechService] using `flutter_tts`.
-/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
-/// Branch: feature/speech-to-text.
 class FlutterTextToSpeechService implements TextToSpeechService {
   final FlutterTts _flutterTts;
   final StreamController<bool> _speakingStateController =

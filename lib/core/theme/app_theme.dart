@@ -1,140 +1,150 @@
 import 'package:flutter/material.dart';
 
-import '../constants/app_colors.dart';
-
-/// Application Theme definition using Material 3 specifications.
-/// Optimized for high readability, accessibility, and high visual contrast.
 class AppTheme {
   AppTheme._();
 
+  static const Color background = Color(0xFFFAF0E6);
+  static const Color surface = Color(0xFFFFFDF8);
+  static const Color border = Color(0xFFEADFD2);
+  static const Color textPrimary = Color(0xFF3A2E3A);
+  static const Color textSecondary = Color(0xFF6E5C6E);
+  static const Color primary = Color(0xFF6C4AB0);
+  static const Color primaryDeep = Color(0xFF4A2E6B);
+  static const Color primaryLight = Color(0xFFEDE6FF);
+  static const Color lavender = Color(0xFFE4D7FF);
+  static const Color peach = Color(0xFFFFE3C2);
+  static const Color butter = Color(0xFFFFF3C4);
+  static const Color danger = Color(0xFFC74343);
+  static const Color mapBackground = Color(0xFFE8DFF5);
+  static const Color cameraBackground = Color(0xFF2E2140);
+
+  static const LinearGradient heroGradient = LinearGradient(
+    colors: [peach, lavender],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient headerGradient = LinearGradient(
+    colors: [primary, Color(0xFF8B6FD6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme(
-      brightness: Brightness.light,
-      primary: AppColors.primary,
-      onPrimary: AppColors.onPrimary,
-      primaryContainer: AppColors.primaryContainer,
-      onPrimaryContainer: AppColors.onPrimaryContainer,
-      secondary: AppColors.secondary,
-      onSecondary: AppColors.onSecondary,
-      secondaryContainer: AppColors.secondaryContainer,
-      onSecondaryContainer: AppColors.onSecondaryContainer,
-      error: AppColors.error,
-      onError: Colors.white,
-      surface: AppColors.surface,
-      onSurface: AppColors.onSurface,
-      surfaceContainerHighest: AppColors.surfaceVariant,
-      onSurfaceVariant: AppColors.onSurfaceVariant,
-      outline: AppColors.outline,
+    const colorScheme = ColorScheme.light(
+      primary: primary,
+      onPrimary: Colors.white,
+      secondary: primaryDeep,
+      surface: surface,
+      error: danger,
+      onSurface: textPrimary,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.surface,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.onSurface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
+      scaffoldBackgroundColor: background,
+      fontFamily: 'Manrope',
+      textTheme: const TextTheme(
+
+        titleLarge: TextStyle(
+          fontFamily: 'Fraunces',
+          fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: AppColors.onSurface,
-          letterSpacing: -0.2,
+          color: textPrimary,
+          height: 1.3,
+        ),
+
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: textPrimary,
+          height: 1.4,
+        ),
+
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          color: textPrimary,
+          height: 1.5,
+        ),
+
+        bodySmall: TextStyle(
+          fontSize: 13,
+          color: textSecondary,
+          height: 1.4,
+        ),
+
+        labelLarge: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
         ),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.outline, width: 1),
+          borderRadius: BorderRadius.circular(28),
+          side: const BorderSide(color: border),
         ),
+        margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
-          minimumSize: const Size.fromHeight(52),
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          minimumSize: const Size.fromHeight(52),
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          foregroundColor: primary,
+          minimumSize: const Size(double.infinity, 56),
+          side: const BorderSide(color: primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: AppColors.primaryContainer,
-        elevation: 2,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onPrimaryContainer,
-            );
-          }
-          return const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.onSurfaceVariant,
-          );
-        }),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: primary, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
-      textTheme: const TextTheme(
-        headlineMedium: TextStyle(
-          fontSize: 26,
-          fontWeight: FontWeight.w700,
-          color: AppColors.onSurface,
-          letterSpacing: -0.5,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: AppColors.onSurface,
-          letterSpacing: -0.3,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppColors.onSurface,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: AppColors.onSurface,
-          height: 1.5,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: AppColors.onSurfaceVariant,
-          height: 1.4,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
-        ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: surface,
+        selectedItemColor: primary,
+        unselectedItemColor: Color(0xFF9A8A9E),
+        selectedLabelStyle: TextStyle(fontSize: 12),
+        unselectedLabelStyle: TextStyle(fontSize: 12),
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
       ),
     );
   }

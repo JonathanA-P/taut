@@ -1,29 +1,19 @@
-/// Global constants for the TAUT platform.
 class AppConstants {
   AppConstants._();
 
-  // Route Names
-  static const String routeHome = '/';
-  static const String routeCommunication = '/communication';
-  static const String routeSpeechToText = '/communication/speech-to-text';
-  static const String routeMotionToSound = '/communication/motion-to-sound';
-  static const String routeHealthcare = '/healthcare';
-  static const String routeLocationSharing = '/location-sharing';
-  static const String routeFriends = '/friends';
-  static const String routeProfile = '/profile';
-  static const String routePrivacy = '/privacy';
+  static const String appName = 'TAUT';
+  static const String tagline = 'Terhubung tanpa hambatan.';
 
-  // Healthcare Tags (OpenStreetMap Overpass)
-  static const List<String> healthcareAmenities = [
-    'hospital',
-    'clinic',
-    'doctors',
-    'pharmacy',
-  ];
+  static const double healthcareRadiusKm = 10;
 
-  // Default Search Radius
-  static const double defaultSearchRadiusMeters = 10000.0;
+  static const Duration initialSharingRemaining = Duration(
+    minutes: 14,
+    seconds: 32,
+  );
 
-  // BISINDO Confidence Threshold
-  static const double defaultGestureConfidenceThreshold = 0.70;
+  static const String demoUserName = 'Jonathan';
+  static const String demoFriendName = 'Budi Santoso';
+  static const String demoLastLocation = 'Jl. Contoh No. 1, Malang';
+
+  static const String demoInviteCode = 'TAUT-8K2P';
 }
