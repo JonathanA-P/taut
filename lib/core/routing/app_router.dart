@@ -1,6 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:taut/features/home/presentation/home_page.dart';
-import 'package:taut/shared/widgets/empty_state_placeholder.dart';
+
+import '../constants/app_constants.dart';
+import '../../features/home/presentation/home_shell_screen.dart';
+import '../../features/home/presentation/home_dashboard_screen.dart';
+import '../../features/home/presentation/home_page.dart';
+import '../../features/communication/presentation/communication_hub_screen.dart';
+import '../../features/communication/speech_to_text/presentation/speech_to_text_screen.dart';
+import '../../features/communication/motion_to_sound/presentation/motion_to_sound_screen.dart';
+import '../../features/healthcare/presentation/healthcare_finder_screen.dart';
+import '../../features/healthcare/presentation/healthcare_detail_screen.dart';
+import '../../features/healthcare/domain/healthcare_facility.dart';
+import '../../features/location_sharing/presentation/location_sharing_screen.dart';
+import '../../features/location_sharing/presentation/share_location_to_healthcare_screen.dart';
+import '../../features/friends/presentation/friends_list_screen.dart';
+import '../../features/friends/presentation/add_friend_screen.dart';
+import '../../features/friends/presentation/live_location_screen.dart';
+import '../../features/friends/presentation/manage_location_sharing_screen.dart';
+import '../../features/auth/presentation/splash_screen.dart';
+import '../../features/auth/presentation/onboarding_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/profile_screen.dart';
+import '../../features/auth/presentation/edit_profile_screen.dart';
+import '../../features/auth/presentation/settings_accessibility_screen.dart';
+import '../../features/privacy/presentation/privacy_policy_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -20,97 +43,119 @@ class AppRoutes {
   static const String register = '/register';
 }
 
+/// Centralized declarative router for TAUT navigation.
+/// Maps all 20 primary application screens and flows.
 class AppRouter {
   AppRouter._();
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    Widget page;
     switch (settings.name) {
       case AppRoutes.home:
-        page = const HomePage();
-        break;
-      
+        return MaterialPageRoute(builder: (_) => const HomePage());
+
+      case AppConstants.routeHome:
+        return MaterialPageRoute(builder: (_) => const HomeShellScreen());
+
+      case AppConstants.routeSplash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+
+      case AppConstants.routeOnboarding:
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+
+      case AppConstants.routeLogin:
+      case AppRoutes.login:
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+
+      case AppConstants.routeRegister:
+      case AppRoutes.register:
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
+
+      case AppConstants.routeHomeDashboard:
+        return MaterialPageRoute(builder: (_) => const HomeDashboardScreen());
+
+      case AppConstants.routeCommunication:
       case AppRoutes.commHub:
-        page = const _PlaceholderPage(
-          title: 'Komunikasi',
-          description:
-              'Hub komunikasi (Speech-to-Text dan Motion-to-Sound) '
-              'sedang dibangun oleh tim Komunikasi.',
-        );
-        break;
+        return MaterialPageRoute(builder: (_) => const CommunicationHubScreen());
+
+      case AppConstants.routeSpeechToText:
       case AppRoutes.speechToText:
-        page = const _PlaceholderPage(
-          title: 'Speech-to-Text',
-          description: 'Suara diubah jadi teks. Fitur ini belum dibangun.',
-        );
-        break;
+        return MaterialPageRoute(builder: (_) => const SpeechToTextScreen());
+
+      case AppConstants.routeMotionToSound:
       case AppRoutes.motionToSound:
-        page = const _PlaceholderPage(
-          title: 'Motion-to-Sound',
-          description:
-              'Isyarat BISINDO diubah jadi suara. Fitur ini belum dibangun.',
-        );
-        break;
+        return MaterialPageRoute(builder: (_) => const MotionToSoundScreen());
+
+      case AppConstants.routeLocationHub:
+      case AppConstants.routeLocationSharing:
       case AppRoutes.location:
-        page = const _PlaceholderPage(
-          title: 'Lokasi',
-          description:
-              'Faskes terdekat dan Teman sedang dibangun oleh tim Lokasi.',
+        return MaterialPageRoute(builder: (_) => const LocationSharingScreen());
+
+      case AppConstants.routeHealthcare:
+        return MaterialPageRoute(builder: (_) => const HealthcareFinderScreen());
+
+      case AppConstants.routeHealthcareDetail:
+      case AppRoutes.healthcareDetail:
+        final facility = settings.arguments as HealthcareFacility? ??
+            const HealthcareFacility(
+              id: 'osm-default',
+              name: 'RSUD Dr. Saiful Anwar',
+              category: 'Rumah Sakit',
+              address: 'Jl. Jaksa Agung Suprapto No. 2, Klojen, Malang',
+              latitude: -7.9723,
+              longitude: 112.6318,
+              distanceMeters: 1250,
+              isWheelchairAccessible: true,
+            );
+        return MaterialPageRoute(
+          builder: (_) => HealthcareDetailScreen(facility: facility),
         );
-        break;
-      case AppRoutes.manageSharing:
-        page = const _PlaceholderPage(
-          title: 'Kelola Berbagi Lokasi',
-          description: 'Kelola sesi berbagi lokasi. Fitur ini belum dibangun.',
+
+      case AppConstants.routeShareHealthcare:
+        final facility = settings.arguments as HealthcareFacility?;
+        return MaterialPageRoute(
+          builder: (_) => ShareLocationToHealthcareScreen(targetFacility: facility),
         );
-        break;
-      case AppRoutes.myPosition:
-        page = const _PlaceholderPage(
-          title: 'Posisi Saya yang Dibagikan',
-          description:
-              'Posisi yang sedang kamu bagikan. Fitur ini belum dibangun.',
-        );
-        break;
+
+      case AppConstants.routeFriends:
+        return MaterialPageRoute(builder: (_) => const FriendsListScreen());
+
+      case AppConstants.routeAddFriend:
+      case AppRoutes.addFriend:
+        return MaterialPageRoute(builder: (_) => const AddFriendScreen());
+
+      case AppConstants.routeLiveLocation:
       case AppRoutes.friendLocation:
-        page = const _PlaceholderPage(
-          title: 'Lokasi Teman',
-          description: 'Posisi teman yang berbagi. Fitur ini belum dibangun.',
+        return MaterialPageRoute(builder: (_) => const LiveLocationScreen());
+
+      case AppConstants.routeManageLocationSharing:
+      case AppRoutes.manageSharing:
+      case AppRoutes.myPosition:
+        return MaterialPageRoute(
+          builder: (_) => const ManageLocationSharingScreen(),
         );
-        break;
+
+      case AppConstants.routeProfile:
       case AppRoutes.profile:
-        page = const _PlaceholderPage(
-          title: 'Profil',
-          description: 'Profil dan pengaturan. Fitur ini belum dibangun.',
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+
+      case AppConstants.routeEditProfile:
+        return MaterialPageRoute(builder: (_) => const EditProfileScreen());
+
+      case AppConstants.routeSettings:
+        return MaterialPageRoute(
+          builder: (_) => const SettingsAccessibilityScreen(),
         );
-        break;
+
+      case AppConstants.routePrivacy:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen());
+
       default:
-        page = const _PlaceholderPage(
-          title: 'Halaman tidak ditemukan',
-          description: 'Rute yang dibuka belum tersedia di aplikasi ini.',
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: const Text('Halaman Tidak Ditemukan')),
+            body: Center(child: Text('Rute ${settings.name} tidak dikenali.')),
+          ),
         );
     }
-
-    return MaterialPageRoute<void>(
-      builder: (_) => page,
-      settings: settings,
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title, required this.description});
-
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: EmptyStatePlaceholder(
-        title: title,
-        description: description,
-      ),
-    );
   }
 }

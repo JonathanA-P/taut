@@ -4,76 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taut/features/communication/speech_to_text/domain/speech_service.dart';
 import 'package:taut/features/communication/speech_to_text/domain/speech_state.dart';
-import 'package:taut/features/communication/speech_to_text/domain/text_to_speech_service.dart';
 import 'package:taut/features/communication/speech_to_text/presentation/speech_to_text_screen.dart';
-
-class MockTtsService implements TextToSpeechService {
-  final _stateController = StreamController<bool>.broadcast();
-  bool _isSpeaking = false;
-  double _speechRate = 0.5;
-  double _pitch = 1.0;
-  double _volume = 1.0;
-  String? lastSpokenText;
-  int speakCount = 0;
-  int stopCount = 0;
-
-  @override
-  bool get isSpeaking => _isSpeaking;
-
-  @override
-  Stream<bool> get isSpeakingStream => _stateController.stream;
-
-  @override
-  double get speechRate => _speechRate;
-
-  @override
-  double get pitch => _pitch;
-
-  @override
-  double get volume => _volume;
-
-  @override
-  Future<void> initialize({String language = 'id-ID'}) async {}
-
-  @override
-  Future<void> speakText(String text) async {
-    lastSpokenText = text;
-    speakCount++;
-    _isSpeaking = true;
-    _stateController.add(true);
-  }
-
-  @override
-  Future<void> stopSpeaking() async {
-    stopCount++;
-    _isSpeaking = false;
-    _stateController.add(false);
-  }
-
-  @override
-  Future<void> setSpeechRate(double rate) async {
-    _speechRate = rate;
-  }
-
-  @override
-  Future<void> setPitch(double pitch) async {
-    _pitch = pitch;
-  }
-
-  @override
-  Future<void> setVolume(double volume) async {
-    _volume = volume;
-  }
-
-  @override
-  void dispose() {
-    _stateController.close();
-  }
-}
 
 class MockSpeechService implements SpeechService {
   bool _isListening = false;
-  final _controller = StreamController<SpeechRecognitionState>.broadcast();
+  final StreamController<SpeechRecognitionState> _controller =
+      StreamController<SpeechRecognitionState>.broadcast();
+  void Function(String text, bool isFinal)? onResultCallback;
 
   @override
   Future<bool> initialize() async => true;
@@ -81,20 +18,25 @@ class MockSpeechService implements SpeechService {
   @override
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
-    String language = 'id-ID',
+    String language = 'id_ID',
   }) async {
     _isListening = true;
-    onResult('Halo apa kabar', false);
+    onResultCallback = onResult;
+    _controller.add(
+      const SpeechRecognitionState(status: SpeechStatus.listening),
+    );
   }
 
   @override
   Future<void> stopListening() async {
     _isListening = false;
+    _controller.add(const SpeechRecognitionState(status: SpeechStatus.ready));
   }
 
   @override
   Future<void> cancelListening() async {
     _isListening = false;
+    _controller.add(const SpeechRecognitionState(status: SpeechStatus.ready));
   }
 
   @override
@@ -110,116 +52,155 @@ class MockSpeechService implements SpeechService {
 }
 
 void main() {
-  group('SpeechToTextScreen Widget Tests', () {
-    late MockTtsService mockTts;
-    late MockSpeechService mockSpeech;
+  group('Live SpeechToTextScreen Production Tests', () {
+    late MockSpeechService mockSpeechService;
 
     setUp(() {
-      mockTts = MockTtsService();
-      mockSpeech = MockSpeechService();
+      mockSpeechService = MockSpeechService();
     });
 
-    Widget createScreen() {
+    Widget createTestWidget() {
       return MaterialApp(
-        home: SpeechToTextScreen(
-          ttsService: mockTts,
-          speechService: mockSpeech,
-        ),
+        home: SpeechToTextScreen(speechService: mockSpeechService),
       );
     }
 
-    testWidgets('Renders TTS tab with quick phrases and controls', (tester) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
+    testWidgets(
+      'Initial view displays idle status, instructions, and controls',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(createScreen());
+        expect(find.text('Live Speech-to-Text'), findsOneWidget);
+        expect(find.text('MIKROFON TIDAK AKTIF'), findsOneWidget);
+        expect(find.text('Mulai Mendengarkan Suara'), findsOneWidget);
+        expect(find.text('Bersihkan Layar'), findsOneWidget);
+        expect(find.text('Ketik Manual'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Tapping mic button activates continuous listening and updates status',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        // Tap main microphone start button
+        await tester.tap(find.text('Mulai Mendengarkan Suara'));
+        await tester.pumpAndSettle();
+
+        expect(mockSpeechService.isListening, isTrue);
+        expect(find.text('MIKROFON AKTIF (Bahasa Indonesia)'), findsOneWidget);
+        expect(find.text('Hentikan Mendengarkan'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Real-time partial results appear directly on screen without confirmation step',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        // Start listening
+        await tester.tap(find.text('Mulai Mendengarkan Suara'));
+        await tester.pumpAndSettle();
+
+        // Simulate partial transcription coming from engine
+        mockSpeechService.onResultCallback?.call('Halo selamat', false);
+        await tester.pump();
+
+        // Verify text is immediately visible without confirmation
+        expect(find.text('Halo selamat'), findsOneWidget);
+
+        // Simulate additional words stream in
+        mockSpeechService.onResultCallback?.call(
+          'Halo selamat pagi dokter',
+          false,
+        );
+        await tester.pump();
+
+        expect(find.text('Halo selamat pagi dokter'), findsOneWidget);
+
+        // Finalize sentence (speaker pauses / sentence ends)
+        mockSpeechService.onResultCallback?.call(
+          'Halo selamat pagi dokter',
+          true,
+        );
+        await tester.pump();
+
+        expect(find.text('Halo selamat pagi dokter'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Continuous listening aggregates sentences across pauses without losing previous text',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Mulai Mendengarkan Suara'));
+        await tester.pumpAndSettle();
+
+        // First sentence finalized
+        mockSpeechService.onResultCallback?.call('Saya butuh bantuan.', true);
+        await tester.pump();
+
+        // Second sentence begins while microphone remains active
+        mockSpeechService.onResultCallback?.call(
+          'Di mana ruang radiologi?',
+          false,
+        );
+        await tester.pump();
+
+        // Both sentences must be visible together
+        expect(
+          find.text('Saya butuh bantuan. Di mana ruang radiologi?'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('Bersihkan Layar empties caption text with single tap', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Verify app bar title and tab titles
-      expect(find.text('Komunikasi Suara & Teks'), findsOneWidget);
-      expect(find.text('Teks ke Suara (TTS)'), findsOneWidget);
-      expect(find.text('Suara ke Teks (STT)'), findsOneWidget);
+      await tester.tap(find.text('Mulai Mendengarkan Suara'));
+      await tester.pumpAndSettle();
 
-      // Verify quick phrases are present
-      expect(find.text('Halo, salam kenal!'), findsOneWidget);
-      expect(find.text('Saya teman Tuli, mohon bantuannya.'), findsOneWidget);
+      mockSpeechService.onResultCallback?.call('Teks yang akan dihapus', true);
+      await tester.pump();
 
-      // Verify text input field is present
+      expect(find.text('Teks yang akan dihapus'), findsOneWidget);
+
+      // Tap Bersihkan Layar button
+      await tester.tap(find.text('Bersihkan Layar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Teks yang akan dihapus'), findsNothing);
+    });
+
+    testWidgets('Manual input fallback appends text to main screen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Toggle manual input
+      await tester.tap(find.text('Ketik Manual'));
+      await tester.pumpAndSettle();
+
       expect(find.byType(TextField), findsOneWidget);
 
-      // Verify Ucapkan button
-      expect(find.text('Ucapkan Suara (TTS)'), findsOneWidget);
-    });
-
-    testWidgets('Tapping quick phrase populates text and can be spoken', (tester) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      await tester.pumpWidget(createScreen());
-      await tester.pumpAndSettle();
-
-      // Tap on a quick phrase chip
-      await tester.tap(find.text('Halo, salam kenal!'));
-      await tester.pumpAndSettle();
-
-      // Check text field has the phrase
-      expect(find.text('Halo, salam kenal!'), findsWidgets);
-
-      // Ensure button is visible before tapping
-      final speakButton = find.text('Ucapkan Suara (TTS)');
-      await tester.ensureVisible(speakButton);
-      await tester.tap(speakButton);
-      await tester.pumpAndSettle();
-
-      expect(mockTts.speakCount, equals(1));
-      expect(mockTts.lastSpokenText, equals('Halo, salam kenal!'));
-    });
-
-    testWidgets('Switching to STT tab displays microphone controls and handles listening', (tester) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      await tester.pumpWidget(createScreen());
-      await tester.pumpAndSettle();
-
-      // Switch to STT tab
-      await tester.tap(find.text('Suara ke Teks (STT)'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Panduan Suara ke Teks'), findsOneWidget);
-      expect(find.text('Ketuk untuk mulai bicara'), findsOneWidget);
-
-      // Tap the circular mic button in STT tab
-      final micButton = find.descendant(
-        of: find.byType(ElevatedButton),
-        matching: find.byIcon(Icons.mic_rounded),
+      await tester.enterText(
+        find.byType(TextField),
+        'Pesan darurat diketik manual',
       );
-      await tester.tap(micButton);
+      await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ketuk untuk berhenti'), findsOneWidget);
-      expect(find.text('Halo apa kabar'), findsOneWidget);
-
-      // Can speak transcription using Putar TTS button
-      final putarTtsButton = find.text('Putar TTS');
-      await tester.ensureVisible(putarTtsButton);
-      await tester.tap(putarTtsButton);
-      await tester.pumpAndSettle();
-
-      expect(mockTts.speakCount, equals(1));
-      expect(mockTts.lastSpokenText, equals('Halo apa kabar'));
+      expect(find.text('Pesan darurat diketik manual'), findsOneWidget);
     });
   });
 }

@@ -2,114 +2,181 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/status_badge.dart';
 
-/// Privacy & Security screen detailing data practices and permissions.
+/// Screen 20: Privacy Policy & Security Screen.
+/// Details on-device AI processing, least-privilege permission model, and PostgreSQL RLS.
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Privasi & Keamanan Data')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Privasi & Keamanan Data'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Komitmen Privasi TAUT',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'TAUT dirancang dengan prinsip Privacy by Design dan Least Privilege untuk melindungi privasi penyandang disabilitas.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+          Row(
+            children: [
+              StatusBadge.active(label: 'Privacy by Design • Terverifikasi'),
+            ],
           ),
           const SizedBox(height: 16),
+          Text(
+            'Komitmen Privasi TAUT',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.darkGreen,
+                ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'TAUT dirancang dengan prinsip Least Privilege dan pemrosesan lokal untuk melindungi data sensitif penyandang disabilitas.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // POLICY 1: AUDIO
           AppCard(
+            margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.mic_none_rounded,
-                      color: AppColors.primary,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSttBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.mic_none_rounded,
+                        color: AppColors.accentStt,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
+                    const SizedBox(width: 12),
+                    const Text(
                       'Pemrosesan Suara (Mikrofon)',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Rekaman audio mikrofon hanya diproses saat tombol mikrofon ditekan secara eksplisit. TAUT tidak merekam secara pasif di latar belakang. Audio diproses melalui speech engine bawaan Android dan tidak disimpan permanen di server TAUT.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(height: 10),
+                const Text(
+                  'Rekaman audio mikrofon hanya diproses saat tombol mikrofon ditekan secara aktif. TAUT tidak merekam secara pasif di latar belakang. Audio diproses melalui speech engine bawaan Android dan tidak disimpan permanen di server.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          // POLICY 2: CAMERA & VISION
           AppCard(
+            margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.camera_alt_outlined,
-                      color: AppColors.primary,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentMtsBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.videocam_outlined,
+                        color: AppColors.accentMts,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
+                    const SizedBox(width: 12),
+                    const Text(
                       'Pemrosesan Isyarat Kamera (BISINDO)',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Bingkai video kamera hanya digunakan untuk mengekstrak titik koordinat tangan (landmarks) secara on-device di perangkat Android Anda. Tidak ada video atau foto mentah pengguna yang diunggah ke server cloud.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(height: 10),
+                const Text(
+                  'Bingkai kamera ponsel hanya diproses secara on-device melalui MediaPipe Hand Landmarker untuk mengekstrak titik koordinat sendi tangan. Tidak ada rekaman video mentah atau citra wajah yang diunggah ke server cloud.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          // POLICY 3: LOCATION & RLS
           AppCard(
+            margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.share_location_rounded,
-                      color: AppColors.primary,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentLocationBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.share_location_rounded,
+                        color: AppColors.accentLocation,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
+                    const SizedBox(width: 12),
+                    const Text(
                       'Berbagi Lokasi GPS & Keamanan RLS',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Lokasi Anda hanya dapat dibagikan kepada teman yang sudah terverifikasi melalui persetujuan dua arah. Setiap sesi berbagi dibatasi waktu (expiring) dan dapat dicabut seketika oleh pemilik lokasi. Akses dibatasi ketat menggunakan PostgreSQL Row Level Security (RLS).',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(height: 10),
+                const Text(
+                  'Pembagian lokasi ke faskes berjalan murni melalui Android Share Sheet tanpa menyimpan koordinat ke database. Pembagian ke teman terpercaya dilindungi oleh PostgreSQL Row Level Security (RLS) pada Supabase.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );

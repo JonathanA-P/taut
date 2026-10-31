@@ -1,16 +1,32 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+
 import '../domain/speech_service.dart';
 import '../domain/speech_state.dart';
 
-/// Foundation implementation of [SpeechService] for Stage 01.
-/// Real integration with `speech_to_text` and Android SpeechRecognizer
-/// will be implemented by Roganda on `feature/speech-to-text`.
+/// Production implementation of [SpeechService] using `speech_to_text` plugin.
+/// Designed for Teman Tuli accessibility in TAUT.
+/// Supports continuous listening, auto-recovery across speech pauses,
+/// dynamic Indonesian locale matching, and real-time streaming.
+/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechServiceImpl implements SpeechService {
-  final _stateController = StreamController<SpeechRecognitionState>.broadcast();
-  bool _isListening = false;
+  final SpeechToText _speechToText;
+  final StreamController<SpeechRecognitionState> _stateController =
+      StreamController<SpeechRecognitionState>.broadcast();
 
-  SpeechServiceImpl() {
+  bool _isAvailable = false;
+  bool _isContinuousActive = false;
+  Completer<bool>? _initCompleter;
+  void Function(String text, bool isFinal)? _currentOnResult;
+  String _currentLanguage = 'id_ID';
+  String? _resolvedIndonesianLocaleId;
+
+  SpeechServiceImpl({SpeechToText? speechToText})
+    : _speechToText = speechToText ?? SpeechToText() {
     _stateController.add(
       const SpeechRecognitionState(status: SpeechStatus.uninitialized),
     );
@@ -18,27 +34,207 @@ class SpeechServiceImpl implements SpeechService {
 
   @override
   Future<bool> initialize() async {
-    _stateController.add(
-      const SpeechRecognitionState(status: SpeechStatus.ready),
+    if (_isAvailable) return true;
+
+    // Masalah 1 Fix: Guard against race condition with Completer
+    if (_initCompleter != null) {
+      return _initCompleter!.future;
+    }
+
+    _initCompleter = Completer<bool>();
+    try {
+      _isAvailable = await _speechToText.initialize(
+        onError: _handleError,
+        onStatus: _handleStatus,
+        debugLogging: kDebugMode,
+      );
+
+      if (_isAvailable) {
+        // Masalah 2 Fix: Dynamically resolve verified Indonesian locale ID from device
+        await _resolveIndonesianLocale();
+      }
+
+      _stateController.add(
+        SpeechRecognitionState(
+          status: _isAvailable ? SpeechStatus.ready : SpeechStatus.error,
+          errorMessage: _isAvailable ? null : 'Fitur pengenalan suara tidak tersedia atau izin mikrofon belum diberikan.',
+        ),
+      );
+      _initCompleter!.complete(_isAvailable);
+      return _isAvailable;
+    } catch (e) {
+      debugPrint('Speech recognition initialization error: $e');
+      _isAvailable = false;
+      _stateController.add(
+        SpeechRecognitionState(
+          status: SpeechStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
+      _initCompleter!.complete(false);
+      return false;
+    } finally {
+      _initCompleter = null;
+    }
+  }
+
+  Future<void> _resolveIndonesianLocale() async {
+    try {
+      final availableLocales = await _speechToText.locales();
+      debugPrint('Device speech locales count: ${availableLocales.length}');
+
+      for (final loc in availableLocales) {
+        final id = loc.localeId.toLowerCase();
+        // Android may register Indonesian as id_ID, id-ID, in_ID, or in-ID
+        if (id == 'id_id' ||
+            id == 'id-id' ||
+            id.startsWith('id_') ||
+            id.startsWith('id-') ||
+            id == 'in_id' ||
+            id == 'in-id' ||
+            id.startsWith('in_') ||
+            id.startsWith('in-')) {
+          _resolvedIndonesianLocaleId = loc.localeId;
+          debugPrint(
+            'Matched Indonesian speech locale: $_resolvedIndonesianLocaleId (${loc.name})',
+          );
+          break;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error inspecting available device locales: $e');
+    }
+  }
+
+  void _handleError(SpeechRecognitionError error) {
+    debugPrint(
+      'SpeechRecognition error: ${error.errorMsg} (permanent: ${error.permanent})',
     );
-    return true;
+    if (_isContinuousActive && !error.permanent) {
+      // Non-fatal pause / network hiccup: restart listening automatically
+      _scheduleAutoRestart();
+    } else {
+      _stateController.add(
+        SpeechRecognitionState(
+          status: SpeechStatus.error,
+          errorMessage: error.errorMsg,
+        ),
+      );
+    }
+  }
+
+  void _handleStatus(String status) {
+    debugPrint('SpeechRecognition status: $status');
+    if (status == 'listening') {
+      _stateController.add(
+        const SpeechRecognitionState(status: SpeechStatus.listening),
+      );
+    } else if (status == 'notListening' || status == 'done') {
+      if (_isContinuousActive) {
+        _scheduleAutoRestart();
+      } else {
+        _stateController.add(
+          const SpeechRecognitionState(status: SpeechStatus.ready),
+        );
+      }
+    }
+  }
+
+  void _scheduleAutoRestart() {
+    if (!_isContinuousActive) return;
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_isContinuousActive && !_speechToText.isListening) {
+        _startListeningInternal();
+      }
+    });
+  }
+
+  Future<void> _startListeningInternal() async {
+    if (!_isAvailable) {
+      final ready = await initialize();
+      if (!ready) return;
+    }
+
+    try {
+      // Masalah 2 Fix: Prioritize verified resolved Indonesian locale ID
+      final localeId =
+          _resolvedIndonesianLocaleId ?? _currentLanguage.replaceAll('-', '_');
+
+      debugPrint('SpeechToText listen() using localeId: $localeId');
+
+      final started = await _speechToText.listen(
+        onResult: (SpeechRecognitionResult result) {
+          debugPrint(
+            'Speech words: "${result.recognizedWords}", isFinal: ${result.finalResult}',
+          );
+          _stateController.add(
+            SpeechRecognitionState(
+              status: SpeechStatus.listening,
+              recognizedText: result.recognizedWords,
+              isFinal: result.finalResult,
+            ),
+          );
+          _currentOnResult?.call(result.recognizedWords, result.finalResult);
+        },
+        listenOptions: SpeechListenOptions(
+          localeId: localeId,
+          listenFor: const Duration(hours: 1),
+          pauseFor: const Duration(seconds: 4),
+          partialResults: true,
+          listenMode: ListenMode.dictation,
+          cancelOnError: false,
+        ),
+      );
+
+      // Masalah 3 Fix: Handle silent listen() rejection
+      if (started == false) {
+        debugPrint('SpeechToText.listen() returned false');
+        _stateController.add(
+          const SpeechRecognitionState(
+            status: SpeechStatus.error,
+            errorMessage: 'Gagal memulai perekaman audio. Periksa izin mikrofon perangkat.',
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error invoking speech listen: $e');
+      _stateController.add(
+        SpeechRecognitionState(
+          status: SpeechStatus.error,
+          errorMessage: 'Gagal mengaktifkan mikrofon: $e',
+        ),
+      );
+    }
   }
 
   @override
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
-    String language = 'id-ID',
+    String language = 'id_ID',
   }) async {
-    _isListening = true;
-    _stateController.add(
-      const SpeechRecognitionState(status: SpeechStatus.listening),
-    );
-    // Stage 01: Does not generate fake recognized text.
+    _isContinuousActive = true;
+    _currentOnResult = onResult;
+    _currentLanguage = language;
+
+    if (!_isAvailable) {
+      final ready = await initialize();
+      if (!ready) {
+        _isContinuousActive = false;
+        return;
+      }
+    }
+
+    await _startListeningInternal();
   }
 
   @override
   Future<void> stopListening() async {
-    _isListening = false;
+    _isContinuousActive = false;
+    try {
+      await _speechToText.stop();
+    } catch (e) {
+      debugPrint('Error stopping speech recognizer: $e');
+    }
     _stateController.add(
       const SpeechRecognitionState(status: SpeechStatus.ready),
     );
@@ -46,20 +242,29 @@ class SpeechServiceImpl implements SpeechService {
 
   @override
   Future<void> cancelListening() async {
-    _isListening = false;
+    _isContinuousActive = false;
+    try {
+      await _speechToText.cancel();
+    } catch (e) {
+      debugPrint('Error cancelling speech recognizer: $e');
+    }
     _stateController.add(
       const SpeechRecognitionState(status: SpeechStatus.ready),
     );
   }
 
   @override
-  bool get isListening => _isListening;
+  bool get isListening => _isContinuousActive || _speechToText.isListening;
 
   @override
   Stream<SpeechRecognitionState> get statusStream => _stateController.stream;
 
   @override
   void dispose() {
+    _isContinuousActive = false;
+    try {
+      _speechToText.stop();
+    } catch (_) {}
     _stateController.close();
   }
 }
