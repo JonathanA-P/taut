@@ -122,7 +122,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   @override
   void initState() {
     super.initState();
-    _signInputController.text = _detectedSign;
+    // Keep initial sentence buffer clean
+    _signInputController.text = '';
 
     _landmarkAnimController = AnimationController(
       vsync: this,
@@ -1818,7 +1819,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
         const Text(
           'Mode Deteksi Gerakan',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 12.5,
             fontWeight: FontWeight.w700,
             color: AppColors.darkGreen,
           ),
@@ -1831,38 +1832,38 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
               ButtonSegment(
                 value: BisindoMode.kata,
                 label: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 2),
                   child: Text(
                     'Kata\n(23)',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
-                icon: Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                icon: Icon(Icons.chat_bubble_outline_rounded, size: 15),
               ),
               ButtonSegment(
                 value: BisindoMode.abjad,
                 label: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 2),
                   child: Text(
                     'Abjad\nA–Z',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
-                icon: Icon(Icons.spellcheck_rounded, size: 16),
+                icon: Icon(Icons.spellcheck_rounded, size: 15),
               ),
               ButtonSegment(
                 value: BisindoMode.angka,
                 label: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 2),
                   child: Text(
                     'Angka\n0–10',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
-                icon: Icon(Icons.pin_outlined, size: 16),
+                icon: Icon(Icons.pin_outlined, size: 15),
               ),
             ],
             selected: {_activeMode},
@@ -1883,7 +1884,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   // ==========================================
   Widget _buildSentenceBuilderSection(TautAppState state) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1899,44 +1900,64 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.article_outlined,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'Bilah Kalimat & Ejaan',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.5,
-                  color: AppColors.darkGreen,
-                ),
-              ),
-              const Spacer(),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isVeryNarrow = constraints.maxWidth < 280;
+              return Row(
                 children: [
-                  const Text(
-                    'Suara Otomatis',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.article_outlined,
+                          size: 16.5,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            'Bilah Kalimat & Ejaan',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Switch(
-                    value: _isAutoSpeak,
-                    activeThumbColor: AppColors.primary,
-                    onChanged: (val) => setState(() => _isAutoSpeak = val),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(width: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        isVeryNarrow ? 'Suara' : 'Suara Otomatis',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Transform.scale(
+                        scale: 0.75,
+                        alignment: Alignment.centerRight,
+                        child: Switch(
+                          value: _isAutoSpeak,
+                          activeThumbColor: AppColors.primary,
+                          onChanged: (val) => setState(() => _isAutoSpeak = val),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 8),
 

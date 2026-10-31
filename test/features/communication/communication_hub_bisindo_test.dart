@@ -104,5 +104,23 @@ void main() {
 
       expect(find.text('Rangkaian kata atau ejaan akan tersusun di sini...'), findsOneWidget);
     });
+
+    testWidgets('Does not overflow on narrow mobile screens (340px width)', (tester) async {
+      tester.view.physicalSize = const Size(340, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const CommunicationHubScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Bilah Kalimat'), findsOneWidget);
+      expect(find.byType(Switch), findsOneWidget);
+    });
   });
 }
