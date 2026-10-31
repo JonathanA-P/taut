@@ -146,28 +146,10 @@ class _ManageLocationSharingScreenState
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 130),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 130),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F3EB),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      'Kamu memilih penerima dan durasinya. Sesi di prototipe ini merupakan simulasi; tidak ada koordinat yang dikirim.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF5B6E55),
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-
                   const Text(
                     'Mulai sesi baru',
                     style: TextStyle(
