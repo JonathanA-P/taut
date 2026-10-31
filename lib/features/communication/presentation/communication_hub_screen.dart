@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../motion_to_sound/data/bisindo_detector_service.dart';
+import '../motion_to_sound/domain/bisindo_labels.dart';
 import '../speech_to_text/data/speech_service_impl.dart';
 import '../speech_to_text/domain/speech_service.dart';
 import '../speech_to_text/domain/speech_state.dart';
@@ -44,6 +45,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   bool _isFrontCamera = true;
   String _detectedSign = 'Menunggu isyarat...';
   double _detectedConfidence = 0.0;
+  BisindoMode _activeMode = BisindoMode.kata;
+  bool _isAutoSpeak = true;
 
   CameraController? _cameraController;
   List<CameraDescription> _availableCameras = [];
@@ -162,12 +165,14 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       _detectorService = detector;
       _detectionSubscription = detector.detectionStream.listen((event) {
         if (!mounted) return;
-        if (event.result.isRecognized && event.result.confidence >= 0.5) {
-          setState(() {
+        setState(() {
+          _detectedConfidence = event.result.confidence;
+          if (event.result.isRecognized) {
             _detectedSign = event.result.label;
-            _detectedConfidence = event.result.confidence;
-            _signInputController.text = event.result.label;
-          });
+          }
+        });
+        if (event.isValidatedToken && event.result.isRecognized) {
+          _onTokenValidated(event.result.label);
         }
       });
 
@@ -459,12 +464,94 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     }
   }
 
+  Future<void> _onModeChanged(BisindoMode newMode) async {
+    if (_activeMode == newMode) return;
+    setState(() {
+      _activeMode = newMode;
+      _detectedSign = 'Menunggu isyarat...';
+      _detectedConfidence = 0.0;
+    });
+    await _detectorService?.switchMode(newMode);
+    _showToast('Mode deteksi: ${newMode.label}');
+  }
+
+  void _onTokenValidated(String token) {
+    if (!mounted) return;
+    setState(() {
+      if (_activeMode == BisindoMode.kata) {
+        final current = _signInputController.text;
+        final space = current.isEmpty || current.endsWith(' ') ? '' : ' ';
+        _signInputController.text = '$current$space$token ';
+        _signInputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _signInputController.text.length),
+        );
+        if (_isAutoSpeak) {
+          _tts.speak(token);
+        }
+      } else if (_activeMode == BisindoMode.angka) {
+        _signInputController.text += token;
+        _signInputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _signInputController.text.length),
+        );
+        if (_isAutoSpeak) {
+          final spoken = BisindoLabels.resolveSpokenLabel(token, _activeMode);
+          _tts.speak(spoken);
+        }
+      } else {
+        _signInputController.text += token;
+        _signInputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _signInputController.text.length),
+        );
+        if (_isAutoSpeak) {
+          _tts.speak(token);
+        }
+      }
+    });
+  }
+
+  void _addSpace() {
+    setState(() {
+      if (!_signInputController.text.endsWith(' ')) {
+        _signInputController.text += ' ';
+        _signInputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _signInputController.text.length),
+        );
+      }
+    });
+  }
+
+  void _backspace() {
+    setState(() {
+      final text = _signInputController.text;
+      if (text.isNotEmpty) {
+        _signInputController.text = text.substring(0, text.length - 1);
+        _signInputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _signInputController.text.length),
+        );
+      }
+    });
+  }
+
+  void _clearSentence() {
+    setState(() {
+      _signInputController.clear();
+    });
+  }
+
   void _selectSignPreset(String preset) {
     HapticFeedback.selectionClick();
     setState(() {
       _detectedSign = preset;
-      _signInputController.text = preset;
-      _detectedConfidence = 0.95 + (preset.length % 5) * 0.01;
+      final current = _signInputController.text.trim();
+      if (current.isEmpty) {
+        _signInputController.text = '$preset ';
+      } else {
+        _signInputController.text = '$current $preset ';
+      }
+      _signInputController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _signInputController.text.length),
+      );
+      _detectedConfidence = 0.95;
     });
     _showToast('Isyarat dipilih: "$preset"');
   }
@@ -516,10 +603,14 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
 
                         // Camera Viewfinder with Live BISINDO Landmarks & FPS
                         _buildLiveCameraViewport(state),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
 
-                        // Editable Sign Result & Putar Suara
-                        _buildSignOutputSection(state),
+                        // Mode Deteksi Gerakan (Kata, Abjad, Angka)
+                        _buildModeSelector(),
+                        const SizedBox(height: 12),
+
+                        // Bilah Kalimat & Ejaan (Isyarat ke Suara lengkap)
+                        _buildSentenceBuilderSection(state),
                         const SizedBox(height: 16),
 
                         // Conversation Header
@@ -1694,65 +1785,157 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   }
 
   // ==========================================
-  // SIGN OUTPUT SECTION (EDIT & PUTAR SUARA)
+  // MODE SELECTOR (KATA, ABJAD, ANGKA)
   // ==========================================
-  Widget _buildSignOutputSection(TautAppState state) {
+  Widget _buildModeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Mode Deteksi Gerakan',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<BisindoMode>(
+            segments: const [
+              ButtonSegment(
+                value: BisindoMode.kata,
+                label: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Kata\n(23)',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                icon: Icon(Icons.chat_bubble_outline_rounded, size: 16),
+              ),
+              ButtonSegment(
+                value: BisindoMode.abjad,
+                label: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Abjad\nA–Z',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                icon: Icon(Icons.spellcheck_rounded, size: 16),
+              ),
+              ButtonSegment(
+                value: BisindoMode.angka,
+                label: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Angka\n0–10',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                icon: Icon(Icons.pin_outlined, size: 16),
+              ),
+            ],
+            selected: {_activeMode},
+            onSelectionChanged: (set) => _onModeChanged(set.first),
+            style: SegmentedButton.styleFrom(
+              selectedBackgroundColor: const Color(0xFFD6E7D2),
+              selectedForegroundColor: AppColors.darkGreen,
+              side: const BorderSide(color: Color(0xFFD8E4D6)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // BILAH KALIMAT & EJAAN (SENTENCE BUILDER)
+  // ==========================================
+  Widget _buildSentenceBuilderSection(TautAppState state) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFD6E4D4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              const Icon(
+                Icons.article_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'Bilah Kalimat & Ejaan',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.sign_language_rounded, size: 16, color: AppColors.primary),
-                  SizedBox(width: 6),
-                  Text(
-                    'Isyarat ke Suara',
+                  const Text(
+                    'Suara Otomatis',
                     style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF5ED),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Sentuh untuk Menyesuaikan',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+                  const SizedBox(width: 4),
+                  Switch(
+                    value: _isAutoSpeak,
+                    activeThumbColor: AppColors.primary,
+                    onChanged: (val) => setState(() => _isAutoSpeak = val),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 8),
 
-          // Editable Sign Text
+          // Sentence Display Box / Editable Text Field
           TextField(
             controller: _signInputController,
-            maxLines: 2,
-            minLines: 1,
+            maxLines: 3,
+            minLines: 2,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1B2E24),
+            ),
             decoration: InputDecoration(
-              hintText: 'Hasil pengenalan isyarat BISINDO...',
+              hintText: 'Rangkaian kata atau ejaan akan tersusun di sini...',
+              hintStyle: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.normal,
+                color: Colors.grey.shade500,
+              ),
               filled: true,
               fillColor: const Color(0xFFF9FAF8),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: Color(0xFFD8E4D6)),
@@ -1767,57 +1950,108 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Action row: Quick sign presets & Putar Suara CTA
+          // Edit Controls: Spasi, Hapus 1, Bersihkan Kalimat
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 32,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _quickSignPresets.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 6),
-                    itemBuilder: (ctx, idx) {
-                      final preset = _quickSignPresets[idx];
-                      return ActionChip(
-                        label: Text(
-                          preset,
-                          style: const TextStyle(fontSize: 11, color: AppColors.darkGreen),
-                        ),
-                        backgroundColor: const Color(0xFFF0F5EF),
-                        side: const BorderSide(color: Color(0xFFD6E4D4)),
-                        padding: EdgeInsets.zero,
-                        onPressed: () => _selectSignPreset(preset),
-                      );
-                    },
+                child: OutlinedButton.icon(
+                  onPressed: _addSpace,
+                  icon: const Icon(Icons.space_bar_rounded, size: 16),
+                  label: const Text('Spasi', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.darkGreen,
+                    side: const BorderSide(color: Color(0xFFD8E4D6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: () => _handlePlaySignSound(state),
-                icon: const Icon(Icons.volume_up_rounded, size: 16),
-                label: const Text(
-                  'Putar Suara',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _backspace,
+                  icon: const Icon(Icons.backspace_outlined, size: 16),
+                  label: const Text('Hapus 1', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.darkGreen,
+                    side: const BorderSide(color: Color(0xFFD8E4D6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: const Size(0, 36),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                tooltip: 'Bersihkan Kalimat',
+                onPressed: _clearSentence,
+                icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                style: IconButton.styleFrom(
+                  foregroundColor: AppColors.darkGreen,
+                  side: const BorderSide(color: Color(0xFFD8E4D6)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+
+          // Quick Sign Presets Row
+          SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _quickSignPresets.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (ctx, idx) {
+                final preset = _quickSignPresets[idx];
+                return ActionChip(
+                  label: Text(
+                    preset,
+                    style: const TextStyle(fontSize: 11, color: AppColors.darkGreen),
+                  ),
+                  backgroundColor: const Color(0xFFF0F5EF),
+                  side: const BorderSide(color: Color(0xFFD6E4D4)),
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _selectSignPreset(preset),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Action Button: Suarakan Sekarang 🔊
+          SizedBox(
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: () => _handlePlaySignSound(state),
+              icon: const Icon(Icons.volume_up_rounded, size: 18),
+              label: const Text(
+                'Suarakan Sekarang 🔊',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+
 
   // ==========================================
   // CONVERSATION HISTORY (PERCAKAPAN)
