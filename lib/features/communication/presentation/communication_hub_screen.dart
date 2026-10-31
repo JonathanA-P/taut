@@ -52,6 +52,63 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     'Sama-sama',
   ];
 
+  // Quick message template chips for Teman Tuli
+  final List<Map<String, String>> _quickMessageChips = const [
+    {'label': 'Tanya arah jalan', 'text': 'Permisi, boleh tanya arah jalan?'},
+    {'label': 'Saya Teman Tuli', 'text': 'Halo, saya Teman Tuli. Senang bertemu Anda.'},
+    {'label': 'Di mana toilet?', 'text': 'Permisi, di mana letak toilet terdekat?'},
+    {'label': 'Bisa tuliskan?', 'text': 'Bisa tolong tuliskan atau ketik pelan-pelan?'},
+    {'label': 'Ke dokter umum', 'text': 'Saya ingin periksa ke dokter umum.'},
+    {'label': 'Terima kasih banyak', 'text': 'Terima kasih banyak atas bantuannya!'},
+  ];
+
+  final List<Map<String, dynamic>> _messageTemplateCategories = const [
+    {
+      'category': 'Arah Jalan & Transportasi',
+      'icon': Icons.directions_walk_rounded,
+      'templates': [
+        'Permisi, boleh tanya arah jalan?',
+        'Di mana letak toilet terdekat?',
+        'Apakah angkutan atau bus ini menuju stasiun?',
+        'Berapa menit jalan kaki ke alamat ini?',
+        'Bisa tunjukkan lokasinya di peta ini?',
+      ],
+    },
+    {
+      'category': 'Percakapan Sehari-hari',
+      'icon': Icons.chat_bubble_outline_rounded,
+      'templates': [
+        'Halo, saya Teman Tuli. Senang bertemu Anda.',
+        'Bisa tolong tuliskan atau ketik pelan-pelan?',
+        'Terima kasih banyak atas bantuannya!',
+        'Maaf, boleh minta tolong sebentar?',
+        'Sama-sama, semoga hari Anda menyenangkan.',
+        'Saya mengerti, terima kasih informasinya.',
+      ],
+    },
+    {
+      'category': 'Kesehatan & Apotek',
+      'icon': Icons.local_hospital_outlined,
+      'templates': [
+        'Saya ingin periksa ke dokter umum.',
+        'Saya butuh bantuan untuk membeli obat ini.',
+        'Berapa dosis pemakaian obat ini per hari?',
+        'Tolong hubungi kontak darurat saya di profil.',
+        'Apakah puskesmas ini buka hari ini?',
+      ],
+    },
+    {
+      'category': 'Belanja & Transaksi',
+      'icon': Icons.shopping_bag_outlined,
+      'templates': [
+        'Berapa harga untuk barang ini?',
+        'Apakah bisa bayar menggunakan QRIS?',
+        'Boleh minta kantong belanjaan atau struknya?',
+        'Apakah barang ini ada ukuran yang lain?',
+      ],
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -1816,12 +1873,171 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     );
   }
 
+  void _applyMessageTemplate(String text, {bool autoSend = false, TautAppState? state}) {
+    _manualInputController.text = text;
+    _manualInputController.selection = TextSelection.fromPosition(
+      TextPosition(offset: text.length),
+    );
+    if (autoSend && state != null) {
+      _handleSendManual(state);
+      _showToast('Pesan template terkirim.');
+    } else {
+      _showToast('Template disalin ke input. Ketuk kirim.');
+    }
+  }
+
+  void _showTemplatesBottomSheet(BuildContext context, TautAppState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD9E2D5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Template Pesan Sehari-hari',
+                        style: TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Pilih kalimat untuk langsung diketikkan ke percakapan.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _messageTemplateCategories.length,
+                  itemBuilder: (ctx, idx) {
+                    final cat = _messageTemplateCategories[idx];
+                    final String catName = cat['category'];
+                    final IconData catIcon = cat['icon'];
+                    final List<String> items = List<String>.from(cat['templates']);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAF8),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2EBE0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+                            child: Row(
+                              children: [
+                                Icon(catIcon, size: 16, color: AppColors.primary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  catName,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.darkGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFE5EDE3)),
+                          ...items.map(
+                            (templateText) => InkWell(
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                _applyMessageTemplate(templateText);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        templateText,
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          color: Color(0xFF263D2F),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    IconButton(
+                                      icon: const Icon(Icons.send_rounded, size: 16, color: AppColors.primary),
+                                      tooltip: 'Kirim langsung',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        _applyMessageTemplate(templateText, autoSend: true, state: state);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // ==========================================
-  // BOTTOM STICKY INPUT BAR (TEXT & MICROPHONE)
+  // BOTTOM STICKY INPUT BAR (TEXT, TEMPLATES & MICROPHONE)
   // ==========================================
   Widget _buildBottomInputBar(TautAppState state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(top: BorderSide(color: Color(0xFFE2EBE2))),
@@ -1833,86 +2049,155 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Manual Text Input Fallback (for Teman Tuli)
-          Expanded(
-            child: Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7FAF6),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFD6E4D4)),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _manualInputController,
-                      decoration: const InputDecoration(
-                        hintText: 'Tulis pesan...',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onSubmitted: (_) => _handleSendManual(state),
+          // Horizontal Message Template Suggestions (Saran Cepat untuk Teman Tuli)
+          SizedBox(
+            height: 30,
+            child: Row(
+              children: [
+                InkWell(
+                  onTap: () => _showTemplatesBottomSheet(context, state),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF5ED),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFC7DBC5)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, size: 13, color: AppColors.primary),
+                        SizedBox(width: 4),
+                        Text(
+                          'Template',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
-                    onPressed: () => _handleSendManual(state),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _quickMessageChips.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (ctx, idx) {
+                      final item = _quickMessageChips[idx];
+                      return ActionChip(
+                        label: Text(
+                          item['label']!,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: Color(0xFF2E4D36),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        backgroundColor: const Color(0xFFF7FAF6),
+                        side: const BorderSide(color: Color(0xFFD6E4D4)),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _applyMessageTemplate(item['text']!),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 8),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(height: 6),
 
-          // Microphone Button (for Teman Dengar)
-          Tooltip(
-            message: _micStatusText,
-            child: GestureDetector(
-              onTap: () => _toggleMic(state),
-              child: Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: _wantMic ? const Color(0xFF1E382B) : AppColors.primary,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    if (_wantMic)
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+          // Text Input Field & Microphone Button
+          Row(
+            children: [
+              // Manual Text Input Fallback (for Teman Tuli)
+              Expanded(
+                child: Container(
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7FAF6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFD6E4D4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _manualInputController,
+                          decoration: const InputDecoration(
+                            hintText: 'Tulis pesan...',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          onSubmitted: (_) => _handleSendManual(state),
+                        ),
                       ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _wantMic ? Icons.mic_rounded : Icons.mic_none_rounded,
-                      color: Colors.white,
-                      size: 19,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      _wantMic ? 'Mendengarkan' : 'Bicara',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                        onPressed: () => _handleSendManual(state),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                    ],
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+
+              // Microphone Button (for Teman Dengar)
+              Tooltip(
+                message: _micStatusText,
+                child: GestureDetector(
+                  onTap: () => _toggleMic(state),
+                  child: Container(
+                    height: 42,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: _wantMic ? const Color(0xFF1E382B) : AppColors.primary,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        if (_wantMic)
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _wantMic ? Icons.mic_rounded : Icons.mic_none_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          _wantMic ? 'Mendengarkan' : 'Bicara',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
