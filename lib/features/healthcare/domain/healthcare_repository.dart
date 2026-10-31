@@ -9,6 +9,13 @@ abstract class HealthcareRepository {
     double radiusMeters = 10000.0,
   });
 
+  Future<List<HealthcareFacility>> searchPlaces({
+    required String query,
+    required double latitude,
+    required double longitude,
+    double radiusMeters = 25000.0,
+  });
+
   double calculateDistance({
     required double startLat,
     required double startLon,
@@ -22,4 +29,3 @@ abstract class HealthcareRepository {
     String? label,
   });
 }
-

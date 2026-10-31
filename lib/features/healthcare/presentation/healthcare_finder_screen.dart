@@ -31,17 +31,27 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSearchNearby(BuildContext context, TautAppState state) async {
+  Future<void> _handleSearchNearby(
+    BuildContext context,
+    TautAppState state, {
+    String? placeQuery,
+  }) async {
     state.setSearchingHealthcare(true);
     try {
       const repository = HealthcareRepositoryImpl();
       final location = await repository.getCurrentLocation();
 
-      final facilities = await repository.searchNearby(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        radiusMeters: 8000,
-      );
+      final facilities = (placeQuery != null && placeQuery.trim().isNotEmpty)
+          ? await repository.searchPlaces(
+              query: placeQuery.trim(),
+              latitude: location.latitude,
+              longitude: location.longitude,
+            )
+          : await repository.searchNearby(
+              latitude: location.latitude,
+              longitude: location.longitude,
+              radiusMeters: 8000,
+            );
 
       final mappedItems = facilities.map((f) {
         return FacilityItem(
@@ -61,6 +71,10 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
         lat: location.latitude,
         lon: location.longitude,
       );
+
+      if (placeQuery != null && placeQuery.trim().isNotEmpty) {
+        state.setFacilitySearchQuery(placeQuery.trim());
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,6 +97,59 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
       }
     } finally {
       state.setSearchingHealthcare(false);
+    }
+  }
+
+  Future<void> _handleSearchByName(
+    BuildContext context,
+    TautAppState state,
+    String query,
+  ) async {
+    final clean = query.trim();
+    if (clean.isEmpty) {
+      state.setFacilitySearchQuery('');
+      return;
+    }
+
+    state.setFacilitySearchQuery(clean);
+
+    if (!state.isRealHealthcareLoaded) {
+      await _handleSearchNearby(context, state, placeQuery: clean);
+      return;
+    }
+
+    if (state.filteredFacilities.isEmpty) {
+      state.setSearchingHealthcare(true);
+      try {
+        const repository = HealthcareRepositoryImpl();
+        final lat = state.userGpsLatitude ?? -7.9723;
+        final lon = state.userGpsLongitude ?? 112.6318;
+        final places = await repository.searchPlaces(
+          query: clean,
+          latitude: lat,
+          longitude: lon,
+        );
+        if (places.isNotEmpty) {
+          final mappedItems = places.map((f) {
+            return FacilityItem(
+              name: f.name,
+              type: f.category,
+              address: f.address ?? 'Lokasi fasilitas',
+              distance: DistanceCalculator.formatDistance(f.distanceMeters),
+              latitude: f.latitude,
+              longitude: f.longitude,
+              isReal: true,
+              isWheelchairAccessible: f.isWheelchairAccessible ?? true,
+            );
+          }).toList();
+          state.setRealHealthcareFacilities(mappedItems, lat: lat, lon: lon);
+          state.setFacilitySearchQuery(clean);
+        }
+      } catch (e) {
+        debugPrint('Search places error: $e');
+      } finally {
+        state.setSearchingHealthcare(false);
+      }
     }
   }
 
@@ -148,15 +215,19 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Action Button / Card to trigger real GPS & OSM search
                   _buildLocationActionCard(context, state),
                   const SizedBox(height: 18),
 
                   TextField(
                     controller: _searchController,
-                    onChanged: (val) => state.setFacilitySearchQuery(val),
+                    textInputAction: TextInputAction.search,
+                    onChanged: (val) {
+                      state.setFacilitySearchQuery(val);
+                      setState(() {});
+                    },
+                    onSubmitted: (val) => _handleSearchByName(context, state, val),
                     decoration: InputDecoration(
-                      hintText: 'Cari nama fasilitas...',
+                      hintText: 'Cari nama tempat, RS, klinik, jalan...',
                       prefixIcon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.textSecondary,
@@ -167,6 +238,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                               onPressed: () {
                                 _searchController.clear();
                                 state.setFacilitySearchQuery('');
+                                setState(() {});
                               },
                             )
                           : null,
@@ -212,57 +284,36 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                           color: AppColors.darkGreen,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: state.isRealHealthcareLoaded
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFF6ECDA),
-                          borderRadius: BorderRadius.circular(9),
-                          border: state.isRealHealthcareLoaded
-                              ? Border.all(color: const Color(0xFFC8E6C9))
-                              : null,
-                        ),
-                        child: Text(
-                          state.isRealHealthcareLoaded
-                              ? 'Live OpenStreetMap'
-                              : 'Data contoh',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: state.isRealHealthcareLoaded
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFF825D24),
+                      if (state.isRealHealthcareLoaded)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(color: const Color(0xFFC8E6C9)),
+                          ),
+                          child: Text(
+                            '${filteredList.length} faskes ditemukan',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2E7D32),
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
 
-                  if (filteredList.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE4E9E1)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Tidak ada fasilitas yang sesuai. Coba kata lain.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    )
+                  if (state.isSearchingHealthcare)
+                    _buildSearchingPlaceholder()
+                  else if (!state.isRealHealthcareLoaded)
+                    _buildLocationUnknownCard(context, state)
+                  else if (filteredList.isEmpty)
+                    _buildEmptySearchResultCard()
                   else
                     ListView.separated(
                       shrinkWrap: true,
@@ -275,17 +326,18 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                       },
                     ),
 
-                  const SizedBox(height: 16),
-                  Text(
-                    state.isRealHealthcareLoaded
-                        ? 'Data fasilitas kesehatan bersumber langsung dari OpenStreetMap & lokasi GPS perangkat.'
-                        : 'Nama, alamat, dan jarak di sini fiktif untuk peninjauan desain. Tekan tombol di atas untuk memuat faskes nyata.',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      height: 1.6,
+                  if (state.isRealHealthcareLoaded) ...[
+                    const SizedBox(height: 16),
+                    const Center(
+                      child: Text(
+                        'Sumber data: OpenStreetMap & GPS perangkat',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -406,6 +458,150 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
     );
   }
 
+  Widget _buildLocationUnknownCard(BuildContext context, TautAppState state) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE4E9E1)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05263D2F),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F7F2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFDCE6DB)),
+            ),
+            child: const Icon(
+              Icons.location_off_rounded,
+              color: AppColors.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Lokasi belum diketahui',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Tekan tombol "Temukan Fasilitas Kesehatan di Sekitar" di atas untuk mencari daftar fasilitas kesehatan terdekat dari posisimu.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchingPlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE4E9E1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Sedang mencari fasilitas kesehatan di sekitar...',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkGreen,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Menghubungkan GPS dan OpenStreetMap...',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySearchResultCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE4E9E1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(
+            Icons.search_off_rounded,
+            color: AppColors.textSecondary,
+            size: 36,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Tidak ada fasilitas yang sesuai',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Coba kata kunci lain atau cari nama tempat maps seperti RS, Apotek, Klinik, atau nama jalan.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryChips(TautAppState state) {
     const categories = ['Semua', 'Klinik', 'Rumah sakit', 'Puskesmas', 'Apotek'];
 
@@ -459,8 +655,8 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
     final markers = <TautMapMarker>[
       TautMapMarker(
         point: LatLng(centerLat, centerLon),
-        label: state.isRealHealthcareLoaded ? 'Posisi Anda (GPS)' : 'Posisi Awal',
-        subtitle: state.isRealHealthcareLoaded ? 'Titik pencarian aktif' : 'Malang Pusat',
+        label: state.isRealHealthcareLoaded ? 'Posisi Anda (GPS)' : 'Peta Sekitar',
+        subtitle: state.isRealHealthcareLoaded ? 'Titik pencarian aktif' : 'Lokasi belum diketahui',
         isUser: true,
       ),
       ...facilities.take(15).map((f) {
@@ -591,7 +787,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
-                          item.isReal ? item.distance : '${item.distance} - jarak contoh',
+                          item.distance,
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,

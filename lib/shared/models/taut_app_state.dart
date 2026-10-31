@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../../core/utils/place_search_matcher.dart';
+
 class TautAppState extends ChangeNotifier {
   static final TautAppState _instance = TautAppState._internal();
   factory TautAppState() => _instance;
@@ -455,26 +457,7 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  final List<FacilityItem> _facilities = const [
-    FacilityItem(
-      name: 'Klinik Harmoni',
-      type: 'Klinik',
-      address: 'Jl. Contoh Sehat No. 12',
-      distance: '0,8 km',
-    ),
-    FacilityItem(
-      name: 'RS Taman Sehat',
-      type: 'Rumah sakit',
-      address: 'Jl. Contoh Utama No. 8',
-      distance: '1,6 km',
-    ),
-    FacilityItem(
-      name: 'Puskesmas Cempaka',
-      type: 'Puskesmas',
-      address: 'Jl. Contoh Cempaka No. 4',
-      distance: '2,3 km',
-    ),
-  ];
+  final List<FacilityItem> _facilities = [];
 
   bool _isRealHealthcareLoaded = false;
   bool get isRealHealthcareLoaded => _isRealHealthcareLoaded;
@@ -518,7 +501,19 @@ class TautAppState extends ChangeNotifier {
   int _selectedFacilityIndex = 0;
   int get selectedFacilityIndex => _selectedFacilityIndex;
 
-  FacilityItem get selectedFacility => _facilities[_selectedFacilityIndex];
+  FacilityItem get selectedFacility {
+    if (_facilities.isNotEmpty &&
+        _selectedFacilityIndex >= 0 &&
+        _selectedFacilityIndex < _facilities.length) {
+      return _facilities[_selectedFacilityIndex];
+    }
+    return const FacilityItem(
+      name: 'Fasilitas Kesehatan',
+      type: 'Klinik',
+      address: 'Lokasi belum diketahui',
+      distance: '-',
+    );
+  }
 
   void setFacilityFilter(String filter) {
     _facilityCategoryFilter = filter;
@@ -549,13 +544,40 @@ class TautAppState extends ChangeNotifier {
   }
 
   List<FacilityItem> get filteredFacilities {
-    return _facilities.where((f) {
-      final matchesCategory = _facilityCategoryFilter == 'Semua' ||
-          f.type == _facilityCategoryFilter;
-      final matchesQuery = _facilitySearchQuery.isEmpty ||
-          f.name.toLowerCase().contains(_facilitySearchQuery.toLowerCase());
-      return matchesCategory && matchesQuery;
+    if (!_isRealHealthcareLoaded) {
+      return const [];
+    }
+
+    final inCategory = _facilities.where((f) {
+      if (_facilityCategoryFilter == 'Semua') return true;
+      return f.type.toLowerCase() == _facilityCategoryFilter.toLowerCase();
     }).toList();
+
+    final query = _facilitySearchQuery.trim();
+    if (query.isEmpty) {
+      return inCategory;
+    }
+
+    final scored = <({FacilityItem item, double score})>[];
+    for (final item in inCategory) {
+      final score = PlaceSearchMatcher.matchScore(
+        query: query,
+        name: item.name,
+        address: item.address,
+        category: item.type,
+      );
+      if (score >= 35.0) {
+        scored.add((item: item, score: score));
+      }
+    }
+
+    scored.sort((a, b) {
+      final scoreDiff = b.score.compareTo(a.score);
+      if (scoreDiff != 0) return scoreDiff;
+      return a.item.distance.compareTo(b.item.distance);
+    });
+
+    return scored.map((s) => s.item).toList();
   }
 
   void resetDemo() {
@@ -570,6 +592,11 @@ class TautAppState extends ChangeNotifier {
     _messages.clear();
     _signText = '';
     _transcriptText = 'Ucapan teman dengar akan tampil di sini.';
+    _facilities.clear();
+    _isRealHealthcareLoaded = false;
+    _isSearchingHealthcare = false;
+    _userGpsLatitude = null;
+    _userGpsLongitude = null;
     _facilityCategoryFilter = 'Semua';
     _facilitySearchQuery = '';
     _selectedFacilityIndex = 0;
