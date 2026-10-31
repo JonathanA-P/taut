@@ -69,6 +69,29 @@ void main() {
       expect(find.text('Sembunyikan'), findsWidgets);
     });
 
+    testWidgets('ManageLocationSharingScreen wraps text to 2 lines on small device with high text scale without overflow', (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+        tester.platformDispatcher.clearTextScaleFactorTestValue();
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const ManageLocationSharingScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Lokasi teman yang dibagikan'), findsOneWidget);
+      expect(find.text('Sesi aktif'), findsOneWidget);
+    });
+
     testWidgets('LiveLocationScreen displays OpenStreetMap and incoming friend locations', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
