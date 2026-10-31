@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taut/core/theme/app_theme.dart';
-import 'package:taut/features/communication/motion_to_sound/domain/bisindo_labels.dart';
 import 'package:taut/features/communication/presentation/communication_hub_screen.dart';
 import 'package:taut/shared/models/taut_app_state.dart';
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_auth_gate_dialog.dart';
 import '../../../shared/widgets/taut_avatar.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
@@ -133,6 +134,10 @@ class HomePage extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () {
+                          if (state.isGuestMode) {
+                            showAuthGateDialog(context, featureTitle: 'Teman Terhubung');
+                            return;
+                          }
                           state.navigateTo('friends');
                         },
                         style: TextButton.styleFrom(
@@ -328,6 +333,10 @@ class HomePage extends StatelessWidget {
           subtitle: 'Tetap dekat, tetap aman',
           bgColor: const Color(0xFFEDE8F0),
           onTap: () {
+            if (state.isGuestMode) {
+              showAuthGateDialog(context, featureTitle: 'Berbagi Lokasi');
+              return;
+            }
             state.navigateTo('sharing');
           },
         ),
@@ -419,7 +428,13 @@ class HomePage extends StatelessWidget {
           final isSharingWithFriend = state.sessions.any((s) => s.name == friendName);
 
           return GestureDetector(
-            onTap: () => state.navigateTo('friends'),
+            onTap: () {
+              if (state.isGuestMode) {
+                showAuthGateDialog(context, featureTitle: 'Teman Terhubung');
+                return;
+              }
+              state.navigateTo('friends');
+            },
             child: Column(
               children: [
                 _buildAvatar(
@@ -502,6 +517,10 @@ class HomePage extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () {
+                if (state.isGuestMode) {
+                  showAuthGateDialog(context, featureTitle: 'Berbagi Lokasi');
+                  return;
+                }
                 state.navigateTo('sharing');
               },
               style: OutlinedButton.styleFrom(

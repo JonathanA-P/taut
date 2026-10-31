@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
+      TautAppState().setGuestMode(false);
       TautAppState().setUserName(profile.displayName);
 
       if (mounted) {
@@ -76,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       final fallbackName = email.split('@').first;
+      TautAppState().setGuestMode(false);
       TautAppState().setUserName(fallbackName.isNotEmpty ? fallbackName : 'Adriel');
       if (mounted) {
         _showFeedback(
@@ -105,19 +107,39 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    // [BACKEND CONNECT]: Supabase Auth OAuth with Google
+    setState(() => _isLoading = true);
     _showFeedback('Menghubungkan akun Google SSO...');
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) {
+    try {
+      final profile = await _authRepository.signInWithGoogle();
+      TautAppState().setGuestMode(false);
+      TautAppState().setUserName(profile.displayName);
+      if (mounted) {
+        _showFeedback('Berhasil masuk via Google! Menuju Beranda...');
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
+      }
+    } catch (e) {
+      TautAppState().setGuestMode(false);
       TautAppState().setUserName('Pengguna Google');
-      _showFeedback('Berhasil masuk via Google! Menuju Beranda...');
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (mounted) {
+        _showFeedback('Masuk via Google (Mode Offline/Demo).', isError: false);
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _handleGuestMode() {
-    TautAppState().setUserName('Tamu TAUT');
-    _showFeedback('Masuk Mode Tamu: Menuju Beranda TAUT...');
+    TautAppState().setGuestMode(true);
+    _showFeedback('Masuk Mode Tamu: Akses Komunikasi & Faskes aktif.');
     Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 

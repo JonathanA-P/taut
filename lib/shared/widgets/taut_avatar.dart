@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class TautAvatar extends StatelessWidget {
@@ -49,6 +50,31 @@ class TautAvatar extends StatelessWidget {
       return fallbackInitial;
     }
 
+    final cleanUrl = avatarUrl!.trim();
+    final isLocal = cleanUrl.startsWith('/') ||
+        cleanUrl.startsWith('file:') ||
+        !cleanUrl.startsWith('http');
+
+    Widget imageWidget;
+    if (isLocal) {
+      final localPath = cleanUrl.replaceFirst('file://', '');
+      imageWidget = Image.file(
+        File(localPath),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => fallbackInitial,
+      );
+    } else {
+      imageWidget = Image.network(
+        cleanUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => fallbackInitial,
+      );
+    }
+
     return Container(
       width: size,
       height: size,
@@ -57,13 +83,7 @@ class TautAvatar extends StatelessWidget {
         border: border,
       ),
       child: ClipOval(
-        child: Image.network(
-          avatarUrl!.trim(),
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => fallbackInitial,
-        ),
+        child: imageWidget,
       ),
     );
   }

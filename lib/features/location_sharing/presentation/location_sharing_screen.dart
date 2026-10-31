@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_auth_gate_dialog.dart';
 
 class LocationSharingScreen extends StatelessWidget {
   const LocationSharingScreen({super.key});
@@ -50,7 +51,13 @@ class LocationSharingScreen extends StatelessWidget {
                     icon: Icons.people_outline_rounded,
                     title: 'Teman terhubung',
                     subtitle: '${state.friends.length} sahabat terhubung',
-                    onTap: () => state.navigateTo('friends'),
+                    onTap: () {
+                      if (state.isGuestMode) {
+                        showAuthGateDialog(context, featureTitle: 'Teman Terhubung');
+                        return;
+                      }
+                      state.navigateTo('friends');
+                    },
                   ),
                   const SizedBox(height: 12),
                   _buildListButton(
@@ -58,7 +65,13 @@ class LocationSharingScreen extends StatelessWidget {
                     icon: Icons.location_on_outlined,
                     title: 'Berbagi lokasi',
                     subtitle: '${state.sessions.length} sesi berbagi aktif',
-                    onTap: () => state.navigateTo('sharing'),
+                    onTap: () {
+                      if (state.isGuestMode) {
+                        showAuthGateDialog(context, featureTitle: 'Berbagi Lokasi');
+                        return;
+                      }
+                      state.navigateTo('sharing');
+                    },
                   ),
                   const SizedBox(height: 24),
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_auth_gate_dialog.dart';
 import '../../../shared/widgets/taut_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -35,6 +36,70 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 children: [
+                  if (state.isGuestMode)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightGreen,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFC7DBC5)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Mode Tamu Aktif',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.darkGreen,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Anda sedang menjelajahi TAUT tanpa akun. Masuk atau buat akun untuk menyimpan profil dan menghubungkan teman.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, AppRoutes.login);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Masuk atau Buat Akun',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   _buildProfileHero(context, state),
                   const SizedBox(height: 24),
 
@@ -49,7 +114,13 @@ class ProfileScreen extends StatelessWidget {
                     context: context,
                     icon: Icons.people_outline_rounded,
                     title: 'Teman terhubung',
-                    onTap: () => state.navigateTo('friends'),
+                    onTap: () {
+                      if (state.isGuestMode) {
+                        showAuthGateDialog(context, featureTitle: 'Teman Terhubung');
+                        return;
+                      }
+                      state.navigateTo('friends');
+                    },
                   ),
                   const SizedBox(height: 24),
 
@@ -147,7 +218,13 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           OutlinedButton(
-            onPressed: () => state.navigateTo('edit'),
+            onPressed: () {
+              if (state.isGuestMode) {
+                showAuthGateDialog(context, featureTitle: 'Edit Profil');
+                return;
+              }
+              state.navigateTo('edit');
+            },
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: Color(0xFFB9C9B6)),

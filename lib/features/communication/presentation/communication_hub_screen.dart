@@ -709,7 +709,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Kode: ${state.roomCode} - ${state.roomParticipants.length} Peserta',
+                        'Kode: ${state.roomCode} • ${state.roomParticipants.length}/${TautAppState.maxRoomCapacity} Peserta',
                         style: const TextStyle(
                           fontSize: 11,
                           color: Color(0xFF5A7262),
@@ -912,6 +912,10 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           ),
           ElevatedButton(
             onPressed: () {
+              if (state.isRoomActive) {
+                _showToast('Anda sudah berada dalam ruangan aktif. Selesaikan ruangan saat ini terlebih dahulu.');
+                return;
+              }
               state.createRoom(name: 'Ruang Kelas ${state.userName}', autoAccept: false);
               _showRoomSetupSheet(context, state);
             },
@@ -1302,14 +1306,24 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             ),
             ElevatedButton(
               onPressed: () {
+                if (state.isRoomActive) {
+                  Navigator.pop(ctx);
+                  _showToast('Anda sudah berada dalam ruangan aktif lain. Keluar terlebih dahulu.');
+                  return;
+                }
+                if (state.isRoomFull) {
+                  Navigator.pop(ctx);
+                  _showToast('Ruangan telah penuh (maksimal 10 orang).');
+                  return;
+                }
                 final code = codeController.text.trim();
                 if (code.isNotEmpty) {
                   final joinedDirectly = state.joinRoomByCode(code);
                   Navigator.pop(ctx);
                   if (joinedDirectly) {
-                    _showToast('Berhasil bergabung ke ruangan $code');
+                    _showToast('Berhasil bergabung ke ruangan $code (${state.roomParticipants.length}/10 orang)');
                   } else {
-                    _showToast('Permintaan bergabung ke $code dikirim ke host.');
+                    _showToast('Gagal bergabung atau ruangan penuh.');
                   }
                 }
               },
@@ -1457,6 +1471,16 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   height: 42,
                   child: ElevatedButton.icon(
                     onPressed: () {
+                      if (state.isRoomActive) {
+                        Navigator.pop(ctx);
+                        _showToast('Anda sudah berada dalam ruangan aktif lain. Keluar terlebih dahulu.');
+                        return;
+                      }
+                      if (state.isRoomFull) {
+                        Navigator.pop(ctx);
+                        _showToast('Ruangan telah penuh (maksimal 10 orang).');
+                        return;
+                      }
                       final code = state.roomCode ?? 'TAUT-8921';
                       final joined = state.joinRoomByCode(code);
                       Navigator.pop(ctx);

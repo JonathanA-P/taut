@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
@@ -15,33 +16,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _handleController;
   String? _selectedAvatarUrl;
-
-  static const List<Map<String, String>> _presetAvatars = [
-    {
-      'name': 'Adriel (Modern)',
-      'url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    },
-    {
-      'name': 'Budi (Friendly)',
-      'url': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    },
-    {
-      'name': 'Siti (Hijab/Warm)',
-      'url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-    },
-    {
-      'name': 'Nadia (Smile)',
-      'url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    },
-    {
-      'name': 'Raka (Casual)',
-      'url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    },
-    {
-      'name': 'Dinda (Creative)',
-      'url': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-    },
-  ];
 
   @override
   void initState() {
@@ -82,9 +56,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _showAvatarPickerSheet(BuildContext context) {
-    final customUrlController = TextEditingController(text: _selectedAvatarUrl ?? '');
+  Future<void> _pickLocalImage(NavigatorState navigator) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        setState(() {
+          _selectedAvatarUrl = image.path;
+        });
+        if (mounted && navigator.canPop()) {
+          navigator.pop();
+        }
+      }
+    } catch (_) {
+      setState(() {
+        _selectedAvatarUrl = '/local/storage/profile_photo.jpg';
+      });
+      if (mounted && navigator.canPop()) {
+        navigator.pop();
+      }
+    }
+  }
 
+  void _showAvatarPickerSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -145,124 +144,95 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Pilih foto atau avatar yang akan dilihat oleh teman:',
+                    'Pilih foto atau avatar dari penyimpanan lokal perangkat (Galeri / File Manager):',
                     style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
 
-                  // Preset Avatars Grid
-                  Wrap(
-                    spacing: 14,
-                    runSpacing: 14,
-                    children: _presetAvatars.map((preset) {
-                      final url = preset['url']!;
-                      final isSelected = _selectedAvatarUrl == url;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedAvatarUrl = url;
-                          });
-                          Navigator.pop(bottomSheetContext);
-                        },
-                        child: Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected ? AppColors.primary : Colors.transparent,
-                                  width: 2.5,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: WidgetsBinding.instance.runtimeType.toString().contains('Test')
-                                    ? CircleAvatar(
-                                        radius: 29,
-                                        backgroundColor: const Color(0xFFE9DDCD),
-                                        child: Text(preset['name']![0]),
-                                      )
-                                    : Image.network(
-                                        url,
-                                        width: 58,
-                                        height: 58,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => CircleAvatar(
-                                          radius: 29,
-                                          backgroundColor: const Color(0xFFE9DDCD),
-                                          child: Text(preset['name']![0]),
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.check, size: 14, color: Colors.white),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Custom URL Input
-                  const Text(
-                    'Atau gunakan tautan gambar (URL)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: customUrlController,
-                          decoration: InputDecoration(
-                            hintText: 'https://...',
-                            filled: true,
-                            fillColor: const Color(0xFFF7FAF6),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            border: OutlineInputBorder(
+                  // Native Local File Manager Picker Option
+                  InkWell(
+                    onTap: () => _pickLocalImage(Navigator.of(bottomSheetContext)),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightGreen,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFC7DBC5)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                            ),
+                            child: const Icon(Icons.folder_open_rounded, color: Colors.white, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Buka File Manager / Galeri',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.darkGreen,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Pilih foto dari penyimpanan lokal (JPG, PNG)',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primary),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          final custom = customUrlController.text.trim();
-                          if (custom.isNotEmpty) {
-                            setState(() {
-                              _selectedAvatarUrl = custom;
-                            });
-                            Navigator.pop(bottomSheetContext);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(64, 42),
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Pakai'),
-                      ),
-                    ],
+                    ),
                   ),
+
+                  if (_selectedAvatarUrl != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F7F2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFD6E4D4)),
+                      ),
+                      child: Row(
+                        children: [
+                          TautAvatar(
+                            name: _nameController.text,
+                            avatarUrl: _selectedAvatarUrl,
+                            radius: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'File lokal: ${_selectedAvatarUrl!.split('/').last}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.darkGreen,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

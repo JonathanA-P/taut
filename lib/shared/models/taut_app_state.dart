@@ -170,6 +170,8 @@ class TautAppState extends ChangeNotifier {
   }
 
   // Room Communication State (Ruangan Obrolan Jarak Jauh)
+  static const int maxRoomCapacity = 10;
+
   bool _isRoomActive = false;
   bool get isRoomActive => _isRoomActive;
 
@@ -187,9 +189,38 @@ class TautAppState extends ChangeNotifier {
 
   final List<String> _roomParticipants = [];
   List<String> get roomParticipants => List.unmodifiable(_roomParticipants);
+  bool get isRoomFull => _roomParticipants.length >= maxRoomCapacity;
 
   final List<String> _roomJoinRequests = [];
   List<String> get roomJoinRequests => List.unmodifiable(_roomJoinRequests);
+
+  bool _isGuestMode = false;
+  bool get isGuestMode => _isGuestMode;
+
+  void setGuestMode(bool guest) {
+    _isGuestMode = guest;
+    if (guest) {
+      _userName = 'Tamu TAUT';
+    }
+    notifyListeners();
+  }
+
+  bool isFeatureAllowedForGuest(String page) {
+    if (!_isGuestMode) return true;
+    const allowed = [
+      'home',
+      'comm',
+      'hub',
+      'stt',
+      'motion',
+      'finder',
+      'faskes',
+      'detail',
+      'profile',
+      'privacy',
+    ];
+    return allowed.contains(page);
+  }
 
   void setRoomName(String name) {
     _roomName = name.trim().isEmpty ? 'Ruang Kelas $_userName' : name.trim();
@@ -226,14 +257,16 @@ class TautAppState extends ChangeNotifier {
 
   void startRoomSession() {
     _isRoomActive = true;
+    final remainingSlots = maxRoomCapacity - _roomParticipants.length;
+    final candidates = ['Nadia (Teman)', 'Raka (Teman)'].take(remainingSlots).toList();
     if (_isAutoAccept) {
-      // Auto accept participants
-      _roomParticipants.addAll(['Nadia (Teman)', 'Raka (Teman)']);
+      // Auto accept participants up to capacity
+      _roomParticipants.addAll(candidates);
       _roomJoinRequests.clear();
     } else {
       // Pending approval for host
       _roomJoinRequests.clear();
-      _roomJoinRequests.addAll(['Nadia (Teman)', 'Raka (Teman)']);
+      _roomJoinRequests.addAll(candidates);
     }
     notifyListeners();
   }
@@ -241,6 +274,10 @@ class TautAppState extends ChangeNotifier {
   bool joinRoomByCode(String code, {String? participantName}) {
     // Constraint: 1 user can only participate in 1 active room at a time
     if (_isRoomActive) {
+      return false;
+    }
+    // Capacity constraint: Maximum 10 people per room
+    if (_roomParticipants.length >= maxRoomCapacity) {
       return false;
     }
     final cleanCode = code.toUpperCase().trim();
@@ -252,16 +289,16 @@ class TautAppState extends ChangeNotifier {
     if (!_roomParticipants.contains(_userName)) {
       _roomParticipants.add('$_userName (Peserta)');
     }
-    if (!_roomParticipants.contains(name) && name != _userName) {
+    if (!_roomParticipants.contains(name) && name != _userName && _roomParticipants.length < maxRoomCapacity) {
       _roomParticipants.add(name);
     }
     notifyListeners();
-    return true; // langsung bergabung
+    return true;
   }
 
   void acceptRoomParticipant(String name) {
     _roomJoinRequests.remove(name);
-    if (!_roomParticipants.contains(name)) {
+    if (!_roomParticipants.contains(name) && _roomParticipants.length < maxRoomCapacity) {
       _roomParticipants.add(name);
     }
     notifyListeners();
