@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../../shared/widgets/taut_illustrations.dart';
+import '../../../shared/widgets/taut_open_street_map.dart';
 
 class LiveLocationScreen extends StatelessWidget {
   const LiveLocationScreen({super.key});
@@ -14,6 +15,26 @@ class LiveLocationScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
+        final mapMarkers = <TautMapMarker>[
+          // Current User position (Malang Center)
+          const TautMapMarker(
+            point: LatLng(-7.9723, 112.6318),
+            label: 'Posisi Saya',
+            subtitle: 'Alun-Alun Tugu Malang (Akurasi GPS ±5m)',
+            isUser: true,
+          ),
+          // Incoming Friend positions
+          ...state.incomingSessions.map((incoming) {
+            return TautMapMarker(
+              point: LatLng(incoming.latitude, incoming.longitude),
+              label: incoming.friendName,
+              subtitle: incoming.subtitle,
+              avatarText: incoming.friendName.isNotEmpty ? incoming.friendName[0] : '?',
+              color: const Color(0xFF2E7D32),
+            );
+          }),
+        ];
+
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
@@ -47,9 +68,27 @@ class LiveLocationScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMapPreview(),
-                  const SizedBox(height: 24),
+                  // OpenStreetMap interactive viewer
+                  TautOpenStreetMap(
+                    initialCenter: const LatLng(-7.9723, 112.6318),
+                    initialZoom: 14.2,
+                    height: 250,
+                    markers: mapMarkers,
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Peta ilustrasi OpenStreetMap • Posisi GPS Real-time',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
+                  // Sesi Dibagikan Saya
                   const Text(
                     'Sesi berbagi demo',
                     style: TextStyle(
@@ -60,19 +99,19 @@ class LiveLocationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Lokasi pada peta adalah ilustrasi. Tidak ada pergerakan atau koordinat nyata.',
+                    'Lokasimu saat ini dapat dipantau oleh kontak terpercaya yang kamu pilih.',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
 
                   if (state.sessions.isEmpty)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(22),
@@ -83,7 +122,7 @@ class LiveLocationScreen extends StatelessWidget {
                           'Belum ada sesi aktif.\nLokasimu tidak dibagikan.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: AppColors.textSecondary,
                             height: 1.5,
                           ),
@@ -101,53 +140,67 @@ class LiveLocationScreen extends StatelessWidget {
                         return _buildSessionCard(context, state, session, index);
                       },
                     ),
+
+                  const SizedBox(height: 28),
+
+                  // Lokasi Teman yang Dibagikan ke Kita
+                  const Text(
+                    'Lokasi teman yang diterima',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Teman yang sedang membagikan lokasinya secara real-time kepadamu.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  if (state.incomingSessions.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: const Color(0xFFEDF0E9)),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Belum ada teman yang membagikan lokasi.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: state.incomingSessions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final incoming = state.incomingSessions[index];
+                        return _buildIncomingFriendCard(context, state, incoming, index);
+                      },
+                    ),
                 ],
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildMapPreview() {
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE9EEE3),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFDAE3D3)),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: TautIllustration.mapPlaceholder(),
-            ),
-          ),
-          Positioned(
-            left: 12,
-            top: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xF0FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Peta ilustrasi - bukan posisi nyata',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkGreen,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -223,7 +276,7 @@ class LiveLocationScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  'Demo',
+                  'Aktif',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -268,5 +321,88 @@ class LiveLocationScreen extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildIncomingFriendCard(
+    BuildContext context,
+    TautAppState state,
+    IncomingSharingSession incoming,
+    int index,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFEDF0E9)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05263D2F),
+            blurRadius: 16,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              color: Color(0xFFD6E7D2),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              incoming.friendName.isNotEmpty ? incoming.friendName[0] : '?',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkGreen,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  incoming.friendName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkGreen,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  incoming.subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
+            ),
+            child: Text(
+              incoming.remainingText(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2E7D32),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

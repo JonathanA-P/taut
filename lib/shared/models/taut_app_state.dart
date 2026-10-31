@@ -173,6 +173,9 @@ class TautAppState extends ChangeNotifier {
   bool _isRoomActive = false;
   bool get isRoomActive => _isRoomActive;
 
+  bool _isHost = false;
+  bool get isHost => _isHost;
+
   String? _roomCode;
   String? get roomCode => _roomCode;
 
@@ -198,7 +201,13 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void createRoom({String? name, bool? autoAccept}) {
+  bool createRoom({String? name, bool? autoAccept}) {
+    // Constraint: 1 user can only create or join 1 active room at a time
+    if (_isRoomActive) {
+      return false;
+    }
+    _isHost = true;
+    _isRoomActive = false;
     _roomCode = 'TAUT-8921';
     if (name != null && name.trim().isNotEmpty) {
       _roomName = name.trim();
@@ -212,6 +221,7 @@ class TautAppState extends ChangeNotifier {
     _roomParticipants.add('$_userName (Host)');
     _roomJoinRequests.clear();
     notifyListeners();
+    return true;
   }
 
   void startRoomSession() {
@@ -229,28 +239,24 @@ class TautAppState extends ChangeNotifier {
   }
 
   bool joinRoomByCode(String code, {String? participantName}) {
+    // Constraint: 1 user can only participate in 1 active room at a time
+    if (_isRoomActive) {
+      return false;
+    }
     final cleanCode = code.toUpperCase().trim();
     final name = participantName ?? 'Tamu_${cleanCode.replaceAll('-', '')}';
     
-    if (_isAutoAccept || !_isRoomActive) {
-      _roomCode = cleanCode;
-      _isRoomActive = true;
-      if (!_roomParticipants.contains(_userName)) {
-        _roomParticipants.add(_userName);
-      }
-      if (!_roomParticipants.contains(name) && name != _userName) {
-        _roomParticipants.add(name);
-      }
-      notifyListeners();
-      return true; // langsung bergabung
-    } else {
-      // Perlu persetujuan host
-      if (!_roomJoinRequests.contains(name) && !_roomParticipants.contains(name)) {
-        _roomJoinRequests.add(name);
-      }
-      notifyListeners();
-      return false; // menunggu persetujuan
+    _isHost = false;
+    _roomCode = cleanCode;
+    _isRoomActive = true;
+    if (!_roomParticipants.contains(_userName)) {
+      _roomParticipants.add('$_userName (Peserta)');
     }
+    if (!_roomParticipants.contains(name) && name != _userName) {
+      _roomParticipants.add(name);
+    }
+    notifyListeners();
+    return true; // langsung bergabung
   }
 
   void acceptRoomParticipant(String name) {
@@ -268,6 +274,7 @@ class TautAppState extends ChangeNotifier {
 
   void endRoomSession() {
     _isRoomActive = false;
+    _isHost = false;
     _roomCode = null;
     _roomParticipants.clear();
     _roomJoinRequests.clear();
@@ -303,6 +310,40 @@ class TautAppState extends ChangeNotifier {
       _expiryTimer?.cancel();
       _expiryTimer = null;
     }
+    notifyListeners();
+  }
+
+  final List<IncomingSharingSession> _incomingSessions = [
+    IncomingSharingSession(
+      id: 'inc-1',
+      friendName: 'Nadia',
+      subtitle: 'Dekat Alun-Alun Malang • 0,6 km',
+      latitude: -7.9826,
+      longitude: 112.6308,
+      expiry: DateTime.now().add(const Duration(minutes: 42)),
+    ),
+    IncomingSharingSession(
+      id: 'inc-2',
+      friendName: 'Budi Setiawan',
+      subtitle: 'Dekat Kampus UB • 2,1 km',
+      latitude: -7.9526,
+      longitude: 112.6144,
+      expiry: DateTime.now().add(const Duration(minutes: 58)),
+    ),
+  ];
+
+  List<IncomingSharingSession> get incomingSessions =>
+      List.unmodifiable(_incomingSessions);
+
+  void stopIncomingSession(int index) {
+    if (index >= 0 && index < _incomingSessions.length) {
+      _incomingSessions.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void stopIncomingSessionById(String id) {
+    _incomingSessions.removeWhere((s) => s.id == id);
     notifyListeners();
   }
 
@@ -519,6 +560,31 @@ class SharingSession {
   final DateTime expiry;
 
   SharingSession({required this.name, required this.expiry});
+
+  String remainingText() {
+    final diff = expiry.difference(DateTime.now());
+    if (diff.isNegative) return 'Sesi berakhir';
+    final minutes = diff.inMinutes + (diff.inSeconds % 60 > 0 ? 1 : 0);
+    return '$minutes menit tersisa';
+  }
+}
+
+class IncomingSharingSession {
+  final String id;
+  final String friendName;
+  final String subtitle;
+  final double latitude;
+  final double longitude;
+  final DateTime expiry;
+
+  IncomingSharingSession({
+    required this.id,
+    required this.friendName,
+    required this.subtitle,
+    required this.latitude,
+    required this.longitude,
+    required this.expiry,
+  });
 
   String remainingText() {
     final diff = expiry.difference(DateTime.now());

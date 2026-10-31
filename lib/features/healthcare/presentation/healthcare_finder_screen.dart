@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
-import '../../../shared/widgets/taut_illustrations.dart';
+import '../../../shared/widgets/taut_open_street_map.dart';
 
 class HealthcareFinderScreen extends StatefulWidget {
   const HealthcareFinderScreen({super.key});
@@ -267,50 +268,37 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
   }
 
   Widget _buildMapPreview() {
-    return Container(
-      height: 170,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE9EEE3),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFDAE3D3)),
+    final state = TautAppState();
+    final facilities = state.filteredFacilities;
+    final markers = <TautMapMarker>[
+      const TautMapMarker(
+        point: LatLng(-7.9723, 112.6318),
+        label: 'Posisi Anda',
+        subtitle: 'Malang Pusat',
+        isUser: true,
       ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: TautIllustration.mapPlaceholder(),
-            ),
-          ),
-          Positioned(
-            left: 12,
-            top: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xF0FFFFFF),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x10263D2F),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'Peta ilustrasi - bukan posisi nyata',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkGreen,
-                ),
-              ),
-            ),
-          ),
-        ],
+      TautMapMarker(
+        point: const LatLng(-7.9750, 112.6320),
+        label: facilities.isNotEmpty ? facilities.first.name : 'RS Saiful Anwar',
+        subtitle: 'Fasilitas Ramah Disabilitas',
+        icon: Icons.local_hospital_rounded,
+        color: AppColors.primary,
       ),
+      if (facilities.length > 1)
+        TautMapMarker(
+          point: const LatLng(-7.9620, 112.6280),
+          label: facilities[1].name,
+          subtitle: 'Klinik Aksesibel',
+          icon: Icons.healing_rounded,
+          color: const Color(0xFF388E3C),
+        ),
+    ];
+
+    return TautOpenStreetMap(
+      initialCenter: const LatLng(-7.9723, 112.6318),
+      initialZoom: 14.3,
+      height: 190,
+      markers: markers,
     );
   }
 

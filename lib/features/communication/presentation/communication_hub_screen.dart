@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
@@ -38,12 +38,11 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
   Timer? _speechSilenceTimer;
   Timer? _speechSimTimer;
   Timer? _motionTrackerTimer;
-  int _gestureStreamIndex = 0;
 
-  // Camera & Landmark settings
+  // Camera & Detection settings
   bool _isFrontCamera = true;
-  String _detectedSign = 'Terima kasih banyak';
-  double _detectedConfidence = 0.984;
+  String _detectedSign = 'Menunggu isyarat...';
+  double _detectedConfidence = 0.0;
   final double _fps = 29.8;
 
   CameraController? _cameraController;
@@ -126,11 +125,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     );
-    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
-    if (!isTest) {
-      _landmarkAnimController.repeat(reverse: true);
-      _startRealtimeSignTracking();
-    }
 
     _speechService = SpeechServiceImpl();
     _speechSubscription = _speechService.statusStream.listen((speechState) {
@@ -157,12 +151,18 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     if (isTest) return;
 
     try {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        debugPrint('[CommunicationHub] Camera permission not granted');
+        return;
+      }
+
       final detector = BisindoDetectorService();
       await detector.initializeModel();
       _detectorService = detector;
       _detectionSubscription = detector.detectionStream.listen((event) {
         if (!mounted) return;
-        if (event.result.isRecognized) {
+        if (event.result.isRecognized && event.result.confidence >= 0.5) {
           setState(() {
             _detectedSign = event.result.label;
             _detectedConfidence = event.result.confidence;
@@ -220,23 +220,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       await _initRealCamera();
     }
     _showToast(_isFrontCamera ? 'Kamera depan aktif' : 'Kamera belakang aktif');
-  }
-
-  void _startRealtimeSignTracking() {
-    _motionTrackerTimer?.cancel();
-    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
-    if (isTest) return;
-
-    _motionTrackerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (!mounted) return;
-      _gestureStreamIndex++;
-      final nextPreset = _quickSignPresets[_gestureStreamIndex % _quickSignPresets.length];
-      setState(() {
-        _detectedSign = nextPreset;
-        _signInputController.text = nextPreset;
-        _detectedConfidence = 0.96 + (_gestureStreamIndex % 4) * 0.01;
-      });
-    });
   }
 
   void _onSpeechWordsReceived(String text, bool isFinal, TautAppState state) {
@@ -1460,13 +1443,26 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           if (_isCameraActive &&
               _cameraController != null &&
               _cameraController!.value.isInitialized)
-            FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _cameraController!.value.previewSize?.height ?? 320,
-                height: _cameraController!.value.previewSize?.width ?? 195,
-                child: CameraPreview(_cameraController!),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardW = constraints.maxWidth;
+                final cardH = constraints.maxHeight;
+                final sensorRatio = _cameraController!.value.aspectRatio;
+                final previewRatio = 1.0 / sensorRatio;
+
+                return SizedBox(
+                  width: cardW,
+                  height: cardH,
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: cardW,
+                      height: cardW / previewRatio,
+                      child: CameraPreview(_cameraController!),
+                    ),
+                  ),
+                );
+              },
             )
           else
             Container(
@@ -1481,24 +1477,49 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
                   ],
                 ),
               ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.camera_alt_outlined,
+                      color: Color(0xFFB0D4B8),
+                      size: 32,
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Kamera belum aktif',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFD6E7D2),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _initRealCamera,
+                      icon: const Icon(Icons.videocam_rounded, size: 14),
+                      label: const Text(
+                        'Aktifkan Kamera',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        minimumSize: Size.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
-          // Animated Landmark Skeleton & Dots
-          AnimatedBuilder(
-            animation: _landmarkAnimController,
-            builder: (context, _) {
-              return CustomPaint(
-                size: const Size(double.infinity, 195),
-                painter: _BisindoLandmarkPainter(
-                  progress: _landmarkAnimController.value,
-                  activeColor: AppColors.sageGreen,
-                  jointColor: const Color(0xFF68D391),
-                ),
-              );
-            },
-          ),
-
-          // Viewfinder Framing Guides
+          // Subtle Viewfinder Framing Guides
           Positioned(
             left: 36,
             right: 36,
@@ -1506,8 +1527,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             bottom: 30,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
           ),
@@ -1624,17 +1645,31 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF16251D).withValues(alpha: 0.85),
+                color: const Color(0xFF16251D).withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF48BB78).withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: _detectedConfidence > 0.5
+                      ? const Color(0xFF48BB78)
+                      : const Color(0xFF8AAB7E).withValues(alpha: 0.5),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.touch_app_rounded, size: 13, color: Color(0xFF68D391)),
+                  Icon(
+                    _detectedConfidence > 0.5
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.sensors_rounded,
+                    size: 13,
+                    color: _detectedConfidence > 0.5
+                        ? const Color(0xFF68D391)
+                        : const Color(0xFFB0D4B8),
+                  ),
                   const SizedBox(width: 5),
                   Text(
-                    'Deteksi Real-time: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)',
+                    _detectedConfidence > 0.0
+                        ? 'Deteksi Real-time: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)'
+                        : 'Deteksi Real-time: $_detectedSign',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -2295,145 +2330,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
         ],
       ),
     );
-  }
-}
-
-// ==========================================
-// BISINDO LANDMARK PAINTER (SKELETON & DOTS)
-// ==========================================
-class _BisindoLandmarkPainter extends CustomPainter {
-  final double progress;
-  final Color activeColor;
-  final Color jointColor;
-
-  _BisindoLandmarkPainter({
-    required this.progress,
-    required this.activeColor,
-    required this.jointColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Subtle breathing displacement
-    final dy = math.sin(progress * math.pi) * 4.0;
-    final dx = math.cos(progress * math.pi) * 3.0;
-
-    final linePaint = Paint()
-      ..color = activeColor.withValues(alpha: 0.6)
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final jointPaint = Paint()
-      ..color = jointColor
-      ..style = PaintingStyle.fill;
-
-    final glowPaint = Paint()
-      ..color = jointColor.withValues(alpha: 0.3)
-      ..style = PaintingStyle.fill;
-
-    // Hand Center Coordinates (Framed in the center-right of camera)
-    final cx = w * 0.52 + dx;
-    final cy = h * 0.54 + dy;
-
-    // 21 Hand Landmarks: Wrist, Thumb(4), Index(4), Middle(4), Ring(4), Pinky(4)
-    final wrist = Offset(cx, cy + 34);
-
-    final thumb = [
-      Offset(cx - 16, cy + 22),
-      Offset(cx - 28, cy + 12),
-      Offset(cx - 36, cy + 2),
-      Offset(cx - 42, cy - 8),
-    ];
-
-    final index = [
-      Offset(cx - 10, cy + 6),
-      Offset(cx - 14, cy - 14),
-      Offset(cx - 16, cy - 30),
-      Offset(cx - 18, cy - 44),
-    ];
-
-    final middle = [
-      Offset(cx + 2, cy + 4),
-      Offset(cx + 2, cy - 18),
-      Offset(cx + 2, cy - 36),
-      Offset(cx + 2, cy - 50),
-    ];
-
-    final ring = [
-      Offset(cx + 14, cy + 8),
-      Offset(cx + 16, cy - 12),
-      Offset(cx + 18, cy - 28),
-      Offset(cx + 20, cy - 42),
-    ];
-
-    final pinky = [
-      Offset(cx + 26, cy + 14),
-      Offset(cx + 30, cy - 4),
-      Offset(cx + 34, cy - 18),
-      Offset(cx + 36, cy - 30),
-    ];
-
-    // Connect hand bones
-    void drawChain(Offset start, List<Offset> points) {
-      Offset prev = start;
-      for (final p in points) {
-        canvas.drawLine(prev, p, linePaint);
-        prev = p;
-      }
-    }
-
-    // Palm connections
-    canvas.drawLine(wrist, thumb[0], linePaint);
-    canvas.drawLine(wrist, index[0], linePaint);
-    canvas.drawLine(wrist, middle[0], linePaint);
-    canvas.drawLine(wrist, ring[0], linePaint);
-    canvas.drawLine(wrist, pinky[0], linePaint);
-
-    canvas.drawLine(index[0], middle[0], linePaint);
-    canvas.drawLine(middle[0], ring[0], linePaint);
-    canvas.drawLine(ring[0], pinky[0], linePaint);
-
-    // Finger chains
-    drawChain(thumb[0], thumb);
-    drawChain(index[0], index);
-    drawChain(middle[0], middle);
-    drawChain(ring[0], ring);
-    drawChain(pinky[0], pinky);
-
-    // Draw Joint Dots
-    final allPoints = [wrist, ...thumb, ...index, ...middle, ...ring, ...pinky];
-    for (final pt in allPoints) {
-      canvas.drawCircle(pt, 5.0, glowPaint);
-      canvas.drawCircle(pt, 2.5, jointPaint);
-    }
-
-    // Upper Body Pose Skeleton (Shoulders & Head Silhouette)
-    final head = Offset(w * 0.48, h * 0.22 + dy * 0.5);
-    final leftShoulder = Offset(w * 0.30, h * 0.42 + dy * 0.7);
-    final rightShoulder = Offset(w * 0.68, h * 0.42 + dy * 0.7);
-
-    final poseLinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(head, Offset(w * 0.49, h * 0.35 + dy * 0.6), poseLinePaint);
-    canvas.drawLine(leftShoulder, rightShoulder, poseLinePaint);
-    canvas.drawLine(leftShoulder, Offset(w * 0.24, h * 0.68), poseLinePaint);
-    canvas.drawLine(rightShoulder, wrist, poseLinePaint);
-
-    canvas.drawCircle(head, 3.5, jointPaint);
-    canvas.drawCircle(leftShoulder, 3.0, jointPaint);
-    canvas.drawCircle(rightShoulder, 3.0, jointPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BisindoLandmarkPainter oldDelegate) {
-    return oldDelegate.progress != progress;
   }
 }
 

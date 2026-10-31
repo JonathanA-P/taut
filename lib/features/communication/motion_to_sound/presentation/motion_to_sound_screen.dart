@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -646,42 +645,32 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
             if (_isCameraActive &&
                 _cameraController != null &&
                 _cameraController!.value.isInitialized)
-              FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _cameraController!.value.previewSize?.height ?? 320,
-                  height: _cameraController!.value.previewSize?.width ?? 320,
-                  child: CameraPreview(_cameraController!),
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final cardW = constraints.maxWidth;
+                  final cardH = constraints.maxHeight;
+                  final sensorRatio = _cameraController!.value.aspectRatio;
+                  final previewRatio = 1.0 / sensorRatio;
+
+                  return SizedBox(
+                    width: cardW,
+                    height: cardH,
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: cardW,
+                        height: cardW / previewRatio,
+                        child: CameraPreview(_cameraController!),
+                      ),
+                    ),
+                  );
+                },
               )
             else
               _buildCameraPlaceholder(),
 
             // Target Guide Frame Overlay
             if (_isCameraActive) _buildGuideFrame(),
-
-            // Animated Hand Landmark Skeleton & Vector Sticks & Dots
-            if (_isCameraActive)
-              AnimatedBuilder(
-                animation: _landmarkAnimController,
-                builder: (context, _) {
-                  return CustomPaint(
-                    size: const Size(double.infinity, 320),
-                    painter: _HandSkeletonPainter(
-                      progress: _landmarkAnimController.value,
-                      box: _currentBox,
-                      isDetected: _currentLiveLabel.isNotEmpty &&
-                          _currentConfidence >= 0.65,
-                      activeColor: _currentLiveLabel.isNotEmpty
-                          ? const Color(0xFF48BB78)
-                          : AppColors.primary,
-                      jointColor: _currentLiveLabel.isNotEmpty
-                          ? const Color(0xFF68D391)
-                          : const Color(0xFF81C784),
-                    ),
-                  );
-                },
-              ),
 
             // Dynamic Bounding Box from Object Detection
             if (_isCameraActive &&
@@ -1234,158 +1223,5 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
         ),
       ],
     );
-  }
-}
-
-/// Visual Landmark Painter (Hand skeleton sticks and joint dots).
-/// Interprets BISINDO hand gesture landmarks on top of camera frames.
-class _HandSkeletonPainter extends CustomPainter {
-  final double progress;
-  final BoundingBox? box;
-  final bool isDetected;
-  final Color activeColor;
-  final Color jointColor;
-
-  _HandSkeletonPainter({
-    required this.progress,
-    this.box,
-    required this.isDetected,
-    required this.activeColor,
-    required this.jointColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final dy = math.sin(progress * math.pi) * 3.5;
-    final dx = math.cos(progress * math.pi) * 2.5;
-
-    final linePaint = Paint()
-      ..color = activeColor.withValues(alpha: isDetected ? 0.85 : 0.6)
-      ..strokeWidth = isDetected ? 2.6 : 2.0
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final jointPaint = Paint()
-      ..color = jointColor
-      ..style = PaintingStyle.fill;
-
-    final glowPaint = Paint()
-      ..color = jointColor.withValues(alpha: isDetected ? 0.45 : 0.25)
-      ..style = PaintingStyle.fill;
-
-    // Determine hand center and scale
-    double cx;
-    double cy;
-    double scale = 1.0;
-
-    if (box != null && box!.isValid) {
-      cx = ((box!.xmin + box!.xmax) / 2 * w).clamp(w * 0.15, w * 0.85);
-      cy = ((box!.ymin + box!.ymax) / 2 * h).clamp(h * 0.15, h * 0.85);
-      final boxW = (box!.xmax - box!.xmin) * w;
-      scale = (boxW / 120.0).clamp(0.7, 1.4);
-    } else {
-      cx = w * 0.5 + dx;
-      cy = h * 0.52 + dy;
-    }
-
-    // 21 Hand Landmarks: Wrist, Thumb(4), Index(4), Middle(4), Ring(4), Pinky(4)
-    final wrist = Offset(cx, cy + 32 * scale);
-
-    final thumb = [
-      Offset(cx - 16 * scale, cy + 20 * scale),
-      Offset(cx - 26 * scale, cy + 10 * scale),
-      Offset(cx - 34 * scale, cy + 2 * scale),
-      Offset(cx - 40 * scale, cy - 8 * scale),
-    ];
-
-    final index = [
-      Offset(cx - 10 * scale, cy + 6 * scale),
-      Offset(cx - 14 * scale, cy - 12 * scale),
-      Offset(cx - 16 * scale, cy - 28 * scale),
-      Offset(cx - 18 * scale, cy - 42 * scale),
-    ];
-
-    final middle = [
-      Offset(cx + 2 * scale, cy + 4 * scale),
-      Offset(cx + 2 * scale, cy - 16 * scale),
-      Offset(cx + 2 * scale, cy - 34 * scale),
-      Offset(cx + 2 * scale, cy - 48 * scale),
-    ];
-
-    final ring = [
-      Offset(cx + 14 * scale, cy + 8 * scale),
-      Offset(cx + 16 * scale, cy - 10 * scale),
-      Offset(cx + 18 * scale, cy - 26 * scale),
-      Offset(cx + 20 * scale, cy - 40 * scale),
-    ];
-
-    final pinky = [
-      Offset(cx + 24 * scale, cy + 14 * scale),
-      Offset(cx + 28 * scale, cy - 2 * scale),
-      Offset(cx + 32 * scale, cy - 16 * scale),
-      Offset(cx + 34 * scale, cy - 28 * scale),
-    ];
-
-    void drawChain(Offset start, List<Offset> points) {
-      Offset prev = start;
-      for (final p in points) {
-        canvas.drawLine(prev, p, linePaint);
-        prev = p;
-      }
-    }
-
-    // Palm connections
-    canvas.drawLine(wrist, thumb[0], linePaint);
-    canvas.drawLine(wrist, index[0], linePaint);
-    canvas.drawLine(wrist, middle[0], linePaint);
-    canvas.drawLine(wrist, ring[0], linePaint);
-    canvas.drawLine(wrist, pinky[0], linePaint);
-
-    canvas.drawLine(index[0], middle[0], linePaint);
-    canvas.drawLine(middle[0], ring[0], linePaint);
-    canvas.drawLine(ring[0], pinky[0], linePaint);
-
-    // Finger chains
-    drawChain(thumb[0], thumb);
-    drawChain(index[0], index);
-    drawChain(middle[0], middle);
-    drawChain(ring[0], ring);
-    drawChain(pinky[0], pinky);
-
-    // Draw Joint Dots
-    final allPoints = [wrist, ...thumb, ...index, ...middle, ...ring, ...pinky];
-    for (final pt in allPoints) {
-      canvas.drawCircle(pt, 4.5 * scale, glowPaint);
-      canvas.drawCircle(pt, 2.4 * scale, jointPaint);
-    }
-
-    // Posture Stick Skeleton (Shoulders and Head)
-    final head = Offset(w * 0.5, h * 0.18 + dy * 0.4);
-    final leftShoulder = Offset(w * 0.28, h * 0.38 + dy * 0.5);
-    final rightShoulder = Offset(w * 0.72, h * 0.38 + dy * 0.5);
-
-    final posePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.20)
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(head, Offset(w * 0.5, h * 0.32), posePaint);
-    canvas.drawLine(leftShoulder, rightShoulder, posePaint);
-    canvas.drawLine(leftShoulder, Offset(w * 0.22, h * 0.65), posePaint);
-    canvas.drawLine(rightShoulder, wrist, posePaint);
-
-    canvas.drawCircle(head, 3.2, jointPaint);
-    canvas.drawCircle(leftShoulder, 2.8, jointPaint);
-    canvas.drawCircle(rightShoulder, 2.8, jointPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _HandSkeletonPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.box != box ||
-        oldDelegate.isDetected != isDetected;
   }
 }
