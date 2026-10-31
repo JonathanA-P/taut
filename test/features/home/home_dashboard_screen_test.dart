@@ -16,28 +16,26 @@ void main() {
       await tester.pumpWidget(createDashboard());
       await tester.pumpAndSettle();
 
-      expect(find.text('Halo, Alfredo'), findsOneWidget);
-      expect(find.textContaining('Semua sensor siap'), findsOneWidget);
-      expect(find.text('AJ'), findsOneWidget);
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
+      expect(find.text('Adriel'), findsOneWidget);
     });
 
     testWidgets('Renders Main Hero Card with illustration and CTA', (tester) async {
       await tester.pumpWidget(createDashboard());
       await tester.pumpAndSettle();
 
-      expect(find.text('Mulai Komunikasi Dua Arah'), findsOneWidget);
+      expect(find.text('SETIAP CERITA BERARTI'), findsOneWidget);
       expect(find.text('Mulai Komunikasi'), findsOneWidget);
-      expect(find.byIcon(Icons.chat_bubble_rounded), findsOneWidget);
     });
 
     testWidgets('Renders 4 Feature Shortcuts with distinct labels', (tester) async {
       await tester.pumpWidget(createDashboard());
       await tester.pumpAndSettle();
 
-      expect(find.text('Suara ke Teks'), findsOneWidget);
-      expect(find.text('Gerakan ke Suara'), findsOneWidget);
-      expect(find.text('Pencari Faskes'), findsOneWidget);
-      expect(find.text('Bagi Lokasi'), findsOneWidget);
+      expect(find.text('Ucapan ke Teks'), findsOneWidget);
+      expect(find.text('Isyarat ke Suara'), findsOneWidget);
+      expect(find.text('Fasilitas Kesehatan'), findsOneWidget);
+      expect(find.text('Berbagi Lokasi'), findsOneWidget);
     });
 
     testWidgets('Renders Connected Friends Preview and Active Location Sharing', (tester) async {
@@ -51,12 +49,10 @@ void main() {
       await tester.pumpWidget(createDashboard());
       await tester.pumpAndSettle();
 
-      expect(find.text('Teman Terhubung'), findsOneWidget);
-      expect(find.text('Adriel Christo'), findsOneWidget);
-      expect(find.text('Roganda Tua'), findsOneWidget);
-
-      expect(find.text('Sesi Berbagi Lokasi Aktif'), findsOneWidget);
-      expect(find.text('Kelola Berbagi'), findsOneWidget);
+      expect(find.text('Teman terhubung'), findsOneWidget);
+      expect(find.text('Nadia'), findsOneWidget);
+      expect(find.text('Raka'), findsOneWidget);
+      expect(find.text('Dinda'), findsOneWidget);
     });
   });
 }

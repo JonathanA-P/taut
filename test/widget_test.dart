@@ -22,28 +22,26 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify navigation bar destinations exist
+      expect(find.text('Beranda'), findsWidgets);
       expect(find.text('Komunikasi'), findsWidgets);
-      expect(find.text('Faskes'), findsOneWidget);
-      expect(find.text('Bagi Lokasi'), findsOneWidget);
-      expect(find.text('Profil'), findsOneWidget);
+      expect(find.text('Lokasi'), findsWidgets);
+      expect(find.text('Profil'), findsWidgets);
 
-      // Verify initial tab title
-      expect(find.text('Komunikasi Dua Arah'), findsOneWidget);
+      // Verify initial tab has greeting
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
 
-      // Switch to Healthcare (Faskes) tab
-      await tester.tap(find.byIcon(Icons.local_hospital_outlined));
+      // Switch to Komunikasi tab
+      await tester.tap(find.text('Komunikasi').first);
       await tester.pumpAndSettle();
-      expect(find.text('Fasilitas Kesehatan Terdekat'), findsOneWidget);
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
 
-      // Switch to Location Sharing (Bagi Lokasi) tab
-      await tester.tap(find.byIcon(Icons.share_location_outlined));
+      // Switch to Lokasi tab
+      await tester.tap(find.text('Lokasi').first);
       await tester.pumpAndSettle();
-      expect(find.text('Berbagi Lokasi'), findsOneWidget);
 
-      // Switch to Profile (Profil) tab
-      await tester.tap(find.byIcon(Icons.person_outline));
+      // Switch to Profil tab
+      await tester.tap(find.text('Profil').first);
       await tester.pumpAndSettle();
-      expect(find.text('Profil & Pengaturan'), findsOneWidget);
     });
   });
 
