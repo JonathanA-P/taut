@@ -34,7 +34,7 @@ class LocationSharingBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Sesi berbagi AKTIF â€” $recipientName',
+                  'Sesi berbagi AKTIF - $recipientName',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),

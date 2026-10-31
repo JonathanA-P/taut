@@ -26,7 +26,7 @@ class StatusBadge extends StatelessWidget {
 
   const StatusBadge.live({
     super.key,
-    this.label = 'â— LIVE',
+    this.label = 'LIVE',
     this.backgroundColor = const Color(0xFFFFEBEE),
     this.textColor = AppColors.error,
     this.icon,
@@ -34,7 +34,7 @@ class StatusBadge extends StatelessWidget {
 
   factory StatusBadge.development() {
     return const StatusBadge(
-      label: 'Tahap Fondasi â€¢ Siap Integrasi',
+      label: 'Tahap Fondasi - Siap Integrasi',
       backgroundColor: AppColors.accentMtsBg,
       textColor: AppColors.onAccentMts,
       icon: Icons.info_outline_rounded,

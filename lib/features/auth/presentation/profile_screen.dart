@@ -101,7 +101,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 18),
 
                   const Text(
-                    'TAUT Â· Prototipe desain 01\nData akun ini hanya contoh.',
+                    'TAUT - Prototipe desain 01\nData akun ini hanya contoh.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

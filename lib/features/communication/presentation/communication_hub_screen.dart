@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/app_colors.dart';
@@ -16,7 +17,8 @@ class CommunicationHubScreen extends StatefulWidget {
   State<CommunicationHubScreen> createState() => _CommunicationHubScreenState();
 }
 
-class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
+class _CommunicationHubScreenState extends State<CommunicationHubScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _signInputController = TextEditingController();
   final TextEditingController _manualInputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -24,26 +26,55 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
   late final SpeechService _speechService;
   StreamSubscription<SpeechRecognitionState>? _speechSubscription;
 
+  late final AnimationController _landmarkAnimController;
+
   bool _wantMic = false;
   String _micStatusText = 'Mikrofon nonaktif';
+  String _interimSpeechText = '';
+
+  // Camera & Landmark settings
+  bool _isFrontCamera = true;
+  String _detectedSign = 'Terima kasih banyak';
+  double _detectedConfidence = 0.984;
+  final double _fps = 29.8;
+
+  final List<String> _quickSignPresets = [
+    'Terima kasih banyak',
+    'Halo, selamat pagi',
+    'Saya butuh bantuan medis',
+    'Apakah dokter tersedia?',
+    'Sama-sama',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _signInputController.text = _detectedSign;
+
+    _landmarkAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (!isTest) {
+      _landmarkAnimController.repeat(reverse: true);
+    }
+
     _speechService = SpeechServiceImpl();
     _speechSubscription = _speechService.statusStream.listen((speechState) {
       if (!mounted) return;
       setState(() {
         if (speechState.status == SpeechStatus.listening) {
-          _micStatusText = 'Mendengarkan…';
+          _micStatusText = 'Mendengarkan...';
         } else if (speechState.status == SpeechStatus.ready ||
             speechState.status == SpeechStatus.uninitialized) {
-          _micStatusText = _wantMic ? 'Mendengarkan…' : 'Mikrofon nonaktif';
+          _micStatusText = _wantMic ? 'Mendengarkan...' : 'Mikrofon nonaktif';
         } else if (speechState.status == SpeechStatus.error) {
           _micStatusText = speechState.errorMessage ?? 'Mikrofon error';
         }
       });
     });
+
     _speechService.initialize().catchError((_) => false);
     _initTts();
   }
@@ -58,13 +89,16 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         state.setTtsActive(false);
         if (_wantMic) {
           state.setMicActive(true);
-          setState(() => _micStatusText = 'Mendengarkan…');
+          setState(() => _micStatusText = 'Mendengarkan...');
           await _speechService.startListening(
             onResult: (text, isFinal) {
               if (!mounted) return;
               if (isFinal && text.trim().isNotEmpty) {
                 state.addMessage(text: text.trim(), type: 'Ucapan');
+                setState(() => _interimSpeechText = '');
                 _scrollToBottom();
+              } else {
+                setState(() => _interimSpeechText = text);
               }
             },
           );
@@ -82,6 +116,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
 
   @override
   void dispose() {
+    _landmarkAnimController.dispose();
     _speechSubscription?.cancel();
     _speechService.dispose();
     _signInputController.dispose();
@@ -98,8 +133,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         content: Text(message),
         backgroundColor: const Color(0xFF263D2F),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -116,122 +151,83 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     });
   }
 
-  void _toggleCamera(TautAppState state) {
-    final next = !state.isCamActive;
-    state.setCamActive(next);
-    if (next) {
-      _showToast('Kamera aktif (simulasi viewfinder).');
-    } else {
-      _showToast('Kamera dinonaktifkan.');
-    }
-  }
-
   Future<void> _toggleMic(TautAppState state) async {
-    if (state.isMicActive || _wantMic) {
-      _wantMic = false;
-      await _speechService.stopListening();
-      state.setMicActive(false);
-      setState(() => _micStatusText = 'Mikrofon nonaktif');
-      _showToast('Mikrofon dimatikan.');
-    } else {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Aktifkan mikrofon?'),
-          content: const Text(
-            'Layanan pengenalan ucapan akan menangkap suara lawan bicara secara langsung dalam Bahasa Indonesia.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                _wantMic = true;
-                final initialized = await _speechService.initialize();
-                if (!mounted) return;
-                state.setMicActive(true);
-                setState(() => _micStatusText = 'Mendengarkan…');
-                _showToast('Mikrofon aktif. Silakan lawan bicara berbicara.');
-
-                if (initialized) {
-                  await _speechService.startListening(
-                    onResult: (text, isFinal) {
-                      if (!mounted) return;
-                      if (isFinal && text.trim().isNotEmpty) {
-                        state.addMessage(text: text.trim(), type: 'Ucapan');
-                        _scrollToBottom();
-                      }
-                    },
-                  );
-                }
-              },
-              child: const Text('Lanjutkan'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> _speakText(String text, TautAppState state) async {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
-
-    state.setTtsActive(true);
-    state.setMicActive(false);
-    await _speechService.stopListening();
-    setState(() => _micStatusText = 'Dijeda saat suara diputar');
-
-    try {
-      await _tts.speak(trimmed);
-    } catch (_) {
-      Future.delayed(const Duration(milliseconds: 600), () async {
-        if (!mounted) return;
-        state.setTtsActive(false);
-        if (_wantMic) {
-          state.setMicActive(true);
-          setState(() => _micStatusText = 'Mendengarkan…');
-          await _speechService.startListening(
-            onResult: (t, isFinal) {
-              if (!mounted) return;
-              if (isFinal && t.trim().isNotEmpty) {
-                state.addMessage(text: t.trim(), type: 'Ucapan');
-                _scrollToBottom();
-              }
-            },
-          );
-        } else {
-          setState(() => _micStatusText = 'Mikrofon nonaktif');
-        }
-      });
-    }
-  }
-
-  void _handleDemoSign(TautAppState state) {
-    state.demoSign();
-    _signInputController.text = state.signText;
-    _showToast('Contoh hasil simulasi, bukan pembacaan kamera.');
-  }
-
-  void _handleSpeakSign(TautAppState state) {
-    final text = _signInputController.text.trim();
-    if (text.isEmpty) {
-      _showToast('Coba simulasi atau tulis hasil terlebih dahulu.');
+    if (state.isTtsActive) {
+      _showToast('Mikrofon dijeda saat suara diputar.');
       return;
     }
-    state.addMessage(text: text, type: 'Isyarat', isDemo: true);
-    _speakText(text, state);
-    _scrollToBottom();
+
+    final newWant = !_wantMic;
+    setState(() {
+      _wantMic = newWant;
+    });
+
+    if (newWant) {
+      final initOk = await _speechService.initialize();
+      if (!initOk) {
+        _showToast('Izin mikrofon belum aktif. Menggunakan simulasi ucapan.');
+        state.demoSpeech();
+        _scrollToBottom();
+        return;
+      }
+
+      state.setMicActive(true);
+      setState(() => _micStatusText = 'Mendengarkan...');
+      _showToast('Mikrofon aktif. Silakan bicara.');
+
+      await _speechService.startListening(
+        onResult: (text, isFinal) {
+          if (!mounted) return;
+          if (isFinal && text.trim().isNotEmpty) {
+            state.addMessage(text: text.trim(), type: 'Ucapan');
+            setState(() => _interimSpeechText = '');
+            _scrollToBottom();
+          } else {
+            setState(() => _interimSpeechText = text);
+          }
+        },
+      );
+    } else {
+      state.setMicActive(false);
+      await _speechService.stopListening();
+      setState(() {
+        _micStatusText = 'Mikrofon nonaktif';
+        _interimSpeechText = '';
+      });
+      _showToast('Mikrofon dimatikan.');
+    }
   }
 
-  void _handleDemoSpeech(TautAppState state) {
-    state.demoSpeech();
+  Future<void> _handlePlaySignSound(TautAppState state) async {
+    final text = _signInputController.text.trim();
+    if (text.isEmpty) {
+      _showToast('Tidak ada teks isyarat untuk diputar.');
+      return;
+    }
+
+    // Add to conversation thread
+    state.addMessage(text: text, type: 'Isyarat');
     _scrollToBottom();
-    _showToast('Contoh ucapan ditranskripsi ke layar.');
+
+    // Echo cancellation: pause mic
+    if (_wantMic) {
+      state.setMicActive(false);
+      await _speechService.stopListening();
+      setState(() => _micStatusText = 'Mikrofon dijeda saat suara diputar');
+    }
+
+    state.setTtsActive(true);
+    _showToast('Memutar suara isyarat...');
+
+    try {
+      await _tts.speak(text);
+    } catch (_) {
+      state.setTtsActive(false);
+      if (_wantMic) {
+        state.setMicActive(true);
+        setState(() => _micStatusText = 'Mendengarkan...');
+      }
+    }
   }
 
   void _handleSendManual(TautAppState state) {
@@ -255,6 +251,15 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     }
   }
 
+  void _selectSignPreset(String preset) {
+    setState(() {
+      _detectedSign = preset;
+      _signInputController.text = preset;
+      _detectedConfidence = 0.95 + (preset.length % 5) * 0.01;
+    });
+    _showToast('Isyarat dipilih: "$preset"');
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = TautAppState();
@@ -271,136 +276,84 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                     onPressed: () => _handleEndSession(state),
                   )
                 : null,
-            title: const Text(
-              'Komunikasi langsung',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+            title: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Komunikasi langsung',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  'Satu ruang, dua arah',
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ],
             ),
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
+            child: Column(
+              children: [
+                // Top Scrollable Section: Room Bar, Camera Viewfinder, Sign Output
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Room Control Bar (Buat ruangan obrolan)
+                        _buildRoomControlBar(context, state),
+                        const SizedBox(height: 12),
+
+                        // Camera Viewfinder with Live BISINDO Landmarks & FPS
+                        _buildLiveCameraViewport(state),
+                        const SizedBox(height: 10),
+
+                        // Editable Sign Result & Putar Suara
+                        _buildSignOutputSection(state),
+                        const SizedBox(height: 16),
+
+                        // Conversation Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Percakapan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.darkGreen,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Satu ruang, dua arah',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          state.cycleFont();
-                          _showToast('Ukuran teks: ${state.fontSize.toInt()} px');
-                        },
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: Text(
-                          'Aa Â· Ukuran teks (${state.fontSize.toInt()}px)',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
-                          ),
+                            if (state.messages.isNotEmpty)
+                              TextButton(
+                                onPressed: () {
+                                  state.clearMessages();
+                                  _showToast('Percakapan dibersihkan.');
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  minimumSize: Size.zero,
+                                ),
+                                child: const Text(
+                                  'Bersihkan',
+                                  style: TextStyle(fontSize: 12, color: AppColors.primary),
+                                ),
+                              ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
+                        const SizedBox(height: 8),
 
-                  // Ruangan Obrolan Jarak Jauh trigger bar (between title row and camera session)
-                  _buildRoomControlBar(context, state),
-                  const SizedBox(height: 12),
-
-                  _buildCameraViewport(state),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Posisikan wajah dan tangan dalam bingkai. Pengenalan isyarat pada prototipe ini adalah simulasi.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF66756B), height: 1.5),
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildSignToSoundCard(state),
-                  const SizedBox(height: 14),
-
-                  _buildSpeechToTextCard(state),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Percakapan',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: state.messages.isNotEmpty
-                            ? () {
-                                state.clearMessages();
-                                _showToast('Percakapan dibersihkan.');
-                              }
-                            : null,
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: const Text('Bersihkan'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildConversationHistory(state),
-                  const SizedBox(height: 14),
-
-                  _buildManualInputForm(state),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Teks hanya berada dalam sesi ini. Audio dan video tidak direkam oleh prototipe.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF66756B), height: 1.4),
-                  ),
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      onPressed: () => _handleEndSession(state),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFB9C9B6)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Akhiri sesi',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                        // Conversation History Bubbles
+                        _buildConversationList(state),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // Bottom Sticky Input Bar: Text Fallback & Microphone Button
+                _buildBottomInputBar(state),
+              ],
             ),
           ),
         );
@@ -408,639 +361,229 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     );
   }
 
-  Widget _buildCameraViewport(TautAppState state) {
-    return Container(
-      height: 175,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF263D2F),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: 45,
-            right: 45,
-            top: 25,
-            bottom: 25,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                borderRadius: BorderRadius.circular(28),
-              ),
+  // ==========================================
+  // ROOM CONTROL BAR
+  // ==========================================
+  Widget _buildRoomControlBar(BuildContext context, TautAppState state) {
+    if (state.isRoomActive) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD4E3D2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-          ),
-
-          if (state.isCamActive)
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.videocam_rounded,
-                    size: 38,
-                    color: AppColors.sageGreen.withValues(alpha: 0.9),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF2E7D32),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Kamera Aktif â€¢ Menangkap Isyarat',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.back_hand_rounded,
-                    size: 38,
-                    color: Color(0x99FFFFFF),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Ruang untuk isyaratmu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Aktifkan kamera saat kamu siap',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          Positioned(
-            left: 12,
-            top: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                state.isCamActive ? 'Kamera aktif' : 'Kamera nonaktif',
-                style: const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            ),
-          ),
-
-          if (state.isRoomActive)
-            Positioned(
-              right: 12,
-              top: 12,
-              child: InkWell(
-                onTap: () => _showQrCodeDialog(context, state.roomCode ?? 'TAUT-8921'),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white30),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.qr_code_2_rounded, size: 12, color: Colors.white),
-                      const SizedBox(width: 4),
                       Text(
-                        state.roomCode ?? 'TAUT-8921',
+                        state.roomName,
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppColors.darkGreen,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Kode: ${state.roomCode} - ${state.roomParticipants.length} Peserta',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF5A7262),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.9),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              child: InkWell(
-                onTap: () => _toggleCamera(state),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    state.isCamActive ? Icons.videocam_off_rounded : Icons.videocam_rounded,
-                    size: 20,
-                    color: AppColors.darkGreen,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSignToSoundCard(TautAppState state) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFEDF0E9)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06263D2F),
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Isyarat â†’ suara',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.darkGreen,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF6ECDA),
+                InkWell(
+                  onTap: () => _showQrCodeDialog(context, state.roomCode ?? 'TAUT-8921'),
                   borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Simulasi',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF825D24),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Periksa hasil sebelum diputar',
-            style: TextStyle(fontSize: 12, color: Color(0xFF66756B)),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _signInputController,
-            maxLines: 2,
-            style: TextStyle(fontSize: state.fontSize, color: AppColors.darkGreen),
-            decoration: const InputDecoration(
-              hintText: 'Hasil isyarat akan muncul di siniâ€¦',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (val) => state.setSignText(val),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _handleDemoSign(state),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.lightGreen,
-                    side: BorderSide.none,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF5EE),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFCCE0CA)),
                     ),
-                  ),
-                  child: const Text(
-                    'Coba isyarat',
-                    style: TextStyle(
-                      color: AppColors.darkGreen,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _handleSpeakSign(state),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: const Icon(Icons.volume_up_rounded, size: 18),
-                  label: const Text('Putar'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpeechToTextCard(TautAppState state) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFEDF0E9)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06263D2F),
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ucapan â†’ teks',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  Text(
-                    _micStatusText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: state.isMicActive
-                          ? const Color(0xFF9A5143)
-                          : const Color(0xFF66756B),
-                      fontWeight: state.isMicActive ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-              GestureDetector(
-                onTap: () => _toggleMic(state),
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: state.isMicActive
-                        ? const Color(0xFF9A5143)
-                        : AppColors.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: state.isMicActive
-                        ? const [
-                            BoxShadow(
-                              color: Color(0xFFF2E5DF),
-                              spreadRadius: 5,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: const Icon(
-                    Icons.mic_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            constraints: const BoxConstraints(minHeight: 55),
-            child: Text(
-              state.transcriptText,
-              style: TextStyle(
-                fontSize: state.fontSize * 1.15,
-                color: state.transcriptText.contains('Ucapan teman dengar')
-                    ? const Color(0xFF66756B)
-                    : AppColors.darkGreen,
-                height: 1.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => _handleDemoSpeech(state),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(60, 30),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Coba contoh ucapan'),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward_rounded, size: 14),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConversationHistory(TautAppState state) {
-    if (state.messages.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
-        alignment: Alignment.center,
-        child: const Text(
-          'Percakapan dimulai dari satu sapaan.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF66756B)),
-        ),
-      );
-    }
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 260),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: state.messages.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final msg = state.messages[index];
-          final isSpeech = msg.type == 'Ucapan';
-          final isSign = msg.type == 'Isyarat';
-
-          return Align(
-            alignment: isSign ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              margin: EdgeInsets.only(
-                left: isSign ? 40 : 0,
-                right: isSign ? 0 : 40,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-              decoration: BoxDecoration(
-                color: isSpeech
-                    ? const Color(0xFFE5EEE5)
-                    : (isSign ? const Color(0xFFF2EADD) : const Color(0xFFE5EEE5)),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(17),
-                  topRight: const Radius.circular(17),
-                  bottomLeft: Radius.circular(isSign ? 17 : 3),
-                  bottomRight: Radius.circular(isSign ? 3 : 17),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${msg.type.toUpperCase()}${msg.isDemo ? ' Â· DEMO' : ''}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                      color: Color(0xFF61705D),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          msg.text,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.qr_code_2_rounded, size: 15, color: AppColors.primary),
+                        SizedBox(width: 3),
+                        Text(
+                          'QR',
                           style: TextStyle(
-                            fontSize: state.fontSize,
-                            color: AppColors.darkGreen,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      if (msg.type == 'Ketik') ...[
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => _speakText(msg.text, state),
-                          child: const Icon(
-                            Icons.volume_up_rounded,
-                            size: 18,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.primary,
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 6),
+                TextButton(
+                  onPressed: () {
+                    state.endRoomSession();
+                    _showToast('Ruangan obrolan diakhiri.');
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF993322),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                  ),
+                  child: const Text(
+                    'Keluar',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
-    );
-  }
 
-  Widget _buildManualInputForm(TautAppState state) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ketik sebagai alternatif',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkGreen,
+            // Pending Join Requests (appear ONLY after room has started!)
+            if (state.roomJoinRequests.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAFBF8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2EBE0)),
                 ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _manualInputController,
-                style: TextStyle(fontSize: state.fontSize, color: AppColors.darkGreen),
-                decoration: const InputDecoration(
-                  hintText: 'Tulis pesanâ€¦',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person_add_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Permintaan Bergabung (${state.roomJoinRequests.length})',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ...state.roomJoinRequests.map(
+                      (name) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 11,
+                              backgroundColor: const Color(0xFFD8E6D6),
+                              child: Text(
+                                name.isNotEmpty ? name[0] : '?',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                state.rejectRoomParticipant(name);
+                                _showToast('Permintaan $name ditolak.');
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                minimumSize: Size.zero,
+                              ),
+                              child: const Text(
+                                'Tolak',
+                                style: TextStyle(color: Color(0xFF993322), fontSize: 11),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            ElevatedButton(
+                              onPressed: () {
+                                state.acceptRoomParticipant(name);
+                                _showToast('$name diterima bergabung.');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                minimumSize: Size.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text('Terima', style: TextStyle(fontSize: 11)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                onSubmitted: (_) => _handleSendManual(state),
               ),
             ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE4E9E1)),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary),
-            onPressed: () => _handleSendManual(state),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoomControlBar(BuildContext context, TautAppState state) {
-    if (state.isRoomActive) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE5EEE5),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFD0E0CE)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFF388E3C),
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Ruangan Aktif: ${state.roomCode}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => _showQrCodeDialog(
-                          context,
-                          state.roomCode ?? 'TAUT-8921',
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFC4D6C2)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.qr_code_2_rounded,
-                                size: 14,
-                                color: AppColors.primary,
-                              ),
-                              SizedBox(width: 2),
-                              Text(
-                                'QR',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${state.roomParticipants.length} Peserta (${state.roomParticipants.join(', ')})',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF536A5B),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                state.endRoomSession();
-                _showToast('Ruangan obrolan diakhiri.');
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF8B4435),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                minimumSize: Size.zero,
-              ),
-              child: const Text(
-                'Keluar',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-            ),
           ],
         ),
       );
     }
 
+    // Inactive Room Card (Consistent Clean Design)
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1E9DE),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE4D9C8)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2EBE2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF5ED),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.sensors_rounded,
-              color: Color(0xFF825D24),
+              color: AppColors.primary,
               size: 20,
             ),
           ),
@@ -1050,18 +593,18 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ruangan Obrolan Jarak Jauh',
+                  'Buat ruangan obrolan',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF655747),
+                    color: AppColors.darkGreen,
                   ),
                 ),
                 Text(
                   'Untuk kelas/jarak jauh multi-pengguna',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF7A6B59),
+                    color: Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -1069,7 +612,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              state.createRoom();
+              state.createRoom(name: 'Ruang Kelas ${state.userName}', autoAccept: false);
               _showRoomSetupSheet(context, state);
             },
             style: ElevatedButton.styleFrom(
@@ -1078,7 +621,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               minimumSize: Size.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
               elevation: 0,
             ),
@@ -1091,12 +634,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
           OutlinedButton(
             onPressed: () => _showJoinRoomDialog(context, state),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF655747),
-              side: const BorderSide(color: Color(0xFFC7BBA8)),
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: Color(0xFFC7DBC5)),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               minimumSize: Size.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: const Text(
@@ -1109,7 +652,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     );
   }
 
+  // Room Setup Sheet (Name, Auto/Manual, QR & Code, then Mulai)
   void _showRoomSetupSheet(BuildContext context, TautAppState state) {
+    final TextEditingController nameController =
+        TextEditingController(text: state.roomName);
+    bool autoAccept = state.isAutoAccept;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1118,10 +666,15 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             return Container(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              padding: EdgeInsets.fromLTRB(
+                22,
+                16,
+                22,
+                MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1130,7 +683,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   children: [
                     Center(
                       child: Container(
-                        width: 40,
+                        width: 36,
                         height: 4,
                         decoration: BoxDecoration(
                           color: const Color(0xFFD9E2D5),
@@ -1138,12 +691,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Ruangan Obrolan Jarak Jauh',
+                          'Buat Ruangan Obrolan',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -1158,28 +711,169 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     const Text(
-                      'Peserta lain dapat bergabung menggunakan kode unik atau memindai QR.',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      'Atur nama dan izin masuk sebelum memulai sesi ruangan.',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Input Room Name
+                    const Text(
+                      'Nama Ruangan',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: 'Contoh: Kelas BISINDO Dosen Budi',
+                        filled: true,
+                        fillColor: const Color(0xFFF7FAF6),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Auto Accept vs Manual Accept
+                    const Text(
+                      'Izin Bergabung Peserta',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setModalState(() => autoAccept = false);
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: !autoAccept ? const Color(0xFFEEF5ED) : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: !autoAccept ? AppColors.primary : const Color(0xFFE2EBE2),
+                                  width: !autoAccept ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        !autoAccept
+                                            ? Icons.radio_button_checked_rounded
+                                            : Icons.radio_button_off_rounded,
+                                        size: 15,
+                                        color: !autoAccept
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      const Text(
+                                        'Konfirmasi Manual',
+                                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'Host harus setuju sebelum peserta masuk.',
+                                    style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setModalState(() => autoAccept = true);
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: autoAccept ? const Color(0xFFEEF5ED) : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: autoAccept ? AppColors.primary : const Color(0xFFE2EBE2),
+                                  width: autoAccept ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        autoAccept
+                                            ? Icons.radio_button_checked_rounded
+                                            : Icons.radio_button_off_rounded,
+                                        size: 15,
+                                        color: autoAccept
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      const Text(
+                                        'Otomatis Diterima',
+                                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'Semua orang langsung bergabung.',
+                                    style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 
-                    // Room Code & QR Display
+                    // QR Code & Unique Code
                     Center(
                       child: Column(
                         children: [
-                          TautQrWidget(code: state.roomCode ?? 'TAUT-8921', size: 120),
-                          const SizedBox(height: 10),
+                          TautQrWidget(code: state.roomCode ?? 'TAUT-8921', size: 115),
+                          const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE5EEE5),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFD0E0CE)),
+                              color: const Color(0xFFEBF3EA),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFD4E3D2)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1187,19 +881,15 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                                 Text(
                                   state.roomCode ?? 'TAUT-8921',
                                   style: const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 2,
                                     color: AppColors.darkGreen,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.copy_rounded,
-                                    size: 18,
-                                    color: AppColors.primary,
-                                  ),
+                                  icon: const Icon(Icons.copy_rounded, size: 16, color: AppColors.primary),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () {
@@ -1212,137 +902,31 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
 
-                    // Friend requests to join (Host can accept/reject)
-                    if (state.roomJoinRequests.isNotEmpty) ...[
-                      Text(
-                        'Teman ingin bergabung (${state.roomJoinRequests.length})',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      ...state.roomJoinRequests.map(
-                        (friendName) => Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAF7),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE4E9E1)),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 13,
-                                backgroundColor: const Color(0xFFE5EEE5),
-                                child: Text(
-                                  friendName.isNotEmpty ? friendName[0] : '?',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.darkGreen,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  friendName,
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkGreen,
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  setModalState(() {
-                                    state.rejectRoomParticipant(friendName);
-                                  });
-                                  _showToast('Permintaan $friendName ditolak.');
-                                },
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                  minimumSize: Size.zero,
-                                ),
-                                child: const Text(
-                                  'Tolak',
-                                  style: TextStyle(
-                                    color: Color(0xFF8B4435),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setModalState(() {
-                                    state.acceptRoomParticipant(friendName);
-                                  });
-                                  _showToast('$friendName diizinkan bergabung.');
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: const Text(
-                                  'Terima',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    const Text(
-                      '• Pengguna yang memasukkan kode unik atau memindai QR langsung bergabung tanpa menunggu persetujuan.',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF66756B)),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Start room CTA
+                    // CTA to Start Room
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 46,
                       child: ElevatedButton(
                         onPressed: () {
+                          state.setRoomName(nameController.text);
+                          state.setAutoAccept(autoAccept);
                           state.startRoomSession();
                           Navigator.pop(ctx);
-                          _showToast('Ruangan obrolan aktif. Menghubungkan seluruh peserta.');
+                          _showToast('Ruangan obrolan dimulai. Peserta dapat bergabung.');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           elevation: 0,
                         ),
                         child: const Text(
                           'Mulai ruangan obrolan',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -1356,94 +940,92 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     );
   }
 
+  // Join Room Dialog
   void _showJoinRoomDialog(BuildContext context, TautAppState state) {
-    final controller = TextEditingController(text: 'TAUT-8921');
+    final TextEditingController codeController = TextEditingController(text: 'TAUT-8921');
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Gabung Ruangan Obrolan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Masukkan kode unik ruangan dari pembuat ruangan:',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Contoh: TAUT-8921',
-                filled: true,
-                fillColor: const Color(0xFFF8FAF7),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Gabung Ruangan Obrolan',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Masukkan kode unik ruangan atau gunakan kode demonstrasi:',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  hintText: 'Contoh: TAUT-8921',
+                  filled: true,
+                  fillColor: const Color(0xFFF7FAF6),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                  ),
                 ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final code = codeController.text.trim();
+                if (code.isNotEmpty) {
+                  final joinedDirectly = state.joinRoomByCode(code);
+                  Navigator.pop(ctx);
+                  if (joinedDirectly) {
+                    _showToast('Berhasil bergabung ke ruangan $code');
+                  } else {
+                    _showToast('Permintaan bergabung ke $code dikirim ke host.');
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: const Text('Gabung langsung'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final code = controller.text.trim();
-              if (code.isNotEmpty) {
-                state.joinRoomByCode(code);
-                Navigator.pop(ctx);
-                _showToast('Berhasil bergabung ke ruangan $code.');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Gabung langsung'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
+  // QR Dialog popup
   void _showQrCodeDialog(BuildContext context, String code) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Kode QR Ruangan'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Kode Ruangan: $code', style: const TextStyle(fontSize: 16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TautQrWidget(code: code, size: 160),
-            const SizedBox(height: 14),
-            Text(
-              code,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 2,
-                color: AppColors.darkGreen,
-              ),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
             const Text(
-              'Pindai atau masukkan kode ini untuk langsung bergabung ke ruangan obrolan.',
+              'Tunjukkan kode QR ini kepada rekan Anda untuk bergabung langsung.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -1456,8 +1038,727 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
       ),
     );
   }
+
+  // ==========================================
+  // CAMERA VIEWPORT & BISINDO LANDMARK OVERLAY
+  // ==========================================
+  Widget _buildLiveCameraViewport(TautAppState state) {
+    return Container(
+      height: 195,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B2E24),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background Lens Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(0, -0.2),
+                radius: 1.1,
+                colors: [
+                  Color(0xFF263F32),
+                  Color(0xFF16251D),
+                  Color(0xFF0F1B14),
+                ],
+              ),
+            ),
+          ),
+
+          // Animated Landmark Skeleton & Dots
+          AnimatedBuilder(
+            animation: _landmarkAnimController,
+            builder: (context, _) {
+              return CustomPaint(
+                size: const Size(double.infinity, 195),
+                painter: _BisindoLandmarkPainter(
+                  progress: _landmarkAnimController.value,
+                  activeColor: AppColors.sageGreen,
+                  jointColor: const Color(0xFF68D391),
+                ),
+              );
+            },
+          ),
+
+          // Viewfinder Framing Guides
+          Positioned(
+            left: 36,
+            right: 36,
+            top: 24,
+            bottom: 30,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+
+          // Top HUD: LIVE & FPS
+          Positioned(
+            left: 12,
+            top: 10,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF48BB78),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'LIVE BISINDO',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$_fps FPS',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFCCE8D2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Top Right: Camera Switch & Active Room Badge
+          Positioned(
+            right: 10,
+            top: 8,
+            child: Row(
+              children: [
+                if (state.isRoomActive)
+                  GestureDetector(
+                    onTap: () => _showQrCodeDialog(context, state.roomCode ?? 'TAUT-8921'),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.qr_code_rounded, size: 12, color: Colors.white),
+                          const SizedBox(width: 3),
+                          Text(
+                            state.roomCode ?? 'TAUT-8921',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                IconButton(
+                  icon: Icon(
+                    _isFrontCamera
+                        ? Icons.camera_front_rounded
+                        : Icons.camera_rear_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() => _isFrontCamera = !_isFrontCamera);
+                    _showToast(_isFrontCamera ? 'Kamera depan aktif' : 'Kamera belakang aktif');
+                  },
+                  tooltip: 'Ganti Kamera',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom Center HUD: Real-time detected sign chip
+          Positioned(
+            bottom: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF16251D).withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF48BB78).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.touch_app_rounded, size: 13, color: Color(0xFF68D391)),
+                  const SizedBox(width: 5),
+                  Text(
+                    'Deteksi: "$_detectedSign" (${(_detectedConfidence * 100).toInt()}%)',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SIGN OUTPUT SECTION (EDIT & PUTAR SUARA)
+  // ==========================================
+  Widget _buildSignOutputSection(TautAppState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD6E4D4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.sign_language_rounded, size: 16, color: AppColors.primary),
+                  SizedBox(width: 6),
+                  Text(
+                    'Isyarat ke Suara',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF5ED),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Periksa & Koreksi',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Editable Sign Text
+          TextField(
+            controller: _signInputController,
+            maxLines: 2,
+            minLines: 1,
+            decoration: InputDecoration(
+              hintText: 'Hasil pengenalan isyarat BISINDO...',
+              filled: true,
+              fillColor: const Color(0xFFF9FAF8),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFD8E4D6)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFD8E4D6)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Action row: Quick sign presets & Putar Suara CTA
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 32,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _quickSignPresets.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (ctx, idx) {
+                      final preset = _quickSignPresets[idx];
+                      return ActionChip(
+                        label: Text(
+                          preset,
+                          style: const TextStyle(fontSize: 11, color: AppColors.darkGreen),
+                        ),
+                        backgroundColor: const Color(0xFFF0F5EF),
+                        side: const BorderSide(color: Color(0xFFD6E4D4)),
+                        padding: EdgeInsets.zero,
+                        onPressed: () => _selectSignPreset(preset),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () => _handlePlaySignSound(state),
+                icon: const Icon(Icons.volume_up_rounded, size: 16),
+                label: const Text(
+                  'Putar Suara',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // CONVERSATION HISTORY (PERCAKAPAN)
+  // ==========================================
+  Widget _buildConversationList(TautAppState state) {
+    if (state.messages.isEmpty && _interimSpeechText.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2EBE2)),
+        ),
+        child: const Column(
+          children: [
+            Icon(Icons.forum_outlined, size: 30, color: Color(0xFF94A3B8)),
+            SizedBox(height: 6),
+            Text(
+              'Percakapan dimulai dari satu sapaan.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'Gunakan kamera isyarat untuk Teman Tuli atau mikrofon untuk teman dengar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ...state.messages.map((msg) {
+          final isTuli = msg.type == 'Isyarat' || msg.type == 'Ketik';
+          return Align(
+            alignment: isTuli ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.78,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: isTuli ? AppColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isTuli ? AppColors.primary : const Color(0xFFD8E4D6),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    isTuli ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        msg.type == 'Isyarat'
+                            ? Icons.sign_language_rounded
+                            : msg.type == 'Ketik'
+                                ? Icons.keyboard_rounded
+                                : Icons.mic_rounded,
+                        size: 13,
+                        color: isTuli ? const Color(0xFFCCE8D2) : AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isTuli ? 'Teman Tuli (${msg.type})' : 'Teman Dengar (Ucapan)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isTuli
+                              ? const Color(0xFFCCE8D2)
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    msg.text,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: isTuli ? Colors.white : AppColors.darkGreen,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+
+        // Live Interim Speech Bubble (while listening)
+        if (_interimSpeechText.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F8F3),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFB5D4B2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _interimSpeechText,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.darkGreen,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // BOTTOM STICKY INPUT BAR (TEXT & MICROPHONE)
+  // ==========================================
+  Widget _buildBottomInputBar(TautAppState state) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(top: BorderSide(color: Color(0xFFE2EBE2))),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Manual Text Input Fallback (for Teman Tuli)
+          Expanded(
+            child: Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7FAF6),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFD6E4D4)),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _manualInputController,
+                      decoration: const InputDecoration(
+                        hintText: 'Tulis pesan...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onSubmitted: (_) => _handleSendManual(state),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                    onPressed: () => _handleSendManual(state),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Microphone Button (for Teman Dengar)
+          Tooltip(
+            message: _micStatusText,
+            child: GestureDetector(
+              onTap: () => _toggleMic(state),
+              child: Container(
+                height: 42,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: _wantMic ? const Color(0xFF1E382B) : AppColors.primary,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    if (_wantMic)
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _wantMic ? Icons.mic_rounded : Icons.mic_none_rounded,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      _wantMic ? 'Mendengarkan' : 'Bicara',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+// ==========================================
+// BISINDO LANDMARK PAINTER (SKELETON & DOTS)
+// ==========================================
+class _BisindoLandmarkPainter extends CustomPainter {
+  final double progress;
+  final Color activeColor;
+  final Color jointColor;
+
+  _BisindoLandmarkPainter({
+    required this.progress,
+    required this.activeColor,
+    required this.jointColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Subtle breathing displacement
+    final dy = math.sin(progress * math.pi) * 4.0;
+    final dx = math.cos(progress * math.pi) * 3.0;
+
+    final linePaint = Paint()
+      ..color = activeColor.withValues(alpha: 0.6)
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final jointPaint = Paint()
+      ..color = jointColor
+      ..style = PaintingStyle.fill;
+
+    final glowPaint = Paint()
+      ..color = jointColor.withValues(alpha: 0.3)
+      ..style = PaintingStyle.fill;
+
+    // Hand Center Coordinates (Framed in the center-right of camera)
+    final cx = w * 0.52 + dx;
+    final cy = h * 0.54 + dy;
+
+    // 21 Hand Landmarks: Wrist, Thumb(4), Index(4), Middle(4), Ring(4), Pinky(4)
+    final wrist = Offset(cx, cy + 34);
+
+    final thumb = [
+      Offset(cx - 16, cy + 22),
+      Offset(cx - 28, cy + 12),
+      Offset(cx - 36, cy + 2),
+      Offset(cx - 42, cy - 8),
+    ];
+
+    final index = [
+      Offset(cx - 10, cy + 6),
+      Offset(cx - 14, cy - 14),
+      Offset(cx - 16, cy - 30),
+      Offset(cx - 18, cy - 44),
+    ];
+
+    final middle = [
+      Offset(cx + 2, cy + 4),
+      Offset(cx + 2, cy - 18),
+      Offset(cx + 2, cy - 36),
+      Offset(cx + 2, cy - 50),
+    ];
+
+    final ring = [
+      Offset(cx + 14, cy + 8),
+      Offset(cx + 16, cy - 12),
+      Offset(cx + 18, cy - 28),
+      Offset(cx + 20, cy - 42),
+    ];
+
+    final pinky = [
+      Offset(cx + 26, cy + 14),
+      Offset(cx + 30, cy - 4),
+      Offset(cx + 34, cy - 18),
+      Offset(cx + 36, cy - 30),
+    ];
+
+    // Connect hand bones
+    void drawChain(Offset start, List<Offset> points) {
+      Offset prev = start;
+      for (final p in points) {
+        canvas.drawLine(prev, p, linePaint);
+        prev = p;
+      }
+    }
+
+    // Palm connections
+    canvas.drawLine(wrist, thumb[0], linePaint);
+    canvas.drawLine(wrist, index[0], linePaint);
+    canvas.drawLine(wrist, middle[0], linePaint);
+    canvas.drawLine(wrist, ring[0], linePaint);
+    canvas.drawLine(wrist, pinky[0], linePaint);
+
+    canvas.drawLine(index[0], middle[0], linePaint);
+    canvas.drawLine(middle[0], ring[0], linePaint);
+    canvas.drawLine(ring[0], pinky[0], linePaint);
+
+    // Finger chains
+    drawChain(thumb[0], thumb);
+    drawChain(index[0], index);
+    drawChain(middle[0], middle);
+    drawChain(ring[0], ring);
+    drawChain(pinky[0], pinky);
+
+    // Draw Joint Dots
+    final allPoints = [wrist, ...thumb, ...index, ...middle, ...ring, ...pinky];
+    for (final pt in allPoints) {
+      canvas.drawCircle(pt, 5.0, glowPaint);
+      canvas.drawCircle(pt, 2.5, jointPaint);
+    }
+
+    // Upper Body Pose Skeleton (Shoulders & Head Silhouette)
+    final head = Offset(w * 0.48, h * 0.22 + dy * 0.5);
+    final leftShoulder = Offset(w * 0.30, h * 0.42 + dy * 0.7);
+    final rightShoulder = Offset(w * 0.68, h * 0.42 + dy * 0.7);
+
+    final poseLinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.22)
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(head, Offset(w * 0.49, h * 0.35 + dy * 0.6), poseLinePaint);
+    canvas.drawLine(leftShoulder, rightShoulder, poseLinePaint);
+    canvas.drawLine(leftShoulder, Offset(w * 0.24, h * 0.68), poseLinePaint);
+    canvas.drawLine(rightShoulder, wrist, poseLinePaint);
+
+    canvas.drawCircle(head, 3.5, jointPaint);
+    canvas.drawCircle(leftShoulder, 3.0, jointPaint);
+    canvas.drawCircle(rightShoulder, 3.0, jointPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BisindoLandmarkPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+// ==========================================
+// VECTOR QR WIDGET
+// ==========================================
 class TautQrWidget extends StatelessWidget {
   final String code;
   final double size;
@@ -1534,4 +1835,3 @@ class _TautQrPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

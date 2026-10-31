@@ -29,7 +29,7 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: StatusBadge.active(label: 'Android Share Sheet â€¢ Siap Kirim'),
+              child: StatusBadge.active(label: 'Android Share Sheet - Siap Kirim'),
             ),
             const SizedBox(height: 20),
             Text(

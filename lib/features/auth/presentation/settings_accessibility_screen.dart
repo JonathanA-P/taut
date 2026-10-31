@@ -114,21 +114,21 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                                 DropdownMenuItem(
                                   value: 16.0,
                                   child: Text(
-                                    'Standar Â· 16px',
+                                    'Standar - 16px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
                                 DropdownMenuItem(
                                   value: 19.0,
                                   child: Text(
-                                    'Besar Â· 19px',
+                                    'Besar - 19px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
                                 DropdownMenuItem(
                                   value: 22.0,
                                   child: Text(
-                                    'Sangat besar Â· 22px',
+                                    'Sangat besar - 22px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),

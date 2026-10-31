@@ -147,33 +147,81 @@ class TautAppState extends ChangeNotifier {
   String? _roomCode;
   String? get roomCode => _roomCode;
 
+  String _roomName = 'Ruang Kelas Adriel';
+  String get roomName => _roomName;
+
+  bool _isAutoAccept = false;
+  bool get isAutoAccept => _isAutoAccept;
+
   final List<String> _roomParticipants = [];
   List<String> get roomParticipants => List.unmodifiable(_roomParticipants);
 
   final List<String> _roomJoinRequests = [];
   List<String> get roomJoinRequests => List.unmodifiable(_roomJoinRequests);
 
-  void createRoom() {
+  void setRoomName(String name) {
+    _roomName = name.trim().isEmpty ? 'Ruang Kelas $_userName' : name.trim();
+    notifyListeners();
+  }
+
+  void setAutoAccept(bool auto) {
+    _isAutoAccept = auto;
+    notifyListeners();
+  }
+
+  void createRoom({String? name, bool? autoAccept}) {
     _roomCode = 'TAUT-8921';
+    if (name != null && name.trim().isNotEmpty) {
+      _roomName = name.trim();
+    } else {
+      _roomName = 'Ruang Kelas $_userName';
+    }
+    if (autoAccept != null) {
+      _isAutoAccept = autoAccept;
+    }
     _roomParticipants.clear();
-    _roomParticipants.add(_userName);
+    _roomParticipants.add('$_userName (Host)');
     _roomJoinRequests.clear();
-    _roomJoinRequests.addAll(['Nadia (Teman)', 'Raka (Teman)']);
     notifyListeners();
   }
 
   void startRoomSession() {
     _isRoomActive = true;
+    if (_isAutoAccept) {
+      // Auto accept participants
+      _roomParticipants.addAll(['Nadia (Teman)', 'Raka (Teman)']);
+      _roomJoinRequests.clear();
+    } else {
+      // Pending approval for host
+      _roomJoinRequests.clear();
+      _roomJoinRequests.addAll(['Nadia (Teman)', 'Raka (Teman)']);
+    }
     notifyListeners();
   }
 
-  void joinRoomByCode(String code) {
-    _roomCode = code.toUpperCase().trim();
-    _isRoomActive = true;
-    if (!_roomParticipants.contains(_userName)) {
-      _roomParticipants.add(_userName);
+  bool joinRoomByCode(String code, {String? participantName}) {
+    final cleanCode = code.toUpperCase().trim();
+    final name = participantName ?? 'Tamu_${cleanCode.replaceAll('-', '')}';
+    
+    if (_isAutoAccept || !_isRoomActive) {
+      _roomCode = cleanCode;
+      _isRoomActive = true;
+      if (!_roomParticipants.contains(_userName)) {
+        _roomParticipants.add(_userName);
+      }
+      if (!_roomParticipants.contains(name) && name != _userName) {
+        _roomParticipants.add(name);
+      }
+      notifyListeners();
+      return true; // langsung bergabung
+    } else {
+      // Perlu persetujuan host
+      if (!_roomJoinRequests.contains(name) && !_roomParticipants.contains(name)) {
+        _roomJoinRequests.add(name);
+      }
+      notifyListeners();
+      return false; // menunggu persetujuan
     }
-    notifyListeners();
   }
 
   void acceptRoomParticipant(String name) {

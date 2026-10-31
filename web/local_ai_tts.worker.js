@@ -162,3 +162,4 @@ self.onmessage = async (e) => {
       break;
   }
 };
+

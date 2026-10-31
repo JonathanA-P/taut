@@ -63,7 +63,7 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             Row(
               children: [
                 StatusBadge.category(
-                  _isCameraActive ? 'Kamera Aktif â€¢ Deteksi 30 FPS' : 'Kamera Siap',
+                  _isCameraActive ? 'Kamera Aktif - Deteksi 30 FPS' : 'Kamera Siap',
                   bg: _isCameraActive ? AppColors.successBg : AppColors.lightGreen,
                   fg: _isCameraActive ? AppColors.success : AppColors.darkGreen,
                 ),

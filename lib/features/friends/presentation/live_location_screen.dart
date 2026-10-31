@@ -137,7 +137,7 @@ class LiveLocationScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
-                'Peta ilustrasi Â· bukan posisi nyata',
+                'Peta ilustrasi - bukan posisi nyata',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,

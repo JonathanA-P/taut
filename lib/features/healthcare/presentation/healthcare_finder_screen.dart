@@ -94,7 +94,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                     controller: _searchController,
                     onChanged: (val) => state.setFacilitySearchQuery(val),
                     decoration: InputDecoration(
-                      hintText: 'Cari nama fasilitasâ€¦',
+                      hintText: 'Cari nama fasilitas...',
                       prefixIcon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.textSecondary,
@@ -300,7 +300,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                 ],
               ),
               child: const Text(
-                'Peta ilustrasi Â· bukan posisi nyata',
+                'Peta ilustrasi - bukan posisi nyata',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -386,7 +386,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        '${item.distance} Â· jarak contoh',
+                        '${item.distance} - jarak contoh',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,

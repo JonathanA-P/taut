@@ -60,7 +60,7 @@ class HomePage extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               const Text(
-                                'âœ¦',
+                                '*',
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Color(0xFF84A078),
@@ -491,7 +491,7 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${state.sessions.length} penerima Â· simulasi lokal',
+            '${state.sessions.length} penerima - simulasi lokal',
             style: const TextStyle(fontSize: 12.5, color: Color(0xFF4C6551)),
           ),
           const SizedBox(height: 12),
