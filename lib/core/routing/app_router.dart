@@ -63,11 +63,9 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
 
       case AppConstants.routeLogin:
-      case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
 
       case AppConstants.routeRegister:
-      case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
 
       case AppConstants.routeHomeDashboard:

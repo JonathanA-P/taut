@@ -7,7 +7,9 @@ import 'package:taut/core/theme/app_theme.dart';
 /// Routing didelegasikan ke [AppRouter] supaya setiap fitur baru cukup
 /// menambahkan satu case di router, tanpa mengubah file ini.
 class TautApp extends StatelessWidget {
-  const TautApp({super.key});
+  final String? initialRoute;
+
+  const TautApp({super.key, this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +17,7 @@ class TautApp extends StatelessWidget {
       title: 'TAUT',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppRoutes.home,
+      initialRoute: initialRoute ?? AppRoutes.home,
       onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
