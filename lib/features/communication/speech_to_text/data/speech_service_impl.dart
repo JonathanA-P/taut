@@ -11,7 +11,7 @@ import '../domain/speech_state.dart';
 /// Production implementation of [SpeechService] using `speech_to_text` plugin.
 /// Designed for Teman Tuli accessibility in TAUT.
 /// Supports continuous listening, auto-recovery across speech pauses,
-/// and real-time streaming in Indonesian (`id_ID`).
+/// dynamic Indonesian locale matching, and real-time streaming.
 /// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechServiceImpl implements SpeechService {
   final SpeechToText _speechToText;
@@ -20,9 +20,10 @@ class SpeechServiceImpl implements SpeechService {
 
   bool _isAvailable = false;
   bool _isContinuousActive = false;
-  bool _isInitializing = false;
+  Completer<bool>? _initCompleter;
   void Function(String text, bool isFinal)? _currentOnResult;
   String _currentLanguage = 'id_ID';
+  String? _resolvedIndonesianLocaleId;
 
   SpeechServiceImpl({SpeechToText? speechToText})
     : _speechToText = speechToText ?? SpeechToText() {
@@ -34,9 +35,13 @@ class SpeechServiceImpl implements SpeechService {
   @override
   Future<bool> initialize() async {
     if (_isAvailable) return true;
-    if (_isInitializing) return false;
 
-    _isInitializing = true;
+    // Masalah 1 Fix: Guard against race condition with Completer
+    if (_initCompleter != null) {
+      return _initCompleter!.future;
+    }
+
+    _initCompleter = Completer<bool>();
     try {
       _isAvailable = await _speechToText.initialize(
         onError: _handleError,
@@ -44,12 +49,18 @@ class SpeechServiceImpl implements SpeechService {
         debugLogging: kDebugMode,
       );
 
+      if (_isAvailable) {
+        // Masalah 2 Fix: Dynamically resolve verified Indonesian locale ID from device
+        await _resolveIndonesianLocale();
+      }
+
       _stateController.add(
         SpeechRecognitionState(
           status: _isAvailable ? SpeechStatus.ready : SpeechStatus.error,
           errorMessage: _isAvailable ? null : 'Fitur pengenalan suara tidak tersedia atau izin mikrofon belum diberikan.',
         ),
       );
+      _initCompleter!.complete(_isAvailable);
       return _isAvailable;
     } catch (e) {
       debugPrint('Speech recognition initialization error: $e');
@@ -60,9 +71,38 @@ class SpeechServiceImpl implements SpeechService {
           errorMessage: e.toString(),
         ),
       );
+      _initCompleter!.complete(false);
       return false;
     } finally {
-      _isInitializing = false;
+      _initCompleter = null;
+    }
+  }
+
+  Future<void> _resolveIndonesianLocale() async {
+    try {
+      final availableLocales = await _speechToText.locales();
+      debugPrint('Device speech locales count: ${availableLocales.length}');
+
+      for (final loc in availableLocales) {
+        final id = loc.localeId.toLowerCase();
+        // Android may register Indonesian as id_ID, id-ID, in_ID, or in-ID
+        if (id == 'id_id' ||
+            id == 'id-id' ||
+            id.startsWith('id_') ||
+            id.startsWith('id-') ||
+            id == 'in_id' ||
+            id == 'in-id' ||
+            id.startsWith('in_') ||
+            id.startsWith('in-')) {
+          _resolvedIndonesianLocaleId = loc.localeId;
+          debugPrint(
+            'Matched Indonesian speech locale: $_resolvedIndonesianLocaleId (${loc.name})',
+          );
+          break;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error inspecting available device locales: $e');
     }
   }
 
@@ -102,7 +142,7 @@ class SpeechServiceImpl implements SpeechService {
 
   void _scheduleAutoRestart() {
     if (!_isContinuousActive) return;
-    Future.delayed(const Duration(milliseconds: 250), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (_isContinuousActive && !_speechToText.isListening) {
         _startListeningInternal();
       }
@@ -116,9 +156,17 @@ class SpeechServiceImpl implements SpeechService {
     }
 
     try {
-      final localeId = _currentLanguage.replaceAll('-', '_');
-      await _speechToText.listen(
+      // Masalah 2 Fix: Prioritize verified resolved Indonesian locale ID
+      final localeId =
+          _resolvedIndonesianLocaleId ?? _currentLanguage.replaceAll('-', '_');
+
+      debugPrint('SpeechToText listen() using localeId: $localeId');
+
+      final started = await _speechToText.listen(
         onResult: (SpeechRecognitionResult result) {
+          debugPrint(
+            'Speech words: "${result.recognizedWords}", isFinal: ${result.finalResult}',
+          );
           _stateController.add(
             SpeechRecognitionState(
               status: SpeechStatus.listening,
@@ -137,8 +185,25 @@ class SpeechServiceImpl implements SpeechService {
           cancelOnError: false,
         ),
       );
+
+      // Masalah 3 Fix: Handle silent listen() rejection
+      if (started == false) {
+        debugPrint('SpeechToText.listen() returned false');
+        _stateController.add(
+          const SpeechRecognitionState(
+            status: SpeechStatus.error,
+            errorMessage: 'Gagal memulai perekaman audio. Periksa izin mikrofon perangkat.',
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error invoking speech listen: $e');
+      _stateController.add(
+        SpeechRecognitionState(
+          status: SpeechStatus.error,
+          errorMessage: 'Gagal mengaktifkan mikrofon: $e',
+        ),
+      );
     }
   }
 
@@ -152,7 +217,11 @@ class SpeechServiceImpl implements SpeechService {
     _currentLanguage = language;
 
     if (!_isAvailable) {
-      await initialize();
+      final ready = await initialize();
+      if (!ready) {
+        _isContinuousActive = false;
+        return;
+      }
     }
 
     await _startListeningInternal();

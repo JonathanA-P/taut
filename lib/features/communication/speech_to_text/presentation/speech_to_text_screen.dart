@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -6,6 +8,7 @@ import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
 import '../data/speech_service_impl.dart';
 import '../domain/speech_service.dart';
+import '../domain/speech_state.dart';
 
 /// Production Live Speech-to-Text screen for Teman Tuli accessibility.
 /// Adopts the Dribbble-inspired healthcare aesthetic & sage green identity:
@@ -15,6 +18,7 @@ import '../domain/speech_service.dart';
 /// - Large, accessible microphone control
 /// - One-tap "Bersihkan Layar" (Clear Screen) button
 /// - Fast manual typing fallback for noisy environments
+/// - Reactive synchronization with native speech recognition engine status stream.
 /// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechToTextScreen extends StatefulWidget {
   final SpeechService? speechService;
@@ -30,8 +34,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _manualInputController = TextEditingController();
 
+  StreamSubscription<SpeechRecognitionState>? _statusSubscription;
   bool _isListening = false;
   bool _isManualInputVisible = false;
+  String? _errorMessage;
 
   /// Accumulated committed sentences from previous speech segments.
   String _accumulatedText = '';
@@ -43,11 +49,37 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   void initState() {
     super.initState();
     _speechService = widget.speechService ?? SpeechServiceImpl();
-    _speechService.initialize();
+    _initSpeechPipeline();
+  }
+
+  void _initSpeechPipeline() {
+    // Masalah 4 Fix: Sync UI state reactively with engine's statusStream
+    _statusSubscription = _speechService.statusStream.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        if (state.status == SpeechStatus.listening) {
+          _isListening = true;
+          _errorMessage = null;
+        } else if (state.status == SpeechStatus.ready ||
+            state.status == SpeechStatus.uninitialized) {
+          _isListening = false;
+        } else if (state.status == SpeechStatus.error) {
+          _isListening = false;
+          _errorMessage = state.errorMessage;
+        }
+      });
+    });
+
+    // Masalah 1 Fix: Safe async initialization handled with Completer in service
+    _speechService.initialize().catchError((e) {
+      debugPrint('Screen initialization catchError: $e');
+      return false;
+    });
   }
 
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     _speechService.dispose();
     _scrollController.dispose();
     _manualInputController.dispose();
@@ -70,6 +102,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     if (!mounted) return;
 
     setState(() {
+      _errorMessage = null;
       if (isFinal) {
         final trimmed = text.trim();
         if (trimmed.isNotEmpty) {
@@ -89,6 +122,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   }
 
   Future<void> _toggleListening() async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     if (_isListening) {
       await _speechService.stopListening();
       if (mounted) {
@@ -105,10 +142,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         });
       }
     } else {
-      setState(() {
-        _isListening = true;
-      });
-
+      // Masalah 4 Fix: Engine statusStream will drive _isListening
       await _speechService.startListening(
         onResult: _onSpeechResult,
         language: 'id_ID',
@@ -165,7 +199,9 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
           IconButton(
             tooltip: 'Ketik Manual',
             icon: Icon(
-              _isManualInputVisible ? Icons.keyboard_hide_rounded : Icons.keyboard_rounded,
+              _isManualInputVisible
+                  ? Icons.keyboard_hide_rounded
+                  : Icons.keyboard_rounded,
               color: AppColors.darkGreen,
             ),
             onPressed: () {
@@ -180,16 +216,22 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Status Header
+            // Top Status Banner: Guides Deaf user on microphone and engine state
             _buildStatusHeader(),
+
+            // Error notice banner if recognition encounters an issue
+            if (_errorMessage != null) _buildErrorNotice(),
 
             // Manual Typing Input (collapsible)
             if (_isManualInputVisible) _buildManualInputField(),
 
-            // Spacious Transcription Area
+            // Spacious Transcription Area / Main Live Caption Display Area
             Expanded(
               child: AppCard(
-                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 padding: const EdgeInsets.all(20.0),
                 backgroundColor: AppColors.white,
                 borderColor: _isListening
@@ -308,7 +350,9 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                       : 'Ketuk tombol di bawah untuk mulai mendengarkan',
                   style: TextStyle(
                     fontSize: 11.5,
-                    color: _isListening ? AppColors.onAccentStt : AppColors.textSecondary,
+                    color: _isListening
+                        ? AppColors.onAccentStt
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -318,6 +362,49 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
             'id-ID',
             bg: _isListening ? AppColors.white : AppColors.sageGreen,
             fg: AppColors.darkGreen,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorNotice() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2), // Red 50
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF87171)), // Red 400
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: Color(0xFFB91C1C),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF991B1B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, size: 16),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            color: const Color(0xFF991B1B),
+            onPressed: () {
+              setState(() {
+                _errorMessage = null;
+              });
+            },
           ),
         ],
       ),
@@ -346,9 +433,15 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                 focusedBorder: InputBorder.none,
                 filled: false,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
               ),
-              style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.textPrimary,
+              ),
               onSubmitted: (_) => _submitManualText(),
             ),
           ),
