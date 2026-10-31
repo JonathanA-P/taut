@@ -5,7 +5,7 @@ import 'package:camera/camera.dart';
 /// High-performance, zero-allocation image converter for TAUT on-device AI.
 /// Converts [CameraImage] (Android YUV420 & iOS BGRA8888) directly into
 /// normalized RGB Float32 tensor buffer (320x320x3, [-1.0, 1.0]) with
-/// center-square cropping to preserve hand sign aspect ratio.
+/// center-square cropping and sensor orientation handling to preserve hand sign aspect ratio.
 class CameraImageConverter {
   CameraImageConverter._();
 
@@ -15,19 +15,20 @@ class CameraImageConverter {
 
   /// Converts [cameraImage] to a contiguous [Float32List] buffer.
   /// Set [isFrontCamera] to true to mirror coordinates horizontally.
+  /// [sensorOrientation] handles Android/iOS portrait/landscape rotation (0, 90, 180, 270).
   static Float32List convertToRgbTensor(
     CameraImage cameraImage, {
     bool isFrontCamera = false,
+    int sensorOrientation = 0,
   }) {
     final tensor = Float32List(tensorSize);
 
     if (cameraImage.format.group == ImageFormatGroup.yuv420 ||
         cameraImage.format.group == ImageFormatGroup.nv21) {
-      _convertYuv420(cameraImage, tensor, isFrontCamera);
+      _convertYuv420(cameraImage, tensor, isFrontCamera, sensorOrientation);
     } else if (cameraImage.format.group == ImageFormatGroup.bgra8888) {
-      _convertBgra8888(cameraImage, tensor, isFrontCamera);
+      _convertBgra8888(cameraImage, tensor, isFrontCamera, sensorOrientation);
     } else {
-      // Fallback for uncommon plane formats
       _convertFallback(cameraImage, tensor, isFrontCamera);
     }
 
@@ -39,6 +40,7 @@ class CameraImageConverter {
     CameraImage image,
     Float32List outTensor,
     bool isFrontCamera,
+    int sensorOrientation,
   ) {
     final srcWidth = image.width;
     final srcHeight = image.height;
@@ -60,24 +62,53 @@ class CameraImageConverter {
     final uRowStride = uPlane.bytesPerRow;
     final vRowStride = vPlane.bytesPerRow;
     final uvPixelStride = uPlane.bytesPerPixel ?? 1;
+    final vPixelStride = vPlane.bytesPerPixel ?? uvPixelStride;
 
     int tensorIdx = 0;
 
     for (int y = 0; y < targetHeight; y++) {
-      final srcY = startY + (y * cropSize ~/ targetHeight);
-      final yRowOffset = srcY * yRowStride;
-      final uvRowOffset = (srcY >> 1) * uRowStride;
-      final vRowOffset = (srcY >> 1) * vRowStride;
+      final double v = y / (targetHeight - 1);
 
       for (int x = 0; x < targetWidth; x++) {
-        final mappedX = isFrontCamera ? (targetWidth - 1 - x) : x;
-        final srcX = startX + (mappedX * cropSize ~/ targetWidth);
+        double u = x / (targetWidth - 1);
+        if (isFrontCamera) {
+          u = 1.0 - u;
+        }
 
-        final yVal = yBytes[yRowOffset + srcX];
-        final uvCol = (srcX >> 1) * uvPixelStride;
+        // Map screen coordinates (u, v) to sensor coordinates (nx, ny)
+        double nx, ny;
+        switch (sensorOrientation) {
+          case 90:
+            nx = v;
+            ny = 1.0 - u;
+            break;
+          case 270:
+            nx = 1.0 - v;
+            ny = u;
+            break;
+          case 180:
+            nx = 1.0 - u;
+            ny = 1.0 - v;
+            break;
+          case 0:
+          default:
+            nx = u;
+            ny = v;
+            break;
+        }
 
-        final uVal = uBytes[uvRowOffset + uvCol];
-        final vVal = vBytes[vRowOffset + uvCol];
+        final srcX = (startX + nx * (cropSize - 1)).toInt().clamp(0, srcWidth - 1);
+        final srcY = (startY + ny * (cropSize - 1)).toInt().clamp(0, srcHeight - 1);
+
+        final yIdx = srcY * yRowStride + srcX;
+        final uvCol = (srcX >> 1);
+        final uvRow = (srcY >> 1);
+        final uIdx = uvRow * uRowStride + uvCol * uvPixelStride;
+        final vIdx = uvRow * vRowStride + uvCol * vPixelStride;
+
+        final yVal = (yIdx >= 0 && yIdx < yBytes.length) ? yBytes[yIdx] : 128;
+        final uVal = (uIdx >= 0 && uIdx < uBytes.length) ? uBytes[uIdx] : 128;
+        final vVal = (vIdx >= 0 && vIdx < vBytes.length) ? vBytes[vIdx] : 128;
 
         // Standard ITU-R BT.601 YUV to RGB conversion
         final c = yVal - 16;
@@ -118,6 +149,7 @@ class CameraImageConverter {
     CameraImage image,
     Float32List outTensor,
     bool isFrontCamera,
+    int sensorOrientation,
   ) {
     final srcWidth = image.width;
     final srcHeight = image.height;
@@ -133,17 +165,42 @@ class CameraImageConverter {
     int tensorIdx = 0;
 
     for (int y = 0; y < targetHeight; y++) {
-      final srcY = startY + (y * cropSize ~/ targetHeight);
-      final rowOffset = srcY * bytesPerRow;
+      final double v = y / (targetHeight - 1);
 
       for (int x = 0; x < targetWidth; x++) {
-        final mappedX = isFrontCamera ? (targetWidth - 1 - x) : x;
-        final srcX = startX + (mappedX * cropSize ~/ targetWidth);
-        final pixelOffset = rowOffset + (srcX * 4);
+        double u = x / (targetWidth - 1);
+        if (isFrontCamera) {
+          u = 1.0 - u;
+        }
 
-        final b = bytes[pixelOffset];
-        final g = bytes[pixelOffset + 1];
-        final r = bytes[pixelOffset + 2];
+        double nx, ny;
+        switch (sensorOrientation) {
+          case 90:
+            nx = v;
+            ny = 1.0 - u;
+            break;
+          case 270:
+            nx = 1.0 - v;
+            ny = u;
+            break;
+          case 180:
+            nx = 1.0 - u;
+            ny = 1.0 - v;
+            break;
+          case 0:
+          default:
+            nx = u;
+            ny = v;
+            break;
+        }
+
+        final srcX = (startX + nx * (cropSize - 1)).toInt().clamp(0, srcWidth - 1);
+        final srcY = (startY + ny * (cropSize - 1)).toInt().clamp(0, srcHeight - 1);
+        final pixelOffset = srcY * bytesPerRow + (srcX * 4);
+
+        final b = (pixelOffset >= 0 && pixelOffset < bytes.length) ? bytes[pixelOffset] : 128;
+        final g = (pixelOffset + 1 >= 0 && pixelOffset + 1 < bytes.length) ? bytes[pixelOffset + 1] : 128;
+        final r = (pixelOffset + 2 >= 0 && pixelOffset + 2 < bytes.length) ? bytes[pixelOffset + 2] : 128;
 
         outTensor[tensorIdx++] = (r - 127.5) / 127.5;
         outTensor[tensorIdx++] = (g - 127.5) / 127.5;
@@ -170,7 +227,7 @@ class CameraImageConverter {
       for (int x = 0; x < targetWidth; x++) {
         final mappedX = isFrontCamera ? (targetWidth - 1 - x) : x;
         final srcX = (mappedX * srcWidth ~/ targetWidth);
-        final val = (rowOffset + srcX < bytes.length)
+        final val = (rowOffset + srcX >= 0 && rowOffset + srcX < bytes.length)
             ? bytes[rowOffset + srcX]
             : 128;
         final norm = (val - 127.5) / 127.5;

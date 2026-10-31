@@ -128,6 +128,18 @@ class BisindoLabels {
     return 'Label-$classIndex';
   }
 
+  /// Resolves the spoken form of a label for text-to-speech.
+  /// Converts numeric digits ('1', '2'...) to natural Indonesian words ('Satu', 'Dua'...).
+  static String resolveSpokenLabel(String label, BisindoMode mode) {
+    if (mode == BisindoMode.angka) {
+      final idx = angka.indexOf(label);
+      if (idx >= 0 && idx < angkaSpoken.length) {
+        return angkaSpoken[idx];
+      }
+    }
+    return label;
+  }
+
   /// Asynchronously loads labels from asset file if available,
   /// falling back to built-in constants.
   static Future<List<String>> loadLabelsFromAsset(BisindoMode mode) async {
@@ -153,4 +165,3 @@ class BisindoLabels {
     return getLabelsForMode(mode);
   }
 }
-

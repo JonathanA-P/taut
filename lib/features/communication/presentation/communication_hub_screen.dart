@@ -194,6 +194,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
           _detectorService?.processCameraImage(
             image,
             isFrontCamera: _isFrontCamera,
+            sensorOrientation: camera.sensorOrientation,
           );
         });
         setState(() {

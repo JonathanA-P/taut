@@ -81,6 +81,7 @@ class MockDetectorService implements BisindoDetectorService {
   Future<BisindoDetectionEvent?> processCameraImage(
     CameraImage cameraImage, {
     bool isFrontCamera = false,
+    int sensorOrientation = 0,
   }) async {
     return null;
   }
@@ -174,6 +175,15 @@ void main() {
       expect(BisindoLabels.resolveLabel(22, BisindoMode.kata), 'Ingin');
       expect(BisindoLabels.resolveLabel(0, BisindoMode.abjad), 'A');
       expect(BisindoLabels.resolveLabel(25, BisindoMode.abjad), 'Z');
+    });
+
+test('Resolves spoken label for natural TTS speech', () {
+      expect(BisindoLabels.resolveSpokenLabel('0', BisindoMode.angka), 'Nol');
+      expect(BisindoLabels.resolveSpokenLabel('1', BisindoMode.angka), 'Satu');
+      expect(BisindoLabels.resolveSpokenLabel('5', BisindoMode.angka), 'Lima');
+      expect(BisindoLabels.resolveSpokenLabel('10', BisindoMode.angka), 'Sepuluh');
+      expect(BisindoLabels.resolveSpokenLabel('Terima Kasih', BisindoMode.kata), 'Terima Kasih');
+      expect(BisindoLabels.resolveSpokenLabel('A', BisindoMode.abjad), 'A');
     });
   });
 
@@ -289,6 +299,77 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Permisi mau tanya jalan'), findsOneWidget);
+    });
+
+testWidgets('Auto-speaks gesture tokens in Kata, Angka, and Abjad modes', (
+      WidgetTester tester,
+    ) async {
+      final mockPermission = MockPermissionService();
+      final mockTts = MockTtsService();
+      final mockDetector = MockDetectorService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MotionToSoundScreen(
+            permissionService: mockPermission,
+            detectorService: mockDetector,
+            ttsService: mockTts,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Ensure "Suara Otomatis" switch is present and on
+      expect(find.text('Suara Otomatis'), findsOneWidget);
+
+      // Emit validated gesture token in Kata mode
+      mockDetector._controller.add(
+        BisindoDetectionEvent(
+          result: GestureResult.recognized(label: 'Terima Kasih', confidence: 0.92),
+          mode: BisindoMode.kata,
+          isValidatedToken: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(mockTts.spokenTexts, contains('Terima Kasih'));
+
+      // Switch to Angka mode
+      final angkaTab = find.text('Angka 0–10');
+      await tester.ensureVisible(angkaTab);
+      await tester.tap(angkaTab);
+      await tester.pumpAndSettle();
+
+      // Emit validated gesture token in Angka mode
+      mockDetector._controller.add(
+        BisindoDetectionEvent(
+          result: GestureResult.recognized(label: '5', confidence: 0.88),
+          mode: BisindoMode.angka,
+          isValidatedToken: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Must speak natural Indonesian number word "Lima"
+      expect(mockTts.spokenTexts, contains('Lima'));
+
+      // Switch to Abjad mode
+      final abjadTab = find.text('Abjad A–Z');
+      await tester.ensureVisible(abjadTab);
+      await tester.tap(abjadTab);
+      await tester.pumpAndSettle();
+
+      // Emit validated gesture token in Abjad mode
+      mockDetector._controller.add(
+        BisindoDetectionEvent(
+          result: GestureResult.recognized(label: 'B', confidence: 0.95),
+          mode: BisindoMode.abjad,
+          isValidatedToken: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(mockTts.spokenTexts, contains('B'));
     });
   });
 }

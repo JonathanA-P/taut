@@ -57,7 +57,7 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
   AppPermissionStatus _cameraPermission = AppPermissionStatus.unknown;
 
   BisindoMode _activeMode = BisindoMode.kata;
-  bool _isAutoSpeakKata = true;
+  bool _isAutoSpeak = true;
 
   // Sentence Builder State
   String _sentenceBuffer = '';
@@ -245,7 +245,11 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
 
       await controller.startImageStream((CameraImage image) {
         final isFront = camera.lensDirection == CameraLensDirection.front;
-        _detectorService.processCameraImage(image, isFrontCamera: isFront);
+        _detectorService.processCameraImage(
+          image,
+          isFrontCamera: isFront,
+          sensorOrientation: camera.sensorOrientation,
+        );
       });
 
       setState(() {
@@ -332,13 +336,23 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
           : ' ';
       _sentenceBuffer += '$space$token ';
 
-      // Auto-speak if enabled
-      if (_isAutoSpeakKata) {
+      // Auto-speak gesture word
+      if (_isAutoSpeak) {
         _ttsService.speakText(token);
       }
-    } else {
-      // In Abjad & Angka Mode: Append single character/digit directly
+    } else if (_activeMode == BisindoMode.angka) {
+      // In Angka Mode: Append single digit and speak natural Indonesian digit word
       _sentenceBuffer += token;
+      if (_isAutoSpeak) {
+        final spoken = BisindoLabels.resolveSpokenLabel(token, _activeMode);
+        _ttsService.speakText(spoken);
+      }
+    } else {
+      // In Abjad Mode: Append letter and speak letter aloud
+      _sentenceBuffer += token;
+      if (_isAutoSpeak) {
+        _ttsService.speakText(token);
+      }
     }
   }
 
@@ -962,22 +976,21 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const Spacer(),
-              if (_activeMode == BisindoMode.kata)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Suara Otomatis',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    Switch(
-                      value: _isAutoSpeakKata,
-                      onChanged: (val) =>
-                          setState(() => _isAutoSpeakKata = val),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Suara Otomatis',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  Switch(
+                    value: _isAutoSpeak,
+                    onChanged: (val) =>
+                        setState(() => _isAutoSpeak = val),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 8),

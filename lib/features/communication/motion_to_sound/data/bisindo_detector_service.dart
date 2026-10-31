@@ -61,8 +61,9 @@ class BisindoDetectorService implements BisindoRecognitionService {
   static const int minFrameIntervalMs = 280;
 
   // Confidence & Stability criteria
-  static const double confidenceThreshold = 0.65;
-  static const int requiredConsecutiveCycles = 2; // 2-3 consecutive cycles
+  // 0.48 threshold gives optimal responsiveness for mobile hand signs
+  static const double confidenceThreshold = 0.48;
+  static const int requiredConsecutiveCycles = 2; // 2 consecutive cycles for stability
   static const int tokenCooldownMs =
       1200; // Cooldown before repeating same token
   static const int unrecognizedTimeoutMs =
@@ -114,9 +115,11 @@ class BisindoDetectorService implements BisindoRecognitionService {
 
   /// Processes live camera frame from [CameraImage].
   /// Enforces frame throttling (3-4 FPS) and on-device privacy guarantee.
+  /// [sensorOrientation] accounts for Android/iOS device rotation.
   Future<BisindoDetectionEvent?> processCameraImage(
     CameraImage cameraImage, {
     bool isFrontCamera = false,
+    int sensorOrientation = 0,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -133,10 +136,11 @@ class BisindoDetectorService implements BisindoRecognitionService {
     _lastInferenceTimeMs = now;
 
     try {
-      // 2. Fast RGB conversion to 320x320 Float32 tensor
+      // 2. Fast RGB conversion to 320x320 Float32 tensor with sensor orientation
       final inputTensor = CameraImageConverter.convertToRgbTensor(
         cameraImage,
         isFrontCamera: isFrontCamera,
+        sensorOrientation: sensorOrientation,
       );
 
       // 3. Run inference with dynamic tensor shape checking
@@ -188,32 +192,69 @@ class BisindoDetectorService implements BisindoRecognitionService {
     List<Tensor> outputTensors,
     Float32List inputTensor,
   ) {
-    int boxesIdx = 0;
-    int classesIdx = 1;
-    int scoresIdx = 2;
-    int numDetectionsIdx = 3;
+    int scoresIdx = -1;
+    int boxesIdx = -1;
+    int numDetectionsIdx = -1;
+    int classesIdx = -1;
 
+    // 1. Unambiguous shape-based resolution
     for (int i = 0; i < outputTensors.length; i++) {
-      final name = outputTensors[i].name.toLowerCase();
       final shape = outputTensors[i].shape;
-
-      if (name.contains(':0') ||
-          name.contains('box') ||
-          name.contains('loc') ||
-          (shape.length == 3 && shape[2] == 4)) {
+      if (shape.length == 3 && shape[2] == 4) {
         boxesIdx = i;
-      } else if (name.contains(':1') ||
-          name.contains('class') ||
-          name.contains('cat')) {
-        classesIdx = i;
-      } else if (name.contains(':2') || name.contains('score')) {
-        scoresIdx = i;
-      } else if (name.contains(':3') ||
-          name.contains('num') ||
-          shape.length == 1) {
+      } else if (shape.length == 1 && shape[0] == 1) {
         numDetectionsIdx = i;
       }
     }
+
+    // 2. Semantic name resolution & TF model conventions
+    for (int i = 0; i < outputTensors.length; i++) {
+      final name = outputTensors[i].name;
+      final lower = name.toLowerCase();
+
+      if (lower.contains('box') || lower.contains('loc')) {
+        boxesIdx = i;
+      } else if (lower.contains('class') || lower.contains('cat')) {
+        classesIdx = i;
+      } else if (lower.contains('score')) {
+        scoresIdx = i;
+      } else if (lower.contains('num')) {
+        numDetectionsIdx = i;
+      } else if (name.contains('StatefulPartitionedCall')) {
+        // TF2 SavedModel Object Detection API output mapping:
+        // StatefulPartitionedCall:1 -> detection_scores
+        // StatefulPartitionedCall:3 -> detection_boxes
+        // StatefulPartitionedCall:0 -> num_detections
+        // StatefulPartitionedCall:2 -> detection_classes
+        if (name.contains(':1')) {
+          scoresIdx = i;
+        } else if (name.contains(':3')) {
+          boxesIdx = i;
+        } else if (name.contains(':0')) {
+          numDetectionsIdx = i;
+        } else if (name.contains(':2')) {
+          classesIdx = i;
+        }
+      } else if (lower.contains('postprocess')) {
+        // TF1 TFLite_Detection_PostProcess mapping:
+        // :0 -> boxes, :1 -> classes, :2 -> scores, :3 -> num
+        if (name.contains(':0')) {
+          boxesIdx = i;
+        } else if (name.contains(':1')) {
+          classesIdx = i;
+        } else if (name.contains(':2')) {
+          scoresIdx = i;
+        } else if (name.contains(':3')) {
+          numDetectionsIdx = i;
+        }
+      }
+    }
+
+    // 3. Fallbacks to default TF2 SavedModel order if any index is still unassigned
+    if (scoresIdx == -1) scoresIdx = 0;
+    if (boxesIdx == -1) boxesIdx = 1;
+    if (numDetectionsIdx == -1) numDetectionsIdx = 2;
+    if (classesIdx == -1) classesIdx = 3;
 
     final boxesBuffer = Float32List(10 * 4);
     final classesBuffer = Float32List(10);
@@ -235,13 +276,13 @@ class BisindoDetectorService implements BisindoRecognitionService {
     int topClassIdx = -1;
     int topBoxOffset = 0;
 
-    final numDetections = math.min(10, numBuffer[0].toInt().clamp(1, 10));
+    final numDetections = math.min(10, numBuffer[0].round().clamp(1, 10));
 
     for (int i = 0; i < numDetections; i++) {
       final score = scoresBuffer[i];
       if (score > topScore) {
         topScore = score;
-        topClassIdx = classesBuffer[i].toInt();
+        topClassIdx = classesBuffer[i].round();
         topBoxOffset = i * 4;
       }
     }
@@ -300,7 +341,7 @@ class BisindoDetectorService implements BisindoRecognitionService {
     return _RawDetection(result: GestureResult.unknown(maxScore));
   }
 
-  /// Applies temporal stability filtering (2-3 consecutive cycles) and
+  /// Applies temporal stability filtering (2 consecutive cycles) and
   /// checks prolonged unrecognized duration.
   BisindoDetectionEvent _evaluateDetection(_RawDetection raw, int now) {
     bool isValidatedToken = false;

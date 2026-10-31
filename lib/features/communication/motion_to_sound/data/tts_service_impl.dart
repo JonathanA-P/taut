@@ -27,11 +27,33 @@ class TtsServiceImpl implements TtsService {
     if (_isInitialized) return;
 
     try {
-      await _flutterTts.setLanguage(language);
-      await _flutterTts.setSpeechRate(0.5);
+      var langSet = false;
+      try {
+        final available = await _flutterTts.isLanguageAvailable(language);
+        if (available == true || available == 1) {
+          await _flutterTts.setLanguage(language);
+          langSet = true;
+        }
+      } catch (_) {}
+
+      if (!langSet) {
+        try {
+          await _flutterTts.setLanguage('id-ID');
+          langSet = true;
+        } catch (_) {
+          try {
+            await _flutterTts.setLanguage('id');
+            langSet = true;
+          } catch (_) {}
+        }
+      }
+
+      await _flutterTts.setSpeechRate(0.48);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
-      await _flutterTts.awaitSpeakCompletion(true);
+      // awaitSpeakCompletion(false) ensures audio output does not block
+      // the Flutter UI thread or stall if the TTS engine omits callbacks.
+      await _flutterTts.awaitSpeakCompletion(false);
       _isInitialized = true;
     } catch (e) {
       debugPrint('[TtsService] Initialization failed: $e');
@@ -50,6 +72,8 @@ class TtsServiceImpl implements TtsService {
 
     try {
       _isSpeaking = true;
+      // Stop previous utterance immediately so new gesture audio is heard without queuing lag
+      await _flutterTts.stop();
       await _flutterTts.speak(cleanText);
     } catch (e) {
       debugPrint('[TtsService] speakText failed: $e');
