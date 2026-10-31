@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/status_badge.dart';
 
-/// Clean, healthcare-oriented Login Screen.
-/// Follows the sage green aesthetic with comfortable inputs and clear accessibility.
+import '../../../core/constants/app_colors.dart';
+import '../../../core/routing/app_router.dart';
+import 'register_screen.dart';
+
+/// Login Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Selamat datang"
+/// - Logo "taut."
+/// - Heading: "Senang bertemu lagi."
+/// - Subtitle: "Masuk ke ruang yang memahami kamu."
+/// - Simulated email & password inputs with notice box
+/// - "Masuk demo" CTA
+/// - "Belum punya akun? Daftar" text link
+/// - "Jelajahi tanpa akun" ghost CTA
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -15,10 +21,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(text: 'alfredo@ub.ac.id');
-  final TextEditingController _passwordController = TextEditingController(text: '••••••••');
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+  final TextEditingController _emailController = TextEditingController(
+    text: 'adriel@email.com',
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: 'password123',
+  );
 
   @override
   void dispose() {
@@ -28,18 +36,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Berhasil masuk sebagai Alfredo Jonathan (Mode Terverifikasi).'),
-          ),
-        );
-        Navigator.pushReplacementNamed(context, AppConstants.routeHome);
-      }
-    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Selamat datang di demo TAUT.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   @override
@@ -47,142 +50,247 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Masuk ke TAUT'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.darkGreen,
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text(
+          'Selamat datang',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: StatusBadge.active(label: 'Supabase RLS Siap Terhubung'),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Selamat Datang Kembali',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              // Brand Logo
+              RichText(
+                text: const TextSpan(
+                  text: 'taut',
+                  style: TextStyle(
+                    fontSize: 34,
                     fontWeight: FontWeight.w800,
                     color: AppColors.darkGreen,
+                    letterSpacing: -2.0,
                   ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Masuk untuk mengakses sinkronisasi teman terpercaya dan berbagi lokasi real-time.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 28),
-            AppCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Email Pengguna',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'nama@email.com',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Kata Sandi',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      hintText: 'Masukkan kata sandi',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: AppColors.textMuted,
-                        ),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
+                  children: [
+                    TextSpan(
+                      text: '.',
+                      style: TextStyle(
+                        color: Color(0xFF8AAB7E),
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Heading & Subtitle
+              const Text(
+                'Senang bertemu lagi.',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                  letterSpacing: -0.6,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Masuk ke ruang yang memahami kamu.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Email Field
+              const Text(
+                'Email',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: 'nama@email.com',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tautan pemulihan kata sandi akan dikirim ke email terdaftar.'),
-                          ),
-                        );
-                      },
-                      child: const Text('Lupa Kata Sandi?'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    label: 'Masuk Akun',
-                    isLoading: _isLoading,
-                    onPressed: _handleLogin,
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(child: Divider(color: AppColors.outline.withValues(alpha: 0.5))),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'atau',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              const SizedBox(height: 16),
+
+              // Password Field
+              const Text(
+                'Kata sandi',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Minimal 6 karakter',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
                   ),
                 ),
-                Expanded(child: Divider(color: AppColors.outline.withValues(alpha: 0.5))),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppButton(
-              label: 'Daftar Akun Baru',
-              isOutlined: true,
-              icon: Icons.person_add_alt_rounded,
-              onPressed: () {
-                Navigator.pushNamed(context, AppConstants.routeRegister);
-              },
-            ),
-            const SizedBox(height: 12),
-            AppButton(
-              label: 'Lanjutkan Sebagai Tamu',
-              isOutlined: true,
-              backgroundColor: AppColors.textSecondary,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, AppConstants.routeHome);
-              },
-            ),
-            const SizedBox(height: 24),
-          ],
+              ),
+              const SizedBox(height: 18),
+
+              // Notice Box
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F3EB),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  'Form simulasi. Jangan gunakan kata sandi asli. Tidak ada data yang dikirim atau akun yang dibuat.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF5B6E55),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Masuk demo',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Switch to Register TextButton
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegisterScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Belum punya akun? Daftar',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Explore without account
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, AppRoutes.home);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: Color(0xFFB9C9B6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Jelajahi tanpa akun',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

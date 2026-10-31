@@ -1,193 +1,210 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_button.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
+import 'login_screen.dart';
 
-/// Onboarding Screen inspired directly by Screen 1 of the Dribbble design reference.
-/// Features clean, spacious composition, friendly healthcare illustration,
-/// prominent rounded pill CTA, and responsive layout.
-class OnboardingScreen extends StatefulWidget {
+/// Onboarding Screen strictly implementing the TAUT HTML prototype:
+/// - Brand logo "taut." + "Lewati" shortcut to home
+/// - Art illustration in rounded curved container
+/// - Eyebrow: "SALING MEMAHAMI"
+/// - Headline: "Ceritamu layak\nuntuk didengar."
+/// - Subtitle: "Ucapan menjadi tulisan. Isyarat menjadi suara. Terhubung dalam satu ruang yang nyaman."
+/// - 3 dots indicator
+/// - Primary CTA: "Mulai bersama TAUT →"
+/// - Footer hint: "Dirancang untuk komunikasi yang lebih setara."
+class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
-
-  @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  final List<Map<String, String>> _pages = const [
-    {
-      'title': 'Komunikasi Inklusif\nTanpa Batas',
-      'subtitle':
-          'Jembatani interaksi antara teman Tuli dan masyarakat dengar dengan konversi Suara ke Teks dan Gerakan BISINDO ke Suara.',
-    },
-    {
-      'title': 'Pencari Fasilitas\nKesehatan Terdekat',
-      'subtitle':
-          'Temukan rumah sakit, puskesmas, dan klinik dalam radius 10 km berbasis GPS dan data terbuka OpenStreetMap terverifikasi.',
-    },
-    {
-      'title': 'Berbagi Lokasi Aman\nDalam Situasi Mendesak',
-      'subtitle':
-          'Kirimkan koordinat lokasi Anda ke faskes melalui lembar berbagi Android atau pantau pergerakan dengan teman terpercaya.',
-    },
-  ];
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _finishOnboarding() {
-    Navigator.pushReplacementNamed(context, AppConstants.routeHome);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        actions: [
-          TextButton(
-            onPressed: _finishOnboarding,
-            child: const Text(
-              'Lewati',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Responsive Illustration (Dribbble Screen 1 inspired)
-            Expanded(
-              flex: 5,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: SizedBox(
-                      width: 280,
-                      height: 250,
-                      child: TautIllustration.onboardingWelcome(height: 250),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            children: [
+              // Header: Logo + Lewati
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  RichText(
+                    text: const TextSpan(
+                      text: 'taut',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.darkGreen,
+                        letterSpacing: -1.5,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '.',
+                          style: TextStyle(
+                            color: Color(0xFF8AAB7E),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-            ),
-            // Page content
-            Expanded(
-              flex: 4,
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _pages.length,
-                onPageChanged: (idx) {
-                  setState(() => _currentPage = idx);
-                },
-                itemBuilder: (context, index) {
-                  final item = _pages[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            item['title']!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.darkGreen,
-                              letterSpacing: -0.4,
-                              height: 1.25,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            item['subtitle']!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.textSecondary,
-                              height: 1.45,
-                            ),
-                          ),
-                        ],
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, AppRoutes.home);
+                    },
+                    child: const Text(
+                      'Lewati',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            // Pagination Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pages.length, (index) {
-                final isSelected = index == _currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: isSelected ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.lightGreen,
-                    borderRadius: BorderRadius.circular(4),
                   ),
-                );
-              }),
-            ),
-            const SizedBox(height: 24),
-            // Bottom Action Button (Dribbble styled large pill)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: AppButton(
-                label: _currentPage == _pages.length - 1
-                    ? 'Mulai Sekarang'
-                    : 'Lanjutkan',
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.white,
-                onPressed: () {
-                  if (_currentPage < _pages.length - 1) {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  } else {
-                    _finishOnboarding();
-                  }
-                },
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, AppConstants.routeLogin);
-              },
-              child: const Text(
-                'Sudah punya akun? Masuk di sini',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+              const SizedBox(height: 20),
+
+              // Onboarding Art Container
+              Container(
+                height: 240,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: AppColors.lightGreen,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(100),
+                    topRight: Radius.circular(100),
+                    bottomLeft: Radius.circular(70),
+                    bottomRight: Radius.circular(60),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: TautIllustration.friendlyConversationHero(
+                  width: 260,
+                  height: 220,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
+              const SizedBox(height: 28),
+
+              // Eyebrow
+              const Text(
+                'SALING MEMAHAMI',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2.0,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Main Headline
+              const Text(
+                'Ceritamu layak\nuntuk didengar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.darkGreen,
+                  height: 1.2,
+                  letterSpacing: -0.8,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Subtitle
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'Ucapan menjadi tulisan. Isyarat menjadi suara. Terhubung dalam satu ruang yang nyaman.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 3 Dots indicator
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 26,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCFDBCA),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCFDBCA),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // Primary CTA
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  iconAlignment: IconAlignment.end,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: const Text(
+                    'Mulai bersama TAUT',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Hint
+              const Text(
+                'Dirancang untuk komunikasi yang lebih setara.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

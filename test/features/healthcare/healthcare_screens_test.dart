@@ -24,18 +24,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Fasilitas Kesehatan Terdekat'), findsOneWidget);
+      expect(find.text('Fasilitas kesehatan'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Rumah Sakit'), findsWidgets);
-      expect(find.text('RSUD Dr. Saiful Anwar'), findsOneWidget);
-      expect(find.text('Klinik UB Medika'), findsOneWidget);
+      expect(find.text('Klinik'), findsWidgets);
+      expect(find.text('Klinik Harmoni'), findsOneWidget);
+      expect(find.text('RS Taman Sehat'), findsOneWidget);
     });
 
-    testWidgets('HealthcareDetailScreen renders facility info, action buttons, and access details', (tester) async {
+    testWidgets('HealthcareDetailScreen renders facility info and action buttons', (tester) async {
       const facility = HealthcareFacility(
         id: 'osm-test',
         name: 'RSUD Dr. Saiful Anwar',
-        category: 'Rumah Sakit',
+        category: 'Rumah sakit',
         address: 'Jl. Jaksa Agung Suprapto No. 2, Klojen, Malang',
         latitude: -7.9723,
         longitude: 112.6318,
@@ -53,8 +53,7 @@ void main() {
 
       expect(find.text('RSUD Dr. Saiful Anwar'), findsOneWidget);
       expect(find.text('Petunjuk Arah'), findsWidgets);
-      expect(find.text('Bagi Lokasi'), findsOneWidget);
-      expect(find.text('Aksesibilitas Kursi Roda'), findsOneWidget);
+      expect(find.text('Bagikan lokasi fasilitas'), findsOneWidget);
     });
 
     testWidgets('ShareLocationToHealthcareScreen displays GPS coordinates and share CTA', (tester) async {

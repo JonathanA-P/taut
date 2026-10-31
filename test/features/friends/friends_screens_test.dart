@@ -17,12 +17,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Daftar Teman & Undangan'), findsOneWidget);
-      expect(find.text('Adriel Christo Lumbantoruan'), findsOneWidget);
-      expect(find.text('Roganda Tua Tampubolon'), findsOneWidget);
+      expect(find.text('Teman terhubung'), findsOneWidget);
+      expect(find.text('Nadia'), findsOneWidget);
+      expect(find.text('Raka'), findsOneWidget);
+      expect(find.text('Tambah teman'), findsOneWidget);
     });
 
-    testWidgets('AddFriendScreen displays personal invitation code and input field', (tester) async {
+    testWidgets('AddFriendScreen displays input field and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -31,9 +32,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Hubungkan Teman & Pendamping'), findsOneWidget);
-      expect(find.textContaining('TAUT-ALFREDO'), findsOneWidget);
-      expect(find.text('Hubungkan Teman Sekarang'), findsOneWidget);
+      expect(find.text('Tambah teman'), findsOneWidget);
+      expect(find.text('Perluas ruang terhubung.'), findsOneWidget);
+      expect(find.text('Nama teman'), findsOneWidget);
+      expect(find.text('Tambah ke demo'), findsOneWidget);
     });
 
     testWidgets('LiveLocationScreen renders live map and friend details', (tester) async {
@@ -45,12 +47,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Pantau Lokasi Langsung'), findsOneWidget);
-      expect(find.textContaining('Adriel Christo'), findsWidgets);
-      expect(find.text('Buka Navigasi ke Teman (Google Maps)'), findsOneWidget);
+      expect(find.text('Lokasi bersama'), findsOneWidget);
+      expect(find.text('Sesi berbagi demo'), findsOneWidget);
+      expect(find.textContaining('Peta ilustrasi'), findsOneWidget);
     });
 
-    testWidgets('ManageLocationSharingScreen displays master and individual switches', (tester) async {
+    testWidgets('ManageLocationSharingScreen displays form and active sessions', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -59,9 +61,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Kelola Berbagi Lokasi'), findsOneWidget);
-      expect(find.text('Siaran Lokasi Langsung'), findsOneWidget);
-      expect(find.byType(Switch), findsNWidgets(4));
+      expect(find.text('Berbagi lokasi'), findsOneWidget);
+      expect(find.text('Mulai sesi baru'), findsOneWidget);
+      expect(find.text('Bagikan kepada'), findsOneWidget);
+      expect(find.text('Durasi'), findsOneWidget);
+      expect(find.text('Mulai berbagi demo'), findsOneWidget);
     });
   });
 }

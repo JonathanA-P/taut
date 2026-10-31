@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
+import '../../../shared/models/taut_app_state.dart';
 
-/// Screen 18: Edit Profile Screen.
-/// Enables user to update display name, accessibility preferences, and emergency contact details.
+/// Edit Profile Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Edit profil"
+/// - Field: "Nama panggilan", maxLength 40
+/// - Button: "Simpan perubahan"
+/// - Updates state.userName and pops with toast
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -14,193 +16,127 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Alfredo Jonathan Purba');
-  final TextEditingController _phoneController =
-      TextEditingController(text: '081234567890');
-  final TextEditingController _emergencyContactController =
-      TextEditingController(text: 'Ibu Alfredo (081298765432)');
-  String _selectedRole = 'Teman Dengar';
-  bool _isLoading = false;
+  late final TextEditingController _nameController;
 
-  final List<String> _roles = const [
-    'Teman Tuli',
-    'Teman Dengar',
-    'Pendamping / Relawan',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: TautAppState().userName);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
-    _emergencyContactController.dispose();
     super.dispose();
   }
 
-  void _saveProfile() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profil berhasil diperbarui.')),
-        );
-        Navigator.pop(context);
-      }
-    });
+  void _handleSave(TautAppState state) {
+    final name = _nameController.text.trim();
+    if (name.isNotEmpty) {
+      state.setUserName(name);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profil demo diperbarui.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = TautAppState();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Ubah Profil'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.darkGreen,
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text(
+          'Edit profil',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: AppColors.sageGreen,
-                      child: Text(
-                        'AJ',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.darkGreen,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: AppColors.darkGreen,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Nama panggilan',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            AppCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Nama Tampilan Lengkap',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
+              const SizedBox(height: 6),
+              TextField(
+                controller: _nameController,
+                maxLength: 40,
+                decoration: InputDecoration(
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Nomor Kontak Pengguna',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.phone_outlined, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Kontak Darurat Pendamping',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _emergencyContactController,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.contact_phone_outlined, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Peran & Preferensi Pengguna',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: _roles.map((role) {
-                      final isSelected = role == _selectedRole;
-                      return ChoiceChip(
-                        label: Text(role),
-                        selected: isSelected,
-                        selectedColor: AppColors.sageGreen,
-                        backgroundColor: AppColors.white,
-                        labelStyle: TextStyle(
-                          color: isSelected ? AppColors.darkGreen : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                        side: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.outline,
-                        ),
-                        onSelected: (val) {
-                          if (val) setState(() => _selectedRole = role);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            AppButton(
-              label: 'Simpan Perubahan',
-              backgroundColor: AppColors.darkGreen,
-              isLoading: _isLoading,
-              onPressed: _saveProfile,
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => _handleSave(state),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Simpan perubahan',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

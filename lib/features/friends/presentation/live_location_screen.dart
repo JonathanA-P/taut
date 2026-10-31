@@ -1,284 +1,274 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
-/// Screen 15: Live Location Tracking Screen.
-/// Renders a real-time tracking interface showing connected friend's position.
+/// Live Location Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Lokasi bersama"
+/// - Map illustration: "Peta ilustrasi · bukan posisi nyata"
+/// - Section: "Sesi berbagi demo"
+/// - Hint: "Lokasi pada peta adalah ilustrasi. Tidak ada pergerakan atau koordinat nyata."
+/// - Session list with live remaining timers & stop button
 class LiveLocationScreen extends StatelessWidget {
   const LiveLocationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Pantau Lokasi Langsung'),
-        actions: [
-          IconButton(
-            tooltip: 'Segarkan Sinyal GPS',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Menyinkronkan koordinat GPS Supabase Realtime...')),
-              );
-            },
+    final state = TautAppState();
+
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: Navigator.canPop(context)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    color: AppColors.darkGreen,
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+            title: const Text(
+              'Lokasi bersama',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkGreen,
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Map Preview Card
+                  _buildMapPreview(),
+                  const SizedBox(height: 24),
+
+                  // Section Title
+                  const Text(
+                    'Sesi berbagi demo',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Lokasi pada peta adalah ilustrasi. Tidak ada pergerakan atau koordinat nyata.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Sessions List
+                  if (state.sessions.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: const Color(0xFFEDF0E9)),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Belum ada sesi aktif.\nLokasimu tidak dibagikan.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: state.sessions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final session = state.sessions[index];
+                        return _buildSessionCard(context, state, session, index);
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMapPreview() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9EEE3),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFDAE3D3)),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: TautIllustration.mapPlaceholder(),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            top: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xF0FFFFFF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Peta ilustrasi · bukan posisi nyata',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+    );
+  }
+
+  Widget _buildSessionCard(
+    BuildContext context,
+    TautAppState state,
+    SharingSession session,
+    int index,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFEDF0E9)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05263D2F),
+            blurRadius: 16,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
           Row(
             children: [
-              StatusBadge.active(label: 'Supabase Realtime Terkoneksi'),
-              const Spacer(),
-              const Text(
-                'Update: 3 detik lalu',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE9DDCD),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  session.name.isNotEmpty ? session.name[0] : '?',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF655747),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      session.remainingText(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6ECDA),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Demo',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF825D24),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // LIVE MAP VISUAL VIEWPORT
-          Container(
-            height: 280,
-            decoration: BoxDecoration(
-              color: AppColors.lightGreen,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.sageGreen, width: 1.5),
-              boxShadow: AppColors.cardShadow,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                // Stylized map texture
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: _LiveMapPainter(),
-                ),
-
-                // Radar pulse on Friend's location
-                Positioned(
-                  top: 90,
-                  left: 120,
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.darkGreen,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: AppColors.cardShadow,
-                        ),
-                        child: const Text(
-                          'Adriel Christo (1.2 km)',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: AppColors.heroShadow,
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.person_pin_circle_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: ElevatedButton(
+              onPressed: () {
+                state.stopSharing(index);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Sesi berbagi dihentikan.'),
+                    duration: Duration(seconds: 2),
                   ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF4E3DE),
+                foregroundColor: const Color(0xFF8B4435),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-
-                // My location marker
-                Positioned(
-                  bottom: 40,
-                  right: 60,
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: AppColors.cardShadow,
-                        ),
-                        child: const Text(
-                          'Posisi Anda',
-                          style: TextStyle(
-                            color: AppColors.darkGreen,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: AppColors.darkGreen,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2.5),
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+              child: const Text(
+                'Hentikan sesi',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: 18),
-
-          // FRIEND STATUS DETAIL CARD
-          AppCard(
-            margin: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    TautIllustration.friendAvatar(
-                      initials: 'AC',
-                      radius: 24,
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Adriel Christo Lumbantoruan',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.darkGreen,
-                            ),
-                          ),
-                          Text(
-                            'Jl. Soekarno Hatta No. 9, Lowokwaru, Malang',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(color: AppColors.lightGreen, height: 24),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _InfoStat(label: 'Jarak Geodesik', value: '1.2 km'),
-                    _InfoStat(label: 'Akurasi GPS', value: '± 4 meter'),
-                    _InfoStat(label: 'Status', value: 'Bergerak'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ACTIONS
-          AppButton(
-            label: 'Buka Navigasi ke Teman (Google Maps)',
-            icon: Icons.directions_rounded,
-            backgroundColor: AppColors.darkGreen,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Membuka rute tercepat ke posisi Adriel...'),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          AppButton(
-            label: 'Hentikan Sesi Pemantauan',
-            isOutlined: true,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
-}
-
-class _InfoStat extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: AppColors.darkGreen,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11.5,
-            color: AppColors.textMuted,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LiveMapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6)
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
-
-    final roadPath = Path()
-      ..moveTo(0, size.height * 0.7)
-      ..quadraticBezierTo(size.width * 0.4, size.height * 0.6, size.width * 0.5, size.height * 0.3)
-      ..lineTo(size.width, size.height * 0.2);
-    canvas.drawPath(roadPath, roadPaint);
-
-    final crossRoad = Path()
-      ..moveTo(size.width * 0.2, 0)
-      ..lineTo(size.width * 0.6, size.height);
-    canvas.drawPath(crossRoad, roadPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

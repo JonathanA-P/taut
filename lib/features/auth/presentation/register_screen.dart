@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
 
-/// Clean, healthcare-oriented Register Screen.
-/// Collects user name, email, password, and accessibility preference.
+import '../../../core/constants/app_colors.dart';
+import '../../../core/routing/app_router.dart';
+import '../../../shared/models/taut_app_state.dart';
+import 'login_screen.dart';
+
+/// Register Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Buat akun"
+/// - Logo "taut."
+/// - Heading: "Mulai perjalananmu."
+/// - Subtitle: "Masuk ke ruang yang memahami kamu."
+/// - Simulated name, email & password inputs with notice box
+/// - "Daftar demo" CTA
+/// - "Sudah punya akun? Masuk" text link
+/// - "Jelajahi tanpa akun" ghost CTA
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -14,17 +22,15 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  String _selectedRole = 'Teman Tuli';
-  bool _isLoading = false;
-
-  final List<String> _roles = const [
-    'Teman Tuli',
-    'Teman Dengar',
-    'Pendamping / Relawan',
-  ];
+  final TextEditingController _nameController = TextEditingController(
+    text: 'Adriel',
+  );
+  final TextEditingController _emailController = TextEditingController(
+    text: 'adriel@email.com',
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: 'password123',
+  );
 
   @override
   void dispose() {
@@ -35,18 +41,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _handleRegister() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Akun berhasil didaftarkan sebagai $_selectedRole. Selamat datang di TAUT!'),
-          ),
-        );
-        Navigator.pushReplacementNamed(context, AppConstants.routeHome);
-      }
-    });
+    final name = _nameController.text.trim();
+    if (name.isNotEmpty) {
+      TautAppState().setUserName(name);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Selamat datang di demo TAUT.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   @override
@@ -54,140 +59,288 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Daftar Akun Baru'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.darkGreen,
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text(
+          'Buat akun',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Bergabung Bersama TAUT',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              // Brand Logo
+              RichText(
+                text: const TextSpan(
+                  text: 'taut',
+                  style: TextStyle(
+                    fontSize: 34,
                     fontWeight: FontWeight.w800,
                     color: AppColors.darkGreen,
+                    letterSpacing: -2.0,
                   ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Daftarkan diri Anda untuk pengalaman aksesibilitas yang dipersonalisasi dan aman.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.45,
+                  children: [
+                    TextSpan(
+                      text: '.',
+                      style: TextStyle(
+                        color: Color(0xFF8AAB7E),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            AppCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Nama Lengkap',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'Contoh: Alfredo Jonathan',
-                      prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Email',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'nama@email.com',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Kata Sandi',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Minimal 8 karakter',
-                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Preferensi Pengguna',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _roles.map((role) {
-                      final isSelected = role == _selectedRole;
-                      return ChoiceChip(
-                        label: Text(role),
-                        selected: isSelected,
-                        selectedColor: AppColors.sageGreen,
-                        backgroundColor: AppColors.white,
-                        labelStyle: TextStyle(
-                          color: isSelected ? AppColors.darkGreen : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                        side: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.outline,
-                        ),
-                        onSelected: (val) {
-                          if (val) setState(() => _selectedRole = role);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  AppButton(
-                    label: 'Buat Akun TAUT',
-                    isLoading: _isLoading,
-                    onPressed: _handleRegister,
-                  ),
-                ],
+              const SizedBox(height: 24),
+
+              // Heading & Subtitle
+              const Text(
+                'Mulai perjalananmu.',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                  letterSpacing: -0.6,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Sudah punya akun? Masuk kembali'),
+              const SizedBox(height: 8),
+              const Text(
+                'Masuk ke ruang yang memahami kamu.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 28),
+
+              // Name Field
+              const Text(
+                'Nama',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _nameController,
+                maxLength: 40,
+                decoration: InputDecoration(
+                  hintText: 'Nama panggilanmu',
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Email Field
+              const Text(
+                'Email',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: 'nama@email.com',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Password Field
+              const Text(
+                'Kata sandi',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Minimal 6 karakter',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Notice Box
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F3EB),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  'Form simulasi. Jangan gunakan kata sandi asli. Tidak ada data yang dikirim atau akun yang dibuat.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF5B6E55),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _handleRegister,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Daftar demo',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Switch to Login TextButton
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Sudah punya akun? Masuk',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Explore without account
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, AppRoutes.home);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: Color(0xFFB9C9B6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Jelajahi tanpa akun',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

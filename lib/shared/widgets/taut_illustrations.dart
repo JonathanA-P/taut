@@ -96,6 +96,29 @@ class TautIllustration {
     );
   }
 
+  /// Map illustration card placeholder strictly matching the HTML prototype vector.
+  static Widget mapPlaceholder({double height = 170}) {
+    return SizedBox(
+      height: height,
+      child: CustomPaint(
+        painter: _MapPlaceholderPainter(),
+        size: Size.infinite,
+      ),
+    );
+  }
+
+  /// Friendly two-person inclusive communication vector for Onboarding.
+  static Widget friendlyConversationHero({double width = 260, double height = 220}) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomPaint(
+        painter: _CommunicationHeroPainter(),
+        size: Size(width, height),
+      ),
+    );
+  }
+
   /// Friendly Avatar Placeholder for Connected Friends.
   static Widget friendAvatar({
     required String initials,
@@ -582,6 +605,105 @@ class _LocationSharingPainter extends CustomPainter {
     // White dot inside pin
     final dotPaint = Paint()..color = Colors.white;
     canvas.drawCircle(Offset(w * 0.5, h * 0.40), w * 0.08, dotPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _MapPlaceholderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()..color = const Color(0xFFE6ECDF),
+    );
+
+    // White Roads
+    final roadPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 14
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final roadPath = Path()
+      ..moveTo(0, h * 0.24)
+      ..lineTo(w, h * 0.65)
+      ..moveTo(w * 0.22, 0)
+      ..lineTo(w * 0.16, h)
+      ..moveTo(w * 0.75, 0)
+      ..lineTo(w * 0.61, h)
+      ..moveTo(0, h * 0.88)
+      ..lineTo(w, h * 0.12);
+    canvas.drawPath(roadPath, roadPaint);
+
+    // River
+    final riverPaint = Paint()
+      ..color = const Color(0xFFC6DCE0)
+      ..strokeWidth = 14
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final riverPath = Path()
+      ..moveTo(0, h * 0.55)
+      ..quadraticBezierTo(w * 0.28, h * 0.25, w * 0.47, h * 0.72)
+      ..quadraticBezierTo(w * 0.74, h * 0.84, w, h * 0.60);
+    canvas.drawPath(riverPath, riverPaint);
+
+    // Dotted route
+    final routePaint = Paint()
+      ..color = const Color(0xFF527B5D)
+      ..strokeWidth = 3.5
+      ..style = PaintingStyle.stroke;
+
+    final routePath = Path()
+      ..moveTo(w * 0.28, h * 0.82)
+      ..lineTo(w * 0.33, h * 0.40)
+      ..lineTo(w * 0.66, h * 0.56);
+    canvas.drawPath(routePath, routePaint);
+
+    // Origin Pin
+    final originPaint = Paint()..color = const Color(0xFF527B5D);
+    canvas.drawCircle(Offset(w * 0.28, h * 0.80), 8, originPaint);
+    canvas.drawCircle(
+      Offset(w * 0.28, h * 0.80),
+      8,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+
+    // Destination Hospital Pin
+    final destRect = Rect.fromCenter(
+      center: Offset(w * 0.66, h * 0.56),
+      width: 26,
+      height: 26,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(destRect, const Radius.circular(8)),
+      Paint()..color = const Color(0xFF527B5D),
+    );
+
+    // Cross icon inside destination
+    final crossPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(w * 0.66 - 6, h * 0.56),
+      Offset(w * 0.66 + 6, h * 0.56),
+      crossPaint,
+    );
+    canvas.drawLine(
+      Offset(w * 0.66, h * 0.56 - 6),
+      Offset(w * 0.66, h * 0.56 + 6),
+      crossPaint,
+    );
   }
 
   @override

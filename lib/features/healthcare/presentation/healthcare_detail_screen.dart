@@ -1,388 +1,207 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
+import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 import '../domain/healthcare_facility.dart';
-import '../../location_sharing/presentation/share_location_to_healthcare_screen.dart';
 
-/// Healthcare Detail Screen inspired directly by Screen 3 of the Dribbble design reference.
-/// Features:
-/// - Visually prominent illustrated header banner with overlapping rounded bottom sheet
-/// - Facility name, category badge, and real geodesic distance
-/// - Action buttons: Directions CTA, Share Location CTA, Copy Address
-/// - Structured information cards with authentic OSM OpenStreetMap tags (no fabricated data)
+/// Healthcare Detail Screen strictly implementing the TAUT HTML prototype design:
+/// - Screen title: "Detail fasilitas"
+/// - Profile Hero: Sage green background, facility icon, category pill, facility name, distance
+/// - Map illustration: "Peta ilustrasi · bukan posisi nyata"
+/// - Card "Informasi lokasi": address, "Fasilitas fiktif · demo" tag, "Informasi belum tersedia"
+/// - Action buttons:
+///   1. "Petunjuk Arah" -> modal with route preview & "Fasilitas ini fiktif. Rute nyata tidak tersedia dalam demo."
+///   2. "Bagikan lokasi fasilitas" -> modal with copyable demo facility info
 class HealthcareDetailScreen extends StatelessWidget {
-  final HealthcareFacility facility;
+  final FacilityItem? facilityItem;
+  final HealthcareFacility? facility;
 
-  const HealthcareDetailScreen({super.key, required this.facility});
+  const HealthcareDetailScreen({
+    super.key,
+    this.facilityItem,
+    this.facility,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final distanceKm = (facility.distanceMeters / 1000).toStringAsFixed(1);
+    // Resolve facility data from parameter or prototype app state
+    final name = facilityItem?.name ??
+        facility?.name ??
+        TautAppState().selectedFacility.name;
+    final type = facilityItem?.type ??
+        facility?.category ??
+        TautAppState().selectedFacility.type;
+    final address = facilityItem?.address ??
+        facility?.address ??
+        TautAppState().selectedFacility.address;
+    final distance = facilityItem?.distance ??
+        (facility != null
+            ? '${(facility!.distanceMeters / 1000).toStringAsFixed(1)} km'
+            : TautAppState().selectedFacility.distance);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // Dribbble Screen 3 Banner Header
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            backgroundColor: AppColors.sageGreen,
-            foregroundColor: AppColors.darkGreen,
-            flexibleSpace: FlexibleSpaceBar(
-              background: TautIllustration.clinicHeaderBanner(height: 200),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.darkGreen,
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text(
+          'Detail fasilitas',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Profile Hero (Sage green)
+              _buildProfileHero(name, type, distance),
+              const SizedBox(height: 20),
+
+              // 2. Map preview
+              _buildMapPreview(),
+              const SizedBox(height: 20),
+
+              // 3. Location Information Card
+              _buildInfoCard(address),
+              const SizedBox(height: 24),
+
+              // 4. Action Buttons Stack
+              _buildActionButtons(context, name, address),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileHero(String name, String type, String distance) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+      decoration: BoxDecoration(
+        color: AppColors.sageGreen,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFD0DDD0)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0C263D2F),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.local_hospital_rounded,
+              color: AppColors.primary,
+              size: 30,
             ),
           ),
-
-          // Overlapping Content Body
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.lightGreen,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Text(
+              type,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF4C6551),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$distance · jarak contoh',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Facility Header Card
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 58,
-                          height: 58,
-                          decoration: BoxDecoration(
-                            color: AppColors.lightGreen,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.sageGreen, width: 1.5),
-                          ),
-                          child: const Icon(
-                            Icons.local_hospital_rounded,
-                            color: AppColors.primaryGreen,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.sageGreen,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  facility.category,
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.darkGreen,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                facility.name,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.darkGreen,
-                                  letterSpacing: -0.4,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.near_me_rounded,
-                                    size: 14,
-                                    color: AppColors.primaryGreen,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '$distanceKm km dari posisi GPS Anda',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryGreen,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-                    // Quick Action Buttons Row (Dribbble Screen 3 action buttons)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            context: context,
-                            icon: Icons.directions_rounded,
-                            label: 'Petunjuk Arah',
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Membuka navigasi Google Maps ke ${facility.name}...',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildActionButton(
-                            context: context,
-                            icon: Icons.emergency_share_rounded,
-                            label: 'Bagi Lokasi',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ShareLocationToHealthcareScreen(
-                                    targetFacility: facility,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildActionButton(
-                            context: context,
-                            icon: Icons.copy_rounded,
-                            label: 'Salin Alamat',
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Alamat faskes disalin ke clipboard.'),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // CARD 1: LOKASI & ALAMAT LENGKAP
-                    const Text(
-                      'Informasi Lokasi & Alamat',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkGreen,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    AppCard(
-                      margin: EdgeInsets.zero,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.location_on_rounded,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  facility.address ?? 'Alamat lengkap tercatat di OpenStreetMap tanpa nomor jalan spesifik.',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textPrimary,
-                                    height: 1.45,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(color: AppColors.lightGreen, height: 24),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.gps_fixed_rounded,
-                                color: AppColors.textMuted,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Koordinat: ${facility.latitude.toStringAsFixed(4)}, ${facility.longitude.toStringAsFixed(4)}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // CARD 2: AKSESIBILITAS RAMAH DISABILITAS (Verified OSM Tags)
-                    const Text(
-                      'Aksesibilitas & Fasilitas Khusus',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkGreen,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    AppCard(
-                      margin: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: facility.isWheelchairAccessible == true
-                                      ? AppColors.successBg
-                                      : AppColors.lightGreen,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  Icons.accessible_rounded,
-                                  color: facility.isWheelchairAccessible == true
-                                      ? AppColors.success
-                                      : AppColors.textMuted,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Aksesibilitas Kursi Roda',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                    ),
-                                    Text(
-                                      facility.isWheelchairAccessible == true
-                                          ? 'Terverifikasi (Tag OpenStreetMap: wheelchair=yes)'
-                                          : facility.isWheelchairAccessible == false
-                                              ? 'Belum ramah kursi roda (wheelchair=no)'
-                                              : 'Belum terverifikasi pada data terbuka OSM',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: facility.isWheelchairAccessible == true
-                                            ? AppColors.success
-                                            : AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(color: AppColors.lightGreen, height: 20),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.lightGreen,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.verified_rounded,
-                                  color: AppColors.primaryGreen,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Sumber Data Resmi',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                    ),
-                                    Text(
-                                      'ID Entitas OSM: ${facility.id}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // BOTTOM PRIMARY ACTIONS
-                    AppButton(
-                      label: 'Bagikan Koordinat ke Faskes Ini',
-                      icon: Icons.emergency_share_rounded,
-                      backgroundColor: AppColors.darkGreen,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ShareLocationToHealthcareScreen(
-                              targetFacility: facility,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    AppButton(
-                      label: 'Buka Petunjuk Arah (Peta)',
-                      icon: Icons.directions_rounded,
-                      isOutlined: true,
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Membuka navigasi ke ${facility.name} ($distanceKm km)...',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+  Widget _buildMapPreview() {
+    return Container(
+      height: 170,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9EEE3),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFDAE3D3)),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: TautIllustration.mapPlaceholder(),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            top: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xF0FFFFFF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Peta ilustrasi · bukan posisi nyata',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
                 ),
               ),
             ),
@@ -392,40 +211,276 @@ class HealthcareDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.lightGreen, width: 1.2),
-          boxShadow: AppColors.cardShadow,
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 22),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkGreen,
+  Widget _buildInfoCard(String address) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFEDF0E9)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05263D2F),
+            blurRadius: 16,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Informasi lokasi',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            address,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textPrimary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6ECDA),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: const Text(
+              'Fasilitas fiktif · demo',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF825D24),
               ),
             ),
-          ],
-        ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: Color(0xFFE4E9E1), height: 1),
+          ),
+          const Text(
+            'Jam buka, layanan, dan aksesibilitas',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Informasi belum tersedia',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.darkGreen,
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(
+    BuildContext context,
+    String name,
+    String address,
+  ) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: () => _showDirectionsModal(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            label: const Text(
+              'Petunjuk Arah',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => _showShareModal(context, name, address),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.darkGreen,
+              side: const BorderSide(color: Color(0xFFB9C9B6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.location_on_outlined, size: 18),
+            label: const Text(
+              'Bagikan lokasi fasilitas',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDirectionsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pratinjau rute',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildMapPreview(),
+              const SizedBox(height: 12),
+              const Text(
+                'Fasilitas ini fiktif. Rute nyata tidak tersedia dalam demo.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Tutup'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showShareModal(BuildContext context, String name, String address) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Bagikan fasilitas',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Ini membagikan informasi fasilitas, bukan lokasi langsungmu.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F3EB),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  '$name · $address\nDATA DEMO — bukan fasilitas nyata.',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF5B6E55),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(
+                        text: '$name — $address (DATA DEMO, bukan fasilitas nyata)',
+                      ),
+                    );
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Informasi contoh disalin.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text('Salin informasi contoh'),
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Tutup'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

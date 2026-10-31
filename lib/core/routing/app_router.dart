@@ -28,6 +28,8 @@ import '../../features/privacy/presentation/privacy_policy_screen.dart';
 class AppRoutes {
   AppRoutes._();
 
+  static const String splash = '/';
+  static const String onboarding = '/onboarding';
   static const String home = '/home';
   static const String commHub = '/comm-hub';
   static const String speechToText = '/stt';

@@ -1,269 +1,267 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
+import '../../../core/routing/app_router.dart';
+import '../../../shared/models/taut_app_state.dart';
+import 'onboarding_screen.dart';
 
-/// Screen 19: Settings & Accessibility Screen.
-/// Provides accessibility-first interaction customization: font sizing, haptic feedback,
-/// high contrast mode, and AI recognition sensitivity.
-class SettingsAccessibilityScreen extends StatefulWidget {
+/// Settings & Accessibility Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Pengaturan"
+/// - Heading: "Kenyamanan untukmu"
+/// - Subtitle: "Sesuaikan cara kamu menggunakan TAUT."
+/// - Font scale selector: 16px (Standar), 19px (Besar), 22px (Sangat besar)
+/// - Preview text box showing dynamic font scaling: "Halo, senang bisa saling memahami."
+/// - "Putar suara setelah konfirmasi" section with hint
+/// - "Mulai ulang onboarding" button
+/// - "Reset seluruh demo" button
+class SettingsAccessibilityScreen extends StatelessWidget {
   const SettingsAccessibilityScreen({super.key});
 
   @override
-  State<SettingsAccessibilityScreen> createState() =>
-      _SettingsAccessibilityScreenState();
-}
-
-class _SettingsAccessibilityScreenState
-    extends State<SettingsAccessibilityScreen> {
-  double _fontScale = 1.0;
-  bool _highContrast = false;
-  bool _hapticFeedback = true;
-  bool _screenFlashAlert = true;
-  double _bisindoThreshold = 0.70;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Pengaturan & Aksesibilitas'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        children: [
-          // SECTION 1: ACCESSIBILITY & DISPLAY
-          const Text(
-            'Tampilan & Keterbacaan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.darkGreen,
-            ),
-          ),
-          const SizedBox(height: 10),
-          AppCard(
-            margin: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Skala Ukuran Teks',
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkGreen,
-                      ),
-                    ),
-                    Text(
-                      '${(_fontScale * 100).toInt()}%',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: _fontScale,
-                  min: 0.9,
-                  max: 1.4,
-                  divisions: 5,
-                  activeColor: AppColors.primary,
-                  onChanged: (val) => setState(() => _fontScale = val),
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Standar (A)', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-                    Text('Besar (A+)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  ],
-                ),
-                const Divider(color: AppColors.lightGreen, height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mode Kontras Maksimal',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.darkGreen,
-                            ),
-                          ),
-                          Text(
-                            'Garis batas tegas dan warna kontras tinggi',
-                            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _highContrast,
-                      activeThumbColor: AppColors.primary,
-                      onChanged: (val) => setState(() => _highContrast = val),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+    final state = TautAppState();
 
-          // SECTION 2: HAPTIC & SENSORY FEEDBACK
-          const Text(
-            'Umpan Balik Sensorik & Haptik',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.darkGreen,
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: Navigator.canPop(context)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    color: AppColors.darkGreen,
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+            title: const Text(
+              'Pengaturan',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkGreen,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          AppCard(
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Getaran Haptik Konfirmasi',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.darkGreen,
-                            ),
-                          ),
-                          Text(
-                            'Getaran saat teks atau isyarat berhasil dikenali',
-                            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kenyamanan untukmu',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                      letterSpacing: -0.6,
                     ),
-                    Switch(
-                      value: _hapticFeedback,
-                      activeThumbColor: AppColors.primary,
-                      onChanged: (val) => setState(() => _hapticFeedback = val),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Sesuaikan cara kamu menggunakan TAUT.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
                     ),
-                  ],
-                ),
-                const Divider(color: AppColors.lightGreen, height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Kedipan Visual Peringatan',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.darkGreen,
-                            ),
-                          ),
-                          Text(
-                            'Flash layar saat situasi darurat atau ada notifikasi',
-                            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _screenFlashAlert,
-                      activeThumbColor: AppColors.primary,
-                      onChanged: (val) => setState(() => _screenFlashAlert = val),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 24),
 
-          // SECTION 3: AI PARAMETERS
-          const Text(
-            'Kecerdasan Artifisial (AI & BISINDO)',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.darkGreen,
-            ),
-          ),
-          const SizedBox(height: 10),
-          AppCard(
-            margin: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Sensitivitas BISINDO (Confidence)',
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkGreen,
+                  // Main Settings Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFFEDF0E9)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x05263D2F),
+                          blurRadius: 16,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Ukuran teks',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.darkGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFD9E2D5)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<double>(
+                              value: state.fontSize,
+                              isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  state.setFontSize(val);
+                                }
+                              },
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 16.0,
+                                  child: Text(
+                                    'Standar · 16px',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 19.0,
+                                  child: Text(
+                                    'Besar · 19px',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 22.0,
+                                  child: Text(
+                                    'Sangat besar · 22px',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Preview Box
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F3EB),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'Halo, senang bisa saling memahami.',
+                            style: TextStyle(
+                              fontSize: state.fontSize,
+                              color: const Color(0xFF5B6E55),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Divider(color: Color(0xFFE4E9E1), height: 1),
+                        ),
+
+                        // Confirmation section
+                        const Text(
+                          'Putar suara setelah konfirmasi',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Hasil isyarat dapat diperiksa dan disunting sebelum kamu menekan Putar.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Restart Onboarding Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const OnboardingScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.lightGreen,
+                        foregroundColor: AppColors.darkGreen,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Mulai ulang onboarding',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    Text(
-                      '${(_bisindoThreshold * 100).toInt()}%',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Reset Demo Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        state.resetDemo();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Demo dikembalikan ke keadaan awal.',
+                            ),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          AppRoutes.home,
+                          (route) => false,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: Color(0xFFB9C9B6)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Reset seluruh demo',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                Slider(
-                  value: _bisindoThreshold,
-                  min: 0.50,
-                  max: 0.90,
-                  divisions: 8,
-                  activeColor: AppColors.primary,
-                  onChanged: (val) => setState(() => _bisindoThreshold = val),
-                ),
-                const Text(
-                  'Ambang batas probabilitas klasifikasi model sebelum diucapkan via TTS.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 28),
-          AppButton(
-            label: 'Simpan Preferensi Aksesibilitas',
-            backgroundColor: AppColors.darkGreen,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Preferensi aksesibilitas telah diterapkan.'),
-                ),
-              );
-              Navigator.pop(context);
-            },
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
+        );
+      },
     );
   }
 }

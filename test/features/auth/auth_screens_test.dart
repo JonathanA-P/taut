@@ -21,8 +21,8 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('TAUT'), findsOneWidget);
-      expect(find.text('Aksesibilitas & Komunikasi Inklusif'), findsOneWidget);
+      expect(find.textContaining('taut'), findsOneWidget);
+      expect(find.text('Ruang untuk saling memahami'), findsOneWidget);
 
       // Advance timer so pending timer resolves
       await tester.pump(const Duration(milliseconds: 1600));
@@ -37,8 +37,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Komunikasi Inklusif'), findsOneWidget);
-      expect(find.text('Lanjutkan'), findsOneWidget);
+      expect(find.text('SALING MEMAHAMI'), findsOneWidget);
+      expect(find.textContaining('Ceritamu layak'), findsOneWidget);
+      expect(find.text('Mulai bersama TAUT'), findsOneWidget);
       expect(find.text('Lewati'), findsOneWidget);
     });
 
@@ -51,12 +52,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Selamat Datang Kembali'), findsOneWidget);
+      expect(find.text('Selamat datang'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(2));
-      expect(find.text('Masuk Akun'), findsOneWidget);
+      expect(find.text('Masuk demo'), findsOneWidget);
+      expect(find.text('Jelajahi tanpa akun'), findsOneWidget);
     });
 
-    testWidgets('RegisterScreen renders form fields and role chips', (tester) async {
+    testWidgets('RegisterScreen renders form fields and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -65,13 +67,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Bergabung Bersama TAUT'), findsOneWidget);
-      expect(find.text('Teman Tuli'), findsOneWidget);
-      expect(find.text('Teman Dengar'), findsOneWidget);
-      expect(find.text('Buat Akun TAUT'), findsOneWidget);
+      expect(find.text('Buat akun'), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(3));
+      expect(find.text('Daftar demo'), findsOneWidget);
     });
 
-    testWidgets('EditProfileScreen renders profile inputs and role selector', (tester) async {
+    testWidgets('EditProfileScreen renders profile inputs and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -80,9 +81,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Ubah Profil'), findsOneWidget);
-      expect(find.text('Alfredo Jonathan Purba'), findsOneWidget);
-      expect(find.text('Simpan Perubahan'), findsOneWidget);
+      expect(find.text('Edit profil'), findsOneWidget);
+      expect(find.text('Nama panggilan'), findsOneWidget);
+      expect(find.text('Simpan perubahan'), findsOneWidget);
     });
 
     testWidgets('SettingsAccessibilityScreen renders accessibility toggles', (tester) async {
@@ -94,10 +95,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Pengaturan & Aksesibilitas'), findsOneWidget);
-      expect(find.text('Skala Ukuran Teks'), findsOneWidget);
-      expect(find.text('Mode Kontras Maksimal'), findsOneWidget);
-      expect(find.text('Getaran Haptik Konfirmasi'), findsOneWidget);
+      expect(find.text('Pengaturan'), findsOneWidget);
+      expect(find.text('Ukuran teks'), findsOneWidget);
+      expect(find.text('Putar suara setelah konfirmasi'), findsOneWidget);
+      expect(find.text('Mulai ulang onboarding'), findsOneWidget);
+      expect(find.text('Reset seluruh demo'), findsOneWidget);
     });
   });
 }

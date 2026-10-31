@@ -1,315 +1,273 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/status_badge.dart';
+import '../../../core/routing/app_router.dart';
+import '../../../shared/models/taut_app_state.dart';
+import '../../friends/presentation/friends_list_screen.dart';
+import '../../privacy/presentation/privacy_policy_screen.dart';
+import 'edit_profile_screen.dart';
+import 'settings_accessibility_screen.dart';
 
-/// Screen 17: Profile & Account Screen.
-/// Clean, healthcare-oriented profile presentation with settings, accessibility, and account management.
+/// Profile Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Profil"
+/// - Profile Hero: Sage green background, large avatar, user name, "Ruangmu untuk terhubung.", "Edit profil" CTA
+/// - 3 Menu Listbuttons:
+///   1. Pengaturan & aksesibilitas
+///   2. Privasi & izin
+///   3. Teman terhubung
+/// - "Keluar dari demo" ghost button
+/// - Footer hint: "TAUT · Prototipe desain 01 / Data akun ini hanya contoh."
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  void _showLogoutDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: AppColors.errorBg,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.logout_rounded,
-                color: AppColors.error,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Konfirmasi Keluar Akun',
+  @override
+  Widget build(BuildContext context) {
+    final state = TautAppState();
+
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: Navigator.canPop(context)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    color: AppColors.darkGreen,
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+            title: const Text(
+              'Profil',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
                 color: AppColors.darkGreen,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Apakah Anda yakin ingin keluar dari akun TAUT? Sesi berbagi lokasi akan otomatis dihentikan.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13.5,
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    label: 'Batal',
-                    isOutlined: true,
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    label: 'Keluar',
-                    backgroundColor: AppColors.error,
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.pushNamedAndRemoveUntil(
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              child: Column(
+                children: [
+                  // Profile Hero (Sage green)
+                  _buildProfileHero(context, state),
+                  const SizedBox(height: 24),
+
+                  // 3 Menu Options Stack
+                  _buildMenuButton(
+                    context: context,
+                    icon: Icons.settings_outlined,
+                    title: 'Pengaturan & aksesibilitas',
+                    onTap: () {
+                      Navigator.push(
                         context,
-                        AppConstants.routeLogin,
-                        (route) => false,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsAccessibilityScreen(),
+                        ),
                       );
                     },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  _buildMenuButton(
+                    context: context,
+                    icon: Icons.shield_outlined,
+                    title: 'Privasi & izin',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivacyPolicyScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMenuButton(
+                    context: context,
+                    icon: Icons.people_outline_rounded,
+                    title: 'Teman terhubung',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FriendsListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Logout Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          AppRoutes.login,
+                          (route) => false,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: Color(0xFFB9C9B6)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Keluar dari demo',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Footer Hint
+                  const Text(
+                    'TAUT · Prototipe desain 01\nData akun ini hanya contoh.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileHero(BuildContext context, TautAppState state) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      decoration: BoxDecoration(
+        color: AppColors.sageGreen,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE9DDCD),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              state.userName.isNotEmpty ? state.userName[0] : '?',
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF655747),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            state.userName,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Ruangmu untuk terhubung.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EditProfileScreen(),
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: Color(0xFFB9C9B6)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text(
+              'Edit profil',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Profil & Pengaturan'),
-        actions: [
-          IconButton(
-            tooltip: 'Keluar Akun',
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            onPressed: () => _showLogoutDialog(context),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        children: [
-          Row(
-            children: [
-              StatusBadge.active(label: 'Akun Terverifikasi'),
-              const Spacer(),
-              const Text(
-                'Tim Mardua Holong',
-                style: TextStyle(
-                  fontSize: 12,
+  Widget _buildMenuButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE4E9E1)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x05263D2F),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+                  color: AppColors.darkGreen,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // PROFILE AVATAR & NAME CARD
-          Center(
-            child: Column(
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 2.5),
-                      ),
-                      child: const CircleAvatar(
-                        radius: 44,
-                        backgroundColor: AppColors.sageGreen,
-                        child: Text(
-                          'AJ',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.darkGreen,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColors.darkGreen,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.verified_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Alfredo Jonathan Purba',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.darkGreen,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                const Text(
-                  'alfredo@ub.ac.id • Teman Dengar & Lead Architect',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // EDIT PROFILE SHORTCUT
-          AppButton(
-            label: 'Ubah Data Profil',
-            icon: Icons.edit_outlined,
-            isOutlined: true,
-            onPressed: () {
-              Navigator.pushNamed(context, AppConstants.routeEditProfile);
-            },
-          ),
-          const SizedBox(height: 20),
-
-          // SETTINGS & ACCESS CONTROL SECTION
-          AppCard(
-            margin: EdgeInsets.zero,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.accessibility_new_rounded, color: AppColors.primary),
-                  title: const Text(
-                    'Pengaturan & Aksesibilitas',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
-                  ),
-                  subtitle: const Text(
-                    'Ukuran teks, kontras tinggi, haptik, TTS & BISINDO',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppConstants.routeSettings);
-                  },
-                ),
-                const Divider(color: AppColors.lightGreen, height: 1),
-                ListTile(
-                  leading: const Icon(Icons.people_outline_rounded, color: AppColors.primary),
-                  title: const Text(
-                    'Daftar Teman & Kode Undangan',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
-                  ),
-                  subtitle: const Text(
-                    'Kelola teman terpercaya dan perizinan berbagi lokasi',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppConstants.routeFriends);
-                  },
-                ),
-                const Divider(color: AppColors.lightGreen, height: 1),
-                ListTile(
-                  leading: const Icon(Icons.shield_outlined, color: AppColors.primary),
-                  title: const Text(
-                    'Kebijakan Privasi & Keamanan',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
-                  ),
-                  subtitle: const Text(
-                    'Pemrosesan lokal & PostgreSQL Row Level Security',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppConstants.routePrivacy);
-                  },
-                ),
-              ],
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF9EAFA3),
+              size: 22,
             ),
-          ),
-          const SizedBox(height: 18),
-
-          // APP VERSION & INFO CARD
-          AppCard(
-            margin: EdgeInsets.zero,
-            backgroundColor: AppColors.lightGreen,
-            borderColor: AppColors.sageGreen,
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.primaryGreen, size: 24),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppConfig.appName,
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
-                        ),
-                      ),
-                      Text(
-                        'Versi ${AppConfig.appVersion} • INCEPTION 2026 Hackathon',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // LOGOUT BUTTON
-          AppButton(
-            label: 'Keluar dari Akun',
-            icon: Icons.logout_rounded,
-            backgroundColor: AppColors.errorBg,
-            foregroundColor: AppColors.error,
-            onPressed: () => _showLogoutDialog(context),
-          ),
-          const SizedBox(height: 24),
-        ],
+          ],
+        ),
       ),
     );
   }

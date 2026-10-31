@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/models/taut_app_state.dart';
 
-/// Screen 14: Add Friend Screen.
-/// Facilitates mutual, consent-driven friend connections using unique invitation tokens.
+/// Add Friend Screen strictly implementing the TAUT HTML prototype:
+/// - Screen title: "Tambah teman"
+/// - Heading: "Perluas ruang terhubung."
+/// - Subtitle: "Tambahkan nama untuk mencoba alur berbagi."
+/// - Input: "Nama teman", placeholder "Contoh: Alya"
+/// - Button: "Tambah ke demo"
+/// - Hint: "Tidak ada undangan yang dikirim."
 class AddFriendScreen extends StatefulWidget {
   const AddFriendScreen({super.key});
 
@@ -15,197 +18,170 @@ class AddFriendScreen extends StatefulWidget {
 }
 
 class _AddFriendScreenState extends State<AddFriendScreen> {
-  final TextEditingController _codeController = TextEditingController();
-  final String _myInviteCode = 'TAUT-ALFREDO-8831';
-  bool _isLoading = false;
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void dispose() {
-    _codeController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
-  void _connectFriend() {
-    final code = _codeController.text.trim();
-    if (code.isEmpty) {
+  void _handleAddFriend(TautAppState state) {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan kode undangan teman terlebih dahulu.')),
+        const SnackBar(
+          content: Text('Masukkan nama teman.'),
+          duration: Duration(seconds: 2),
+        ),
       );
       return;
     }
 
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Undangan terkirim ke pemilik kode "$code". Menunggu persetujuan.'),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    });
+    final success = state.addFriend(name);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama ini sudah ada.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Teman contoh ditambahkan.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = TautAppState();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Tambah Teman Terpercaya'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.darkGreen,
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text(
+          'Tambah teman',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: StatusBadge.active(label: 'Token SHA-256 Aman'),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Hubungkan Teman & Pendamping',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.darkGreen,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Hanya teman yang Anda setujui yang dapat saling melihat posisi lokasi langsung.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.45,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Perluas ruang terhubung.',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                  letterSpacing: -0.6,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 8),
+              const Text(
+                'Tambahkan nama untuk mencoba alur berbagi.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
 
-            // MY INVITATION CODE CARD
-            AppCard(
-              margin: EdgeInsets.zero,
-              backgroundColor: AppColors.lightGreen,
-              borderColor: AppColors.sageGreen,
-              child: Column(
-                children: [
-                  const Text(
-                    'Kode Undangan Anda',
+              // Name Field
+              const Text(
+                'Nama teman',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkGreen,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _nameController,
+                maxLength: 40,
+                decoration: InputDecoration(
+                  hintText: 'Contoh: Alya',
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD9E2D5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => _handleAddFriend(state),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tambah ke demo',
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.sageGreen),
-                    ),
-                    child: SelectableText(
-                      _myInviteCode,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2.0,
-                        color: AppColors.darkGreen,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.copy_rounded, size: 16),
-                        label: const Text('Salin Kode'),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(120, 40),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Kode undangan disalin ke clipboard!'),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.share_rounded, size: 16),
-                        label: const Text('Bagikan'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(120, 40),
-                          backgroundColor: AppColors.darkGreen,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Membuka lembar berbagi kode undangan...'),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // ENTER FRIEND'S CODE CARD
-            AppCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Masukkan Kode Undangan Teman',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Dapatkan kode unik dari teman atau dokter pendamping Anda.',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _codeController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      hintText: 'Contoh: TAUT-ADRIEL-9921',
-                      prefixIcon: Icon(Icons.vpn_key_rounded, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  AppButton(
-                    label: 'Hubungkan Teman Sekarang',
-                    icon: Icons.check_circle_rounded,
-                    backgroundColor: AppColors.primary,
-                    isLoading: _isLoading,
-                    onPressed: _connectFriend,
-                  ),
-                ],
+              const SizedBox(height: 14),
+              const Text(
+                'Tidak ada undangan yang dikirim.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-          ],
+            ],
+          ),
         ),
       ),
     );

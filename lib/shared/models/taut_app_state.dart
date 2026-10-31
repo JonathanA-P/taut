@@ -229,8 +229,19 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setFacilityCategoryFilter(String filter) => setFacilityFilter(filter);
+
   void setFacilityQuery(String query) {
     _facilitySearchQuery = query;
+    notifyListeners();
+  }
+
+  void setFacilitySearchQuery(String query) => setFacilityQuery(query);
+
+  void stopHardwareTracks() {
+    _isMicActive = false;
+    _isCamActive = false;
+    _isTtsActive = false;
     notifyListeners();
   }
 
