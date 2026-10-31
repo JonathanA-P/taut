@@ -88,7 +88,7 @@ void main() {
       expect(find.textContaining('Jelajahi tanpa Akun'), findsOneWidget);
     });
 
-    testWidgets('EditProfileScreen renders profile inputs and submit button', (tester) async {
+    testWidgets('EditProfileScreen renders profile inputs, avatar photo picker, and submit button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -99,7 +99,15 @@ void main() {
 
       expect(find.text('Edit profil'), findsOneWidget);
       expect(find.text('Nama panggilan'), findsOneWidget);
+      expect(find.text('Ubah foto profil'), findsOneWidget);
       expect(find.text('Simpan perubahan'), findsOneWidget);
+
+      // Tap photo picker to open sheet
+      await tester.tap(find.text('Ubah foto profil'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pilih Foto Profil'), findsOneWidget);
+      expect(find.textContaining('Pilih foto atau avatar'), findsOneWidget);
     });
 
     testWidgets('SettingsAccessibilityScreen renders accessibility toggles', (tester) async {

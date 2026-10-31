@@ -106,9 +106,35 @@ class TautAppState extends ChangeNotifier {
     }
   }
 
+  String? _userAvatarUrl;
+  String? get userAvatarUrl => _userAvatarUrl;
+
+  void setUserAvatarUrl(String? url) {
+    _userAvatarUrl = url?.trim().isEmpty ?? true ? null : url?.trim();
+    notifyListeners();
+  }
+
+  final Map<String, String> _friendAvatars = {
+    'Nadia': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    'Raka': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    'Dinda': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+  };
+
+  String? getFriendAvatar(String name) => _friendAvatars[name];
+
   final List<FriendRequest> _friendRequests = [
-    const FriendRequest(name: 'Budi Santoso', username: 'budi.s', avatarInitial: 'B'),
-    const FriendRequest(name: 'Siti Rahma', username: 'siti.r', avatarInitial: 'S'),
+    const FriendRequest(
+      name: 'Budi Santoso',
+      username: 'budi.s',
+      avatarInitial: 'B',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    ),
+    const FriendRequest(
+      name: 'Siti Rahma',
+      username: 'siti.r',
+      avatarInitial: 'S',
+      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+    ),
   ];
   List<FriendRequest> get friendRequests => List.unmodifiable(_friendRequests);
   int get pendingRequestsCount => _friendRequests.length;
@@ -117,6 +143,9 @@ class TautAppState extends ChangeNotifier {
     _friendRequests.remove(req);
     if (!_friends.contains(req.name)) {
       _friends.add(req.name);
+    }
+    if (req.avatarUrl != null) {
+      _friendAvatars[req.name] = req.avatarUrl!;
     }
     notifyListeners();
   }
@@ -459,6 +488,7 @@ class TautAppState extends ChangeNotifier {
 
   void resetDemo() {
     _userName = 'Adriel';
+    _userAvatarUrl = null;
     _friends = ['Nadia', 'Raka', 'Dinda'];
     _sessions.clear();
     cancelTimers();
@@ -529,11 +559,13 @@ class FriendRequest {
   final String name;
   final String username;
   final String avatarInitial;
+  final String? avatarUrl;
 
   const FriendRequest({
     required this.name,
     required this.username,
     required this.avatarInitial,
+    this.avatarUrl,
   });
 }
 

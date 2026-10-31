@@ -15,7 +15,7 @@ void main() {
       state.setUserHandle('adriel');
     });
 
-    testWidgets('ProfileScreen displays unique username handle under user name', (tester) async {
+    testWidgets('ProfileScreen displays unique username handle under user name and no accessibility settings option', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -26,6 +26,9 @@ void main() {
 
       expect(find.text('Adriel'), findsOneWidget);
       expect(find.text('@adriel'), findsOneWidget);
+      expect(find.text('Pengaturan & aksesibilitas'), findsNothing);
+      expect(find.text('Privasi & izin'), findsOneWidget);
+      expect(find.text('Teman terhubung'), findsOneWidget);
     });
 
     testWidgets('FriendsListScreen displays pending requests with Terima and Tolak actions', (tester) async {

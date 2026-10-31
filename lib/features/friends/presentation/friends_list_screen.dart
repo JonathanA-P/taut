@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_avatar.dart';
 
 class FriendsListScreen extends StatelessWidget {
   const FriendsListScreen({super.key});
@@ -102,16 +103,12 @@ class FriendsListScreen extends StatelessWidget {
                                 ),
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
+                                    TautAvatar(
+                                      name: req.name,
+                                      avatarUrl: req.avatarUrl,
                                       radius: 18,
                                       backgroundColor: const Color(0xFFE5EEE5),
-                                      child: Text(
-                                        req.avatarInitial,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
+                                      textColor: AppColors.darkGreen,
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
@@ -315,22 +312,12 @@ class FriendsListScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: colorBg,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                name.isNotEmpty ? name[0] : '?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: colorTxt,
-                ),
-              ),
+            TautAvatar(
+              name: name,
+              avatarUrl: state.getFriendAvatar(name),
+              radius: 24,
+              backgroundColor: colorBg,
+              textColor: colorTxt,
             ),
             const SizedBox(width: 14),
             Expanded(

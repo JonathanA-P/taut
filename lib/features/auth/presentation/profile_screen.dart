@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -49,13 +50,6 @@ class ProfileScreen extends StatelessWidget {
                   _buildProfileHero(context, state),
                   const SizedBox(height: 24),
 
-                  _buildMenuButton(
-                    context: context,
-                    icon: Icons.settings_outlined,
-                    title: 'Pengaturan & aksesibilitas',
-                    onTap: () => state.navigateTo('settings'),
-                  ),
-                  const SizedBox(height: 12),
                   _buildMenuButton(
                     context: context,
                     icon: Icons.shield_outlined,
@@ -128,23 +122,13 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE9DDCD),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              state.userName.isNotEmpty ? state.userName[0] : '?',
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF655747),
-              ),
-            ),
+          TautAvatar(
+            name: state.userName,
+            avatarUrl: state.userAvatarUrl,
+            radius: 40,
+            border: Border.all(color: Colors.white, width: 3),
+            backgroundColor: const Color(0xFFE9DDCD),
+            textColor: const Color(0xFF655747),
           ),
           const SizedBox(height: 14),
           Text(

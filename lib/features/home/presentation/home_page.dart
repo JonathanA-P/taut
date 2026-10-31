@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../../shared/widgets/taut_avatar.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
 class HomePage extends StatelessWidget {
@@ -78,7 +79,11 @@ class HomePage extends StatelessWidget {
                             state.navigateTo('profile');
                           }
                         },
-                        child: _buildAvatar(state.userName, 0),
+                        child: _buildAvatar(
+                          state.userName,
+                          0,
+                          avatarUrl: state.userAvatarUrl,
+                        ),
                       ),
                     ],
                   ),
@@ -167,7 +172,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String name, int index) {
+  Widget _buildAvatar(String name, int index, {String? avatarUrl}) {
     final colors = [
       const Color(0xFFE9DDCD),
       const Color(0xFFDCE7DC),
@@ -180,25 +185,14 @@ class HomePage extends StatelessWidget {
     ];
     final bg = colors[index % colors.length];
     final fg = textColors[index % textColors.length];
-    final letter = name.isNotEmpty ? name[0].toUpperCase() : 'U';
 
-    return Container(
-      width: 47,
-      height: 47,
-      decoration: BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.background, width: 3),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        letter,
-        style: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          color: fg,
-        ),
-      ),
+    return TautAvatar(
+      name: name,
+      avatarUrl: avatarUrl,
+      radius: 23.5,
+      border: Border.all(color: AppColors.background, width: 3),
+      backgroundColor: bg,
+      textColor: fg,
     );
   }
 
@@ -423,7 +417,11 @@ class HomePage extends StatelessWidget {
             onTap: () => state.navigateTo('friends'),
             child: Column(
               children: [
-                _buildAvatar(friendName, i),
+                _buildAvatar(
+                  friendName,
+                  i,
+                  avatarUrl: state.getFriendAvatar(friendName),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   friendName,
