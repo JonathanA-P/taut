@@ -1,17 +1,23 @@
 import 'dart:async';
 
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+
 import '../../../core/errors/app_exception.dart';
 import '../../../shared/models/user_profile.dart';
 import '../domain/auth_repository.dart';
 
-/// Foundation implementation of [AuthRepository] for Stage 01.
-/// Real implementation using `supabase_flutter` will be completed by Alfredo in
-/// branch `feature/supabase-auth-friends`.
+/// Production implementation of [AuthRepository] powered by Supabase Auth and PostgreSQL.
+/// Feature Owner: Alfredo Jonathan Purba (Team Lead & Backend Architect)
 class AuthRepositoryImpl implements AuthRepository {
-  final _controller = StreamController<UserProfile?>.broadcast();
-  UserProfile? _currentUser;
+  final sb.SupabaseClient? _customClient;
 
-  AuthRepositoryImpl();
+  AuthRepositoryImpl({sb.SupabaseClient? client}) : _customClient = client;
+
+  sb.SupabaseClient get _client {
+    final custom = _customClient;
+    if (custom != null) return custom;
+    return sb.Supabase.instance.client;
+  }
 
   @override
   Future<UserProfile> signUp({
@@ -19,11 +25,41 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     required String displayName,
   }) async {
-    // Stage 01 contract stub - throws until Alfredo wires Supabase client
-    throw const AuthException(
-      message: 'Supabase Auth belum dihubungkan (Stage 01 Foundation).',
-      code: 'AUTH_NOT_IMPLEMENTED',
-    );
+    try {
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'display_name': displayName},
+      );
+
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException(
+          message: 'Pendaftaran gagal: Pengguna tidak dapat dibuat.',
+          code: 'USER_CREATION_FAILED',
+        );
+      }
+
+      // Fetch the automatically provisioned profile from public.profiles
+      UserProfile? profile = await _fetchProfile(user.id);
+      profile ??= UserProfile(
+        id: user.id,
+        displayName: displayName,
+        email: user.email,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      return profile;
+    } on sb.AuthException catch (e) {
+      throw AuthException(
+        message: _mapSupabaseErrorMessage(e.message),
+        code: e.statusCode,
+      );
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(message: 'Terjadi kendala jaringan atau server: $e');
+    }
   }
 
   @override
@@ -31,29 +67,116 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    throw const AuthException(
-      message: 'Supabase Auth belum dihubungkan (Stage 01 Foundation).',
-      code: 'AUTH_NOT_IMPLEMENTED',
-    );
+    try {
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException(
+          message: 'Gagal masuk: Pengguna tidak ditemukan.',
+          code: 'USER_NOT_FOUND',
+        );
+      }
+
+      UserProfile? profile = await _fetchProfile(user.id);
+      profile ??= UserProfile(
+        id: user.id,
+        displayName:
+            (user.userMetadata?['display_name'] as String?) ?? 'Pengguna TAUT',
+        email: user.email,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      return profile;
+    } on sb.AuthException catch (e) {
+      throw AuthException(
+        message: _mapSupabaseErrorMessage(e.message),
+        code: e.statusCode,
+      );
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(message: 'Gagal masuk: $e');
+    }
   }
 
   @override
   Future<void> signOut() async {
-    _currentUser = null;
-    _controller.add(null);
+    try {
+      await _client.auth.signOut();
+    } catch (e) {
+      throw AuthException(message: 'Gagal keluar sesi: $e');
+    }
   }
 
   @override
   Future<UserProfile?> getCurrentUser() async {
-    return _currentUser;
+    final user = _client.auth.currentUser;
+    if (user == null) return null;
+
+    final profile = await _fetchProfile(user.id);
+    return profile ??
+        UserProfile(
+          id: user.id,
+          displayName:
+              (user.userMetadata?['display_name'] as String?) ??
+              'Pengguna TAUT',
+          email: user.email,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
   }
 
   @override
   Stream<UserProfile?> authStateChanges() {
-    return _controller.stream;
+    return _client.auth.onAuthStateChange.asyncMap((data) async {
+      final user = data.session?.user;
+      if (user == null) return null;
+
+      final profile = await _fetchProfile(user.id);
+      return profile ??
+          UserProfile(
+            id: user.id,
+            displayName:
+                (user.userMetadata?['display_name'] as String?) ??
+                'Pengguna TAUT',
+            email: user.email,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+    });
   }
 
-  void dispose() {
-    _controller.close();
+  Future<UserProfile?> _fetchProfile(String userId) async {
+    try {
+      final res = await _client
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (res != null) {
+        return UserProfile.fromJson(res);
+      }
+    } catch (_) {
+      // Fallback if query fails during initial registration race condition
+    }
+    return null;
+  }
+
+  String _mapSupabaseErrorMessage(String rawMessage) {
+    if (rawMessage.contains('Invalid login credentials')) {
+      return 'Email atau kata sandi tidak sesuai.';
+    }
+    if (rawMessage.contains('User already registered')) {
+      return 'Email ini sudah terdaftar. Silakan masuk.';
+    }
+    if (rawMessage.contains('Password should be at least')) {
+      return 'Kata sandi minimal harus terdiri dari 6 karakter.';
+    }
+    return rawMessage;
   }
 }
