@@ -223,20 +223,20 @@ class HomePage extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.sageGreen,
         borderRadius: BorderRadius.circular(26),
       ),
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
           Positioned(
-            right: -10,
-            bottom: 20,
+            right: -6,
+            bottom: 4,
             child: SizedBox(
-              width: 140,
-              height: 120,
-              child: TautIllustration.communicationHero(height: 120),
+              width: 155,
+              height: 155,
+              child: TautIllustration.communicationHero(height: 155),
             ),
           ),
           Column(
@@ -280,7 +280,7 @@ class HomePage extends StatelessWidget {
                   if (onNavigateToCommunication != null) {
                     onNavigateToCommunication!();
                   } else {
-                    state.navigateTo('comm');
+                    state.navigateTo('hub');
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -324,7 +324,7 @@ class HomePage extends StatelessWidget {
             if (onNavigateToCommunication != null) {
               onNavigateToCommunication!();
             } else {
-              state.navigateTo('comm');
+              state.navigateTo('hub');
             }
           },
         ),
@@ -337,7 +337,7 @@ class HomePage extends StatelessWidget {
             if (onNavigateToCommunication != null) {
               onNavigateToCommunication!();
             } else {
-              state.navigateTo('comm');
+              state.navigateTo('hub');
             }
           },
         ),

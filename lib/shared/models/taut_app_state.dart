@@ -57,7 +57,7 @@ class TautAppState extends ChangeNotifier {
         navigateTo('home');
         break;
       case 1:
-        navigateTo('comm');
+        navigateTo('hub');
         break;
       case 2:
         navigateTo('location');

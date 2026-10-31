@@ -30,8 +30,15 @@ void main() {
       // Verify initial tab has greeting
       expect(find.text('Halo, selamat datang'), findsOneWidget);
 
-      // Switch to Komunikasi tab
+      // Switch to Komunikasi tab (shows pre-communication landing screen)
       await tester.tap(find.text('Komunikasi').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+      expect(find.text('Dua arah.\nSatu percakapan.'), findsOneWidget);
+
+      // Tap Mulai komunikasi to enter live communication
+      await tester.ensureVisible(find.text('Mulai komunikasi'));
+      await tester.tap(find.text('Mulai komunikasi'));
       await tester.pumpAndSettle();
       expect(find.text('Komunikasi langsung'), findsOneWidget);
 

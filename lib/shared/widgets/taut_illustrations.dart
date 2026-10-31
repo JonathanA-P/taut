@@ -150,110 +150,173 @@ class TautIllustration {
 class _CommunicationHeroPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+    if (size.width <= 0 || size.height <= 0) return;
 
-    // Soft organic background blob
-    final blobPaint = Paint()
-      ..color = AppColors.sageGreen.withValues(alpha: 0.5)
-      ..style = PaintingStyle.fill;
+    // ViewBox is 230x230, exactly matching the prototype SVG
+    final scale = (size.width / 230).clamp(0.0, size.height / 230);
+    final dx = (size.width - 230 * scale) / 2;
+    final dy = (size.height - 230 * scale) / 2;
 
-    final path = Path()
-      ..moveTo(w * 0.1, h * 0.5)
-      ..quadraticBezierTo(w * 0.15, h * 0.05, w * 0.55, h * 0.1)
-      ..quadraticBezierTo(w * 0.95, h * 0.15, w * 0.9, h * 0.6)
-      ..quadraticBezierTo(w * 0.85, h * 0.95, w * 0.45, h * 0.9)
-      ..quadraticBezierTo(w * 0.05, h * 0.85, w * 0.1, h * 0.5)
+    canvas.save();
+    canvas.translate(dx, dy);
+    canvas.scale(scale);
+
+    // 1. Ground shadow ellipse: <ellipse cx="116" cy="205" rx="95" ry="12" fill="#b8cbb0"/>
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(116, 205), width: 190, height: 24),
+      Paint()..color = const Color(0xFFB8CBB0)..style = PaintingStyle.fill,
+    );
+
+    // 2. Circular backdrop: <circle cx="129" cy="101" r="86" fill="#e7efdf"/>
+    canvas.drawCircle(
+      const Offset(129, 101),
+      86,
+      Paint()..color = const Color(0xFFE7EFDF)..style = PaintingStyle.fill,
+    );
+
+    // 3. Left person shirt/body: <path d="M30 200v-55q0-38 40-38t40 38v55" fill="#527B5D"/>
+    final leftBody = Path()
+      ..moveTo(30, 200)
+      ..lineTo(30, 145)
+      ..quadraticBezierTo(30, 107, 70, 107)
+      ..quadraticBezierTo(110, 107, 110, 145)
+      ..lineTo(110, 200)
       ..close();
-    canvas.drawPath(path, blobPaint);
-
-    // Accent soft circle
-    final accentPaint = Paint()
-      ..color = AppColors.lightGreen
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(w * 0.78, h * 0.35), h * 0.28, accentPaint);
-
-    // Left Figure (Friendly Teal/Green)
-    final figurePaint1 = Paint()
-      ..color = AppColors.primaryGreen
-      ..style = PaintingStyle.fill;
-
-    // Head
-    canvas.drawCircle(Offset(w * 0.32, h * 0.36), h * 0.14, figurePaint1);
-    // Torso (rounded pill)
-    final torso1 = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(w * 0.32, h * 0.76),
-        width: w * 0.22,
-        height: h * 0.5,
-      ),
-      const Radius.circular(24),
+    canvas.drawPath(
+      leftBody,
+      Paint()..color = const Color(0xFF527B5D)..style = PaintingStyle.fill,
     );
-    canvas.drawRRect(torso1, figurePaint1);
 
-    // Right Figure (Dark Green)
-    final figurePaint2 = Paint()
-      ..color = AppColors.darkGreen
-      ..style = PaintingStyle.fill;
-
-    // Head
-    canvas.drawCircle(Offset(w * 0.68, h * 0.36), h * 0.14, figurePaint2);
-    // Torso
-    final torso2 = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(w * 0.68, h * 0.76),
-        width: w * 0.22,
-        height: h * 0.5,
-      ),
-      const Radius.circular(24),
+    // 4. Right person shirt/body: <path d="M125 200v-61q0-32 34-32t39 32v61" fill="#a7b997"/>
+    final rightBody = Path()
+      ..moveTo(125, 200)
+      ..lineTo(125, 139)
+      ..quadraticBezierTo(125, 107, 159, 107)
+      ..quadraticBezierTo(193, 107, 198, 139)
+      ..lineTo(198, 200)
+      ..close();
+    canvas.drawPath(
+      rightBody,
+      Paint()..color = const Color(0xFFA7B997)..style = PaintingStyle.fill,
     );
-    canvas.drawRRect(torso2, figurePaint2);
 
-    // Speech bubble connecting them in the center
-    final bubblePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final bubbleShadow = Paint()
-      ..color = AppColors.darkGreen.withValues(alpha: 0.12)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-
-    final bubbleRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(w * 0.50, h * 0.34),
-        width: w * 0.26,
-        height: h * 0.32,
-      ),
-      const Radius.circular(14),
+    // 5. Left person arms: <path d="m53 143 30 31 50-28" stroke="#d6aa8b" stroke-width="16" stroke-linecap="round"/>
+    final leftArm = Path()
+      ..moveTo(53, 143)
+      ..lineTo(83, 174)
+      ..lineTo(133, 146);
+    canvas.drawPath(
+      leftArm,
+      Paint()
+        ..color = const Color(0xFFD6AA8B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 16
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
     );
-    canvas.drawRRect(bubbleRect.shift(const Offset(0, 3)), bubbleShadow);
-    canvas.drawRRect(bubbleRect, bubblePaint);
 
-    // Sound wave lines inside bubble
-    final wavePaint = Paint()
-      ..color = AppColors.primaryGreen
-      ..strokeWidth = 2.5
+    // 6. Right person arms: <path d="m176 143-23 28-25-18" stroke="#b87d61" stroke-width="14" stroke-linecap="round"/>
+    final rightArm = Path()
+      ..moveTo(176, 143)
+      ..lineTo(153, 171)
+      ..lineTo(128, 153);
+    canvas.drawPath(
+      rightArm,
+      Paint()
+        ..color = const Color(0xFFB87D61)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 14
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // 7. Left head: <ellipse cx="69" cy="79" rx="25" ry="31" fill="#d6aa8b"/>
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(69, 79), width: 50, height: 62),
+      Paint()..color = const Color(0xFFD6AA8B)..style = PaintingStyle.fill,
+    );
+
+    // 8. Left hair: <path d="M44 80q-15-40 22-38 35-1 28 36l-12-16q-11 15-38 10" fill="#263d2f"/>
+    final leftHair = Path()
+      ..moveTo(44, 80)
+      ..quadraticBezierTo(29, 40, 66, 42)
+      ..quadraticBezierTo(101, 41, 94, 78)
+      ..lineTo(82, 62)
+      ..quadraticBezierTo(71, 77, 44, 72)
+      ..close();
+    canvas.drawPath(
+      leftHair,
+      Paint()..color = const Color(0xFF263D2F)..style = PaintingStyle.fill,
+    );
+
+    // 9. Right head: <ellipse cx="159" cy="82" rx="24" ry="30" fill="#b87d61"/>
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(159, 82), width: 48, height: 60),
+      Paint()..color = const Color(0xFFB87D61)..style = PaintingStyle.fill,
+    );
+
+    // 10. Right hair: <path d="M135 79q-12-35 19-39 36-6 30 41l-14-23q-15 13-35 12" fill="#384a38"/>
+    final rightHair = Path()
+      ..moveTo(135, 79)
+      ..quadraticBezierTo(123, 44, 154, 40)
+      ..quadraticBezierTo(190, 34, 184, 81)
+      ..lineTo(170, 58)
+      ..quadraticBezierTo(155, 71, 135, 70)
+      ..close();
+    canvas.drawPath(
+      rightHair,
+      Paint()..color = const Color(0xFF384A38)..style = PaintingStyle.fill,
+    );
+
+    // 11. Eyes: <path d="M82 84h3m67 0h3" stroke="#263d2f" stroke-width="3" stroke-linecap="round"/>
+    final eyePaint = Paint()
+      ..color = const Color(0xFF263D2F)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
+    canvas.drawLine(const Offset(82, 84), const Offset(85, 84), eyePaint);
+    canvas.drawLine(const Offset(152, 84), const Offset(155, 84), eyePaint);
 
-    canvas.drawLine(
-      Offset(w * 0.44, h * 0.34),
-      Offset(w * 0.44, h * 0.34),
-      wavePaint,
+    // 12. Smiles: <path d="M79 95q7 5 11-1m50 1q6 5 11 0" stroke="#79533c" fill="none" stroke-width="2"/>
+    final smilePaint = Paint()
+      ..color = const Color(0xFF79533C)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    final leftSmile = Path()
+      ..moveTo(79, 95)
+      ..quadraticBezierTo(86, 100, 90, 94);
+    canvas.drawPath(leftSmile, smilePaint);
+
+    final rightSmile = Path()
+      ..moveTo(140, 95)
+      ..quadraticBezierTo(146, 100, 151, 95);
+    canvas.drawPath(rightSmile, smilePaint);
+
+    // 13. Speech bubble: <rect x="85" y="7" width="55" height="33" rx="14" fill="white"/>
+    final bubblePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(85, 7, 55, 33),
+        const Radius.circular(14),
+      ),
+      bubblePaint,
     );
-    canvas.drawLine(
-      Offset(w * 0.48, h * 0.28),
-      Offset(w * 0.48, h * 0.40),
-      wavePaint,
-    );
-    canvas.drawLine(
-      Offset(w * 0.52, h * 0.25),
-      Offset(w * 0.52, h * 0.43),
-      wavePaint,
-    );
-    canvas.drawLine(
-      Offset(w * 0.56, h * 0.30),
-      Offset(w * 0.56, h * 0.38),
-      wavePaint,
-    );
+    // Tail: <path d="m108 38-8 9 2-12" fill="white"/>
+    final tail = Path()
+      ..moveTo(108, 38)
+      ..lineTo(100, 47)
+      ..lineTo(102, 35)
+      ..close();
+    canvas.drawPath(tail, bubblePaint);
+
+    // Dots: <circle cx="102" cy="23" r="3" fill="#527B5D"/> etc.
+    final dotPaint = Paint()..color = const Color(0xFF527B5D)..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(102, 23), 3, dotPaint);
+    canvas.drawCircle(const Offset(113, 23), 3, dotPaint);
+    canvas.drawCircle(const Offset(124, 23), 3, dotPaint);
+
+    canvas.restore();
   }
 
   @override

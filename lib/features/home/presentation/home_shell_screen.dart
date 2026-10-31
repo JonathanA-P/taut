@@ -6,6 +6,7 @@ import '../../auth/presentation/edit_profile_screen.dart';
 import '../../auth/presentation/profile_screen.dart';
 import '../../auth/presentation/settings_accessibility_screen.dart';
 import '../../communication/presentation/communication_hub_screen.dart';
+import '../../communication/presentation/communication_landing_screen.dart';
 import '../../friends/presentation/add_friend_screen.dart';
 import '../../friends/presentation/friends_list_screen.dart';
 import '../../friends/presentation/live_location_screen.dart';
@@ -31,8 +32,9 @@ class HomeShellScreen extends StatelessWidget {
     switch (page) {
       case 'home':
         return const HomePage();
-      case 'comm':
       case 'hub':
+        return const CommunicationLandingScreen();
+      case 'comm':
         return const CommunicationHubScreen();
       case 'location':
         return const LocationSharingScreen();
