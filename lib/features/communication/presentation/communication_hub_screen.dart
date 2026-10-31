@@ -2120,37 +2120,39 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
             children: [
               // Manual Text Input Fallback (for Teman Tuli)
               Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7FAF6),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFD6E4D4)),
+                child: TextField(
+                  controller: _manualInputController,
+                  textInputAction: TextInputAction.send,
+                  decoration: InputDecoration(
+                    hintText: 'Tulis pesan...',
+                    hintStyle: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF7FAF6),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 10, 4, 10),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: Color(0xFFD6E4D4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                      onPressed: () => _handleSendManual(state),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _manualInputController,
-                          decoration: const InputDecoration(
-                            hintText: 'Tulis pesan...',
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          onSubmitted: (_) => _handleSendManual(state),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
-                        onPressed: () => _handleSendManual(state),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                  ),
+                  onSubmitted: (_) => _handleSendManual(state),
                 ),
               ),
               const SizedBox(width: 10),

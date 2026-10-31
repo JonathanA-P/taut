@@ -65,5 +65,26 @@ void main() {
       // Sheet closes and input contains the selected template text
       expect(find.text('Di mana letak toilet terdekat?'), findsOneWidget);
     });
+
+    testWidgets('Unified manual input bar sends typed message via suffix send button', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const CommunicationHubScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.widgetWithText(TextField, 'Tulis pesan...');
+      expect(inputFinder, findsOneWidget);
+
+      await tester.enterText(inputFinder, 'Halo dari teman tuli');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_forward_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Halo dari teman tuli'), findsOneWidget);
+    });
   });
 }
