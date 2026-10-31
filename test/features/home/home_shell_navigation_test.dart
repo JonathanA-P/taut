@@ -82,5 +82,47 @@ void main() {
       expect(state.currentPage, 'home');
       expect(find.text('Halo, selamat datang'), findsOneWidget);
     });
+
+    testWidgets('Swiping left and right switches tabs smoothly between all 4 pages', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const HomeShellScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(state.currentNavIndex, 0);
+      expect(state.currentPage, 'home');
+      expect(find.byType(PageView), findsOneWidget);
+
+      // Swipe left from Beranda -> Komunikasi
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 1);
+      expect(state.currentPage, 'hub');
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+
+      // Swipe left from Komunikasi -> Lokasi
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+
+      // Swipe left from Lokasi -> Profil
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 3);
+      expect(state.currentPage, 'profile');
+      expect(find.text('Profil'), findsWidgets);
+
+      // Swipe right from Profil -> Lokasi
+      await tester.fling(find.byType(PageView), const Offset(400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+    });
   });
 }

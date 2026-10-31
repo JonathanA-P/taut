@@ -21,10 +21,98 @@ import '../../location_sharing/presentation/location_sharing_screen.dart';
 import '../../privacy/presentation/privacy_policy_screen.dart';
 import 'home_page.dart';
 
-class HomeShellScreen extends StatelessWidget {
+class HomeShellScreen extends StatefulWidget {
   final int initialIndex;
 
   const HomeShellScreen({super.key, this.initialIndex = 0});
+
+  @override
+  State<HomeShellScreen> createState() => _HomeShellScreenState();
+}
+
+class _HomeShellScreenState extends State<HomeShellScreen> {
+  late final PageController _pageController;
+  bool _isAnimatingToPage = false;
+
+  static const _primaryTabs = ['home', 'hub', 'location', 'profile'];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.initialIndex);
+    if (widget.initialIndex > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final state = TautAppState();
+        state.switchToTab(widget.initialIndex);
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(HomeShellScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      _isAnimatingToPage = true;
+      _pageController.animateToPage(
+        widget.initialIndex,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      ).then((_) {
+        if (mounted) {
+          _isAnimatingToPage = false;
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index, TautAppState state) {
+    if (!_isAnimatingToPage && state.currentNavIndex != index) {
+      HapticFeedback.selectionClick();
+      state.switchToTab(index);
+    }
+  }
+
+  void _onNavTap(int index, TautAppState state) {
+    if (state.currentNavIndex == index && _primaryTabs.contains(state.currentPage)) {
+      return;
+    }
+    _isAnimatingToPage = true;
+    state.switchToTab(index);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      ).then((_) {
+        if (mounted) {
+          _isAnimatingToPage = false;
+        }
+      });
+    } else {
+      _isAnimatingToPage = false;
+    }
+  }
+
+  void _syncPageWithNav(int targetIndex) {
+    if (_pageController.hasClients &&
+        !_isAnimatingToPage &&
+        (_pageController.page?.round() ?? 0) != targetIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            _pageController.hasClients &&
+            !_isAnimatingToPage &&
+            (_pageController.page?.round() ?? 0) != targetIndex) {
+          _pageController.jumpToPage(targetIndex);
+        }
+      });
+    }
+  }
 
   Widget _resolveScreen(String page) {
     switch (page) {
@@ -73,6 +161,12 @@ class HomeShellScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         final activeNavIndex = state.currentNavIndex;
+        final isPrimaryTab = _primaryTabs.contains(state.currentPage);
+        final safeIndex = activeNavIndex.clamp(0, 3);
+
+        if (isPrimaryTab) {
+          _syncPageWithNav(safeIndex);
+        }
 
         return PopScope(
           canPop: !state.canPopPage,
@@ -100,18 +194,30 @@ class HomeShellScreen extends StatelessWidget {
                     padding: EdgeInsets.only(
                       bottom: state.isNavbarVisible ? 86 : 0,
                     ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeOutCubic,
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey(state.currentPage),
-                        child: _resolveScreen(state.currentPage),
-                      ),
-                    ),
+                    child: isPrimaryTab
+                        ? PageView(
+                            controller: _pageController,
+                            physics: const ClampingScrollPhysics(),
+                            onPageChanged: (idx) => _onPageChanged(idx, state),
+                            children: const [
+                              HomePage(),
+                              CommunicationLandingScreen(),
+                              LocationSharingScreen(),
+                              ProfileScreen(),
+                            ],
+                          )
+                        : AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeOutCubic,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
+                            child: KeyedSubtree(
+                              key: ValueKey(state.currentPage),
+                              child: _resolveScreen(state.currentPage),
+                            ),
+                          ),
                   ),
                 ),
                 if (state.isNavbarVisible)
@@ -121,7 +227,7 @@ class HomeShellScreen extends StatelessWidget {
                     bottom: 16,
                     child: SafeArea(
                       bottom: true,
-                      child: _buildFloatingNavBar(context, state, activeNavIndex),
+                      child: _buildFloatingNavBar(context, state, safeIndex),
                     ),
                   ),
               ],
@@ -135,10 +241,8 @@ class HomeShellScreen extends StatelessWidget {
   Widget _buildFloatingNavBar(
     BuildContext context,
     TautAppState state,
-    int activeIndex,
+    int safeIndex,
   ) {
-    final safeIndex = activeIndex.clamp(0, 3);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
@@ -183,7 +287,7 @@ class HomeShellScreen extends StatelessWidget {
                     icon: Icons.home_outlined,
                     activeIcon: Icons.home_rounded,
                     isActive: safeIndex == 0,
-                    onTap: () => state.switchToTab(0),
+                    onTap: () => _onNavTap(0, state),
                   ),
                   _buildNavItem(
                     index: 1,
@@ -191,7 +295,7 @@ class HomeShellScreen extends StatelessWidget {
                     icon: Icons.chat_bubble_outline_rounded,
                     activeIcon: Icons.chat_bubble_rounded,
                     isActive: safeIndex == 1,
-                    onTap: () => state.switchToTab(1),
+                    onTap: () => _onNavTap(1, state),
                   ),
                   _buildNavItem(
                     index: 2,
@@ -200,7 +304,7 @@ class HomeShellScreen extends StatelessWidget {
                     activeIcon: Icons.location_on_rounded,
                     isActive: safeIndex == 2,
                     hasBadge: state.isSharingLocation,
-                    onTap: () => state.switchToTab(2),
+                    onTap: () => _onNavTap(2, state),
                   ),
                   _buildNavItem(
                     index: 3,
@@ -208,7 +312,7 @@ class HomeShellScreen extends StatelessWidget {
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
                     isActive: safeIndex == 3,
-                    onTap: () => state.switchToTab(3),
+                    onTap: () => _onNavTap(3, state),
                   ),
                 ],
               ),
@@ -291,4 +395,3 @@ class HomeShellScreen extends StatelessWidget {
     );
   }
 }
-
