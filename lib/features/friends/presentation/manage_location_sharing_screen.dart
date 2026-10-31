@@ -18,6 +18,52 @@ class _ManageLocationSharingScreenState
   int _selectedDuration = 15;
   bool _hasAgreed = false;
 
+  void _showMinimalNotification(
+    BuildContext context, {
+    required String message,
+    IconData icon = Icons.check_circle_rounded,
+    Color iconColor = const Color(0xFF81C784),
+    Duration duration = const Duration(milliseconds: 2000),
+  }) {
+    final state = TautAppState();
+    final bottomMargin = state.isNavbarVisible ? 94.0 : 24.0;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        elevation: 3,
+        duration: duration,
+        margin: EdgeInsets.only(bottom: bottomMargin, left: 24, right: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        backgroundColor: const Color(0xFF1E2D22),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -29,23 +75,21 @@ class _ManageLocationSharingScreenState
 
   void _handleStartSharing(TautAppState state) {
     if (!_hasAgreed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Centang persetujuan terlebih dahulu untuk memulai simulasi.',
-          ),
-          duration: Duration(seconds: 2),
-        ),
+      _showMinimalNotification(
+        context,
+        message: 'Centang persetujuan terlebih dahulu.',
+        icon: Icons.warning_amber_rounded,
+        iconColor: const Color(0xFFFFB74D),
       );
       return;
     }
 
     if (_selectedRecipient == null || _selectedRecipient!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih penerima terlebih dahulu.'),
-          duration: Duration(seconds: 2),
-        ),
+      _showMinimalNotification(
+        context,
+        message: 'Pilih penerima terlebih dahulu.',
+        icon: Icons.warning_amber_rounded,
+        iconColor: const Color(0xFFFFB74D),
       );
       return;
     }
@@ -55,13 +99,9 @@ class _ManageLocationSharingScreenState
       durationMinutes: _selectedDuration,
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Sesi demo dimulai. Tidak ada lokasi nyata yang dikirim.',
-        ),
-        duration: Duration(seconds: 3),
-      ),
+    _showMinimalNotification(
+      context,
+      message: 'Sesi demo dimulai. Tidak ada lokasi nyata yang dikirim.',
     );
   }
 
@@ -445,13 +485,13 @@ class _ManageLocationSharingScreenState
                     const SizedBox(height: 28),
                   ],
 
-                  // Lokasi Teman yang Dibagikan ke Kita (Disetujui)
+                  // Daftar Orang yang Diterima Berbagi Lokasinya
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Expanded(
                         child: Text(
-                          'Lokasi teman yang dibagikan',
+                          'Daftar orang yang diterima berbagi lokasinya',
                           maxLines: 2,
                           softWrap: true,
                           overflow: TextOverflow.ellipsis,
@@ -484,6 +524,15 @@ class _ManageLocationSharingScreenState
                       ),
                     ],
                   ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Daftar teman yang berbagi lokasi kepadamu dan telah kamu setujui.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
                   const SizedBox(height: 14),
 
                   if (state.acceptedIncomingSessions.isEmpty)
@@ -497,7 +546,7 @@ class _ManageLocationSharingScreenState
                       ),
                       child: const Center(
                         child: Text(
-                          'Belum ada lokasi teman yang aktif diterima.\nSetujui permintaan masuk untuk melihat lokasi teman.',
+                          'Belum ada orang yang kamu terima berbagi lokasinya.\nSetujui permintaan masuk di atas untuk melihat lokasi teman.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -524,11 +573,10 @@ class _ManageLocationSharingScreenState
                     child: TextButton.icon(
                       onPressed: () {
                         state.simulateNewIncomingSharing();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Simulasi permintaan berbagi lokasi baru dari Raka ditambahkan.'),
-                            duration: Duration(seconds: 2),
-                          ),
+                        _showMinimalNotification(
+                          context,
+                          message: 'Simulasi permintaan berbagi lokasi baru dari Raka ditambahkan.',
+                          icon: Icons.person_add_rounded,
                         );
                       },
                       icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
@@ -671,21 +719,9 @@ class _ManageLocationSharingScreenState
                       child: ElevatedButton.icon(
                         onPressed: () {
                           state.acceptIncomingSession(incoming.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Kamu setuju menerima lokasi dari ${incoming.friendName}.'),
-                              duration: const Duration(seconds: 4),
-                              action: SnackBarAction(
-                                label: 'Lihat Lokasi',
-                                onPressed: () {
-                                  FriendLocationDetailSheet.show(
-                                    context,
-                                    incoming: incoming,
-                                    onStopSharing: () => state.stopIncomingSessionById(incoming.id),
-                                  );
-                                },
-                              ),
-                            ),
+                          _showMinimalNotification(
+                            context,
+                            message: 'Permintaan berbagi lokasi dari ${incoming.friendName} diterima.',
                           );
                         },
                         icon: const Icon(Icons.check_circle_rounded, size: 16),
@@ -715,11 +751,11 @@ class _ManageLocationSharingScreenState
                       child: OutlinedButton.icon(
                         onPressed: () {
                           state.rejectIncomingSession(incoming.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.'),
-                              duration: const Duration(seconds: 2),
-                            ),
+                          _showMinimalNotification(
+                            context,
+                            message: 'Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.',
+                            icon: Icons.info_outline_rounded,
+                            iconColor: const Color(0xFFFFB74D),
                           );
                         },
                         icon: const Icon(Icons.close_rounded, size: 16),
@@ -751,22 +787,10 @@ class _ManageLocationSharingScreenState
                         child: ElevatedButton.icon(
                           onPressed: () {
                             state.acceptIncomingSession(incoming.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Kamu setuju menerima lokasi dari ${incoming.friendName}.'),
-                                duration: const Duration(seconds: 4),
-                                action: SnackBarAction(
-                                  label: 'Lihat Lokasi',
-                                  onPressed: () {
-                                    FriendLocationDetailSheet.show(
-                                      context,
-                                      incoming: incoming,
-                                      onStopSharing: () => state.stopIncomingSessionById(incoming.id),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
+                          _showMinimalNotification(
+                            context,
+                            message: 'Permintaan berbagi lokasi dari ${incoming.friendName} diterima.',
+                          );
                           },
                           icon: const Icon(Icons.check_circle_rounded, size: 16),
                           label: const Text(
@@ -797,12 +821,12 @@ class _ManageLocationSharingScreenState
                         child: OutlinedButton.icon(
                           onPressed: () {
                             state.rejectIncomingSession(incoming.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                          _showMinimalNotification(
+                            context,
+                            message: 'Permintaan berbagi lokasi dari ${incoming.friendName} ditolak.',
+                            icon: Icons.info_outline_rounded,
+                            iconColor: const Color(0xFFFFB74D),
+                          );
                           },
                           icon: const Icon(Icons.close_rounded, size: 16),
                           label: const Text(
@@ -960,18 +984,18 @@ class _ManageLocationSharingScreenState
                             incoming: incoming,
                             onStopSharing: () {
                               state.stopIncomingSessionById(incoming.id);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
+                                _showMinimalNotification(
+                                  context,
+                                  message: 'Lokasi ${incoming.friendName} disembunyikan.',
+                                  icon: Icons.visibility_off_outlined,
+                                  iconColor: const Color(0xFFB0BEC5),
+                                );
                             },
                           );
                         },
-                        icon: const Icon(Icons.map_rounded, size: 16),
+                        icon: const Icon(Icons.location_on_rounded, size: 16),
                         label: const Text(
-                          'Lihat di Peta',
+                          'Lihat Lokasi Teman',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -996,11 +1020,11 @@ class _ManageLocationSharingScreenState
                       child: OutlinedButton(
                         onPressed: () {
                           state.stopIncomingSession(index);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
-                              duration: const Duration(seconds: 2),
-                            ),
+                          _showMinimalNotification(
+                            context,
+                            message: 'Lokasi ${incoming.friendName} disembunyikan.',
+                            icon: Icons.visibility_off_outlined,
+                            iconColor: const Color(0xFFB0BEC5),
                           );
                         },
                         style: OutlinedButton.styleFrom(
@@ -1034,18 +1058,18 @@ class _ManageLocationSharingScreenState
                             incoming: incoming,
                             onStopSharing: () {
                               state.stopIncomingSessionById(incoming.id);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
+                                _showMinimalNotification(
+                                  context,
+                                  message: 'Lokasi ${incoming.friendName} disembunyikan.',
+                                  icon: Icons.visibility_off_outlined,
+                                  iconColor: const Color(0xFFB0BEC5),
+                                );
                             },
                           );
                         },
-                          icon: const Icon(Icons.map_rounded, size: 16),
+                          icon: const Icon(Icons.location_on_rounded, size: 16),
                           label: const Text(
-                            'Lihat di Peta',
+                            'Lihat Lokasi Teman',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1072,12 +1096,12 @@ class _ManageLocationSharingScreenState
                         child: OutlinedButton(
                           onPressed: () {
                             state.stopIncomingSession(index);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Lokasi ${incoming.friendName} disembunyikan.'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                          _showMinimalNotification(
+                            context,
+                            message: 'Lokasi ${incoming.friendName} disembunyikan.',
+                            icon: Icons.visibility_off_outlined,
+                            iconColor: const Color(0xFFB0BEC5),
+                          );
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.textSecondary,

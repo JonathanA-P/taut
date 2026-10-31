@@ -62,10 +62,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Lokasi teman yang dibagikan'), findsOneWidget);
+      expect(find.text('Daftar orang yang diterima berbagi lokasinya'), findsOneWidget);
       expect(find.text('Nadia'), findsWidgets);
       expect(find.text('Budi Setiawan'), findsOneWidget);
-      expect(find.text('Lihat di Peta'), findsWidgets);
+      expect(find.text('Lihat Lokasi Teman'), findsWidgets);
       expect(find.text('Sembunyikan'), findsWidgets);
     });
 
@@ -88,7 +88,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Lokasi teman yang dibagikan'), findsOneWidget);
+      expect(find.text('Daftar orang yang diterima berbagi lokasinya'), findsOneWidget);
       expect(find.text('Sesi aktif'), findsOneWidget);
     });
 

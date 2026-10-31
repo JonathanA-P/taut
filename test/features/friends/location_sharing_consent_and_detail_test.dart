@@ -54,9 +54,9 @@ void main() {
       expect(find.text('Tolak'), findsOneWidget);
 
       // Check accepted active friend section
-      expect(find.text('Lokasi teman yang dibagikan'), findsOneWidget);
+      expect(find.text('Daftar orang yang diterima berbagi lokasinya'), findsOneWidget);
       expect(find.text('Nadia'), findsWidgets);
-      expect(find.text('Lihat di Peta'), findsWidgets);
+      expect(find.text('Lihat Lokasi Teman'), findsWidgets);
       expect(find.text('Sembunyikan'), findsWidgets);
     });
 
@@ -88,10 +88,10 @@ void main() {
       expect(state.acceptedIncomingSessions.length, 2);
 
       // SnackBar shows confirmation
-      expect(find.textContaining('Kamu setuju menerima lokasi dari Budi Setiawan'), findsOneWidget);
+      expect(find.text('Permintaan berbagi lokasi dari Budi Setiawan diterima.'), findsOneWidget);
     });
 
-    testWidgets('Tapping Lihat di Peta opens FriendLocationDetailSheet with map and coordinates', (tester) async {
+    testWidgets('Tapping Lihat Lokasi Teman opens FriendLocationDetailSheet with map and coordinates', (tester) async {
       tester.view.physicalSize = const Size(400, 1000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -107,8 +107,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap Lihat di Peta for Nadia
-      final viewMapButtons = find.text('Lihat di Peta');
+      // Tap Lihat Lokasi Teman for Nadia
+      final viewMapButtons = find.text('Lihat Lokasi Teman');
       expect(viewMapButtons, findsWidgets);
       await tester.ensureVisible(viewMapButtons.first);
       await tester.tap(viewMapButtons.first);
