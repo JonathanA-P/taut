@@ -1,3 +1,5 @@
+import 'package:permission_handler/permission_handler.dart' as ph;
+
 enum AppPermissionStatus {
   granted,
   denied,
@@ -17,19 +19,47 @@ abstract class PermissionService {
 class PermissionServiceImpl implements PermissionService {
   const PermissionServiceImpl();
 
+  ph.Permission _mapType(AppPermissionType type) {
+    switch (type) {
+      case AppPermissionType.location:
+        return ph.Permission.location;
+      case AppPermissionType.microphone:
+        return ph.Permission.microphone;
+      case AppPermissionType.camera:
+        return ph.Permission.camera;
+    }
+  }
+
+  AppPermissionStatus _mapStatus(ph.PermissionStatus status) {
+    switch (status) {
+      case ph.PermissionStatus.granted:
+      case ph.PermissionStatus.limited:
+        return AppPermissionStatus.granted;
+      case ph.PermissionStatus.denied:
+        return AppPermissionStatus.denied;
+      case ph.PermissionStatus.permanentlyDenied:
+        return AppPermissionStatus.permanentlyDenied;
+      case ph.PermissionStatus.restricted:
+        return AppPermissionStatus.restricted;
+      default:
+        return AppPermissionStatus.unknown;
+    }
+  }
+
   @override
   Future<AppPermissionStatus> checkPermission(AppPermissionType type) async {
-    return AppPermissionStatus.unknown;
+    final status = await _mapType(type).status;
+    return _mapStatus(status);
   }
 
   @override
   Future<AppPermissionStatus> requestPermission(AppPermissionType type) async {
-    return AppPermissionStatus.unknown;
+    final status = await _mapType(type).request();
+    return _mapStatus(status);
   }
 
   @override
   Future<bool> openAppSettings() async {
-    return false;
+    return ph.openAppSettings();
   }
 }
-
