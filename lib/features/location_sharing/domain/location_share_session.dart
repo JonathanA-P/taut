@@ -1,4 +1,3 @@
-/// Representation of an authorized live location sharing session between friends.
 class LocationShareSession {
   final String id;
   final String ownerId;
@@ -62,3 +61,4 @@ class LocationShareSession {
     'revoked_at': revokedAt?.toIso8601String(),
   };
 }
+

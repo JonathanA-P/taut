@@ -1,6 +1,6 @@
-import 'app.dart';
-import 'bootstrap/bootstrap.dart';
+import 'package:taut/bootstrap/bootstrap.dart';
 
 void main() {
-  bootstrap(() => const TautApp());
+  bootstrap();
 }
+

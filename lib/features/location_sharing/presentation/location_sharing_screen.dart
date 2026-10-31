@@ -1,203 +1,230 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/models/taut_app_state.dart';
 
-/// Location Sharing Hub Screen:
-/// Explicitly separates:
-/// 1. Location Sharing to Healthcare / External Contacts (via Share Sheet, Feature 3)
-/// 2. Friend-to-Friend Live Location Sharing (via Supabase Realtime, Feature 4)
 class LocationSharingScreen extends StatelessWidget {
   const LocationSharingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Berbagi Lokasi')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: StatusBadge.development(),
-          ),
-          const SizedBox(height: 16),
-          // FEATURE 3 SECTION
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.emergency_share_rounded,
-                        color: AppColors.secondary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Alur A: Berbagi ke Faskes / Kontak Luar',
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'Menggunakan Android Share Sheet (Tanpa database backend)',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Kirimkan tautan Google Maps koordinat Anda ke nomor darurat faskes atau pendamping melalui aplikasi eksternal (WhatsApp, SMS, dll). Konfirmasi data lokasi akan ditampilkan terlebih dahulu.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'Uji Pesan Berbagi Lokasi Faskes',
-                  icon: Icons.share_location_rounded,
-                  isOutlined: true,
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Konfirmasi Berbagi Lokasi'),
-                        content: const Text(
-                          'Lokasi Anda saat ini (-7.9526, 112.6144) akan disiapkan dalam format tautan Google Maps untuk dibagikan melalui Android Share Sheet.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Batal'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Panggilan share_plus akan diaktifkan pada Tahap 02 oleh Adriel.',
-                                  ),
-                                ),
-                              );
-                            },
-                            child: const Text('Buka Lembar Berbagi'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // FEATURE 4 SECTION
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.people_alt_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Alur B: Berbagi Lokasi Antar Teman Terpercaya',
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'Menggunakan Supabase Realtime & PostgreSQL RLS',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Berbagi lokasi langsung (foreground live location) dengan teman yang sudah terverifikasi melalui kode undangan. Pemilik lokasi memegang kendali penuh untuk menghentikan sesi kapan saja.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'Kelola Teman Terverifikasi',
-                  icon: Icons.person_search_rounded,
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppConstants.routeFriends);
-                  },
-                ),
-                const SizedBox(height: 8),
-                AppButton(
-                  label: 'Mulai Sesi Berbagi Baru',
-                  icon: Icons.broadcast_on_personal_rounded,
-                  isOutlined: true,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Sesi Supabase Realtime akan diaktifkan pada Tahap 02 oleh Alfredo.',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Sesi Berbagi Aktif (0)',
-              style: Theme.of(context).textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Text(
-                'Tidak ada sesi berbagi lokasi yang sedang berjalan.',
-                style: TextStyle(color: Colors.grey),
+    final state = TautAppState();
+
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: (Navigator.canPop(context) || state.canPopPage)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    color: AppColors.darkGreen,
+                    onPressed: () {
+                      if (state.canPopPage) {
+                        state.popPage();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
+                  )
+                : null,
+            title: const Text(
+              'Ruang lokasi',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkGreen,
               ),
+            ),
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeroCard(),
+                  const SizedBox(height: 24),
+
+                  _buildListButton(
+                    context: context,
+                    icon: Icons.local_hospital_rounded,
+                    title: 'Fasilitas kesehatan',
+                    subtitle: 'Cari klinik dan rumah sakit',
+                    onTap: () => state.navigateTo('finder'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildListButton(
+                    context: context,
+                    icon: Icons.people_outline_rounded,
+                    title: 'Teman terhubung',
+                    subtitle: '${state.friends.length} teman contoh',
+                    onTap: () => state.navigateTo('friends'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildListButton(
+                    context: context,
+                    icon: Icons.location_on_outlined,
+                    title: 'Berbagi lokasi',
+                    subtitle: '${state.sessions.length} sesi demo aktif',
+                    onTap: () => state.navigateTo('sharing'),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F3EB),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Text(
+                      'Tidak ada pelacakan latar belakang. Berbagi selalu dimulai dan dihentikan olehmu.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF5B6E55),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeroCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.sageGreen,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'DEKAT DENGAN YANG BERARTI',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2.0,
+              color: AppColors.darkGreen,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Ke mana pun,\ntetap terhubung.',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkGreen,
+              height: 1.2,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Temukan fasilitas dan atur berbagi lokasi dengan tenang.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF4C6551),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.location_on_rounded,
+              color: AppColors.primary,
+              size: 24,
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildListButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE4E9E1)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x05263D2F),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.lightGreen,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF9EAFA3),
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+

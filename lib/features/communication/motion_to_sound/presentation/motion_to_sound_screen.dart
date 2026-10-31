@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -85,7 +84,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     await _ttsService.initialize(language: 'id-ID');
 
     // 2. Initialize Model Engine
-    _modelStateSubscription = BisindoModelManager().stateStream.listen((state) {
+    _modelStateSubscription =
+        BisindoModelManager().stateStream.listen((state) {
       if (mounted) {
         setState(() => _modelState = state);
       }
@@ -98,18 +98,16 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     }
 
     // 3. Listen to Detection Events
-    _detectionSubscription = _detectorService.detectionStream.listen(
-      _handleDetectionEvent,
-    );
+    _detectionSubscription =
+        _detectorService.detectionStream.listen(_handleDetectionEvent);
 
     // 4. Check Camera Permission & Enumerate Cameras
     await _checkPermissionAndCameras();
   }
 
   Future<void> _checkPermissionAndCameras() async {
-    final status = await _permissionService.checkPermission(
-      AppPermissionType.camera,
-    );
+    final status =
+        await _permissionService.checkPermission(AppPermissionType.camera);
     if (!mounted) return;
 
     setState(() => _cameraPermission = status);
@@ -137,9 +135,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
   }
 
   Future<void> _requestCameraPermission() async {
-    final status = await _permissionService.requestPermission(
-      AppPermissionType.camera,
-    );
+    final status =
+        await _permissionService.requestPermission(AppPermissionType.camera);
     if (!mounted) return;
 
     setState(() => _cameraPermission = status);
@@ -225,8 +222,9 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
           _isCameraInitializing = false;
           _isCameraActive = false;
         });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal memulai kamera: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memulai kamera: $e')),
+        );
       }
     }
   }
@@ -331,10 +329,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
   void _backspace() {
     setState(() {
       if (_sentenceBuffer.isNotEmpty) {
-        _sentenceBuffer = _sentenceBuffer.substring(
-          0,
-          _sentenceBuffer.length - 1,
-        );
+        _sentenceBuffer =
+            _sentenceBuffer.substring(0, _sentenceBuffer.length - 1);
       }
     });
   }
@@ -538,8 +534,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
           color: _isProlongedUnrecognized
               ? AppColors.error
               : (_currentLiveLabel.isNotEmpty
-                    ? AppColors.primary
-                    : AppColors.outline),
+                  ? AppColors.primary
+                  : AppColors.outline),
           width: 2.5,
         ),
         boxShadow: [
@@ -594,9 +590,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
               right: 12,
               child: FloatingActionButton.small(
                 heroTag: 'camera_toggle',
-                backgroundColor: _isCameraActive
-                    ? AppColors.error
-                    : AppColors.primary,
+                backgroundColor:
+                    _isCameraActive ? AppColors.error : AppColors.primary,
                 foregroundColor: Colors.white,
                 onPressed: _isCameraActive ? _stopCamera : _startCamera,
                 child: Icon(
@@ -756,8 +751,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
               hasDetection
                   ? 'Terdeteksi: $_currentLiveLabel ($pct%)'
                   : (_isCameraActive
-                        ? 'Menunggu gerakan isyarat...'
-                        : 'Kamera Siaga'),
+                      ? 'Menunggu gerakan isyarat...'
+                      : 'Kamera Siaga'),
               style: TextStyle(
                 color: hasDetection ? Colors.white : Colors.white70,
                 fontWeight: FontWeight.bold,
@@ -942,9 +937,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
           // Large High-Contrast "Suarakan Sekarang" Button
           AppButton(
             label: 'Suarakan Sekarang 🔊',
-            onPressed: _sentenceBuffer.trim().isEmpty
-                ? null
-                : _speakCurrentSentence,
+            onPressed:
+                _sentenceBuffer.trim().isEmpty ? null : _speakCurrentSentence,
           ),
         ],
       ),
@@ -977,9 +971,8 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
                   fontSize: 12,
                 ),
               ),
-              backgroundColor: AppColors.primaryContainer.withValues(
-                alpha: 0.5,
-              ),
+              backgroundColor:
+                  AppColors.primaryContainer.withValues(alpha: 0.5),
               side: const BorderSide(color: AppColors.primary, width: 1.2),
               onPressed: () => _speakPreset(preset),
             );

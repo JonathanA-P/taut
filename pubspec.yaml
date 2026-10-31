@@ -1,21 +1,24 @@
 name: taut
-description: "A new Flutter project."
-publish_to: 'none'
-
-version: 1.0.0+1
+description: TAUT - Aplikasi aksesibilitas Android untuk INCEPTION 2026 Hackathon (tim Mardua Holong, Universitas Brawijaya).
+publish_to: "none"
+version: 0.1.0+1
 
 environment:
-  sdk: ^3.13.5
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.22.0"
 
 dependencies:
   flutter:
     sdk: flutter
-
   cupertino_icons: ^1.0.8
+  speech_to_text: ^7.5.0
+  supabase_flutter: ^2.18.3
+  crypto: ^3.0.6
+  flutter_tts: ^4.2.5
+  qr_flutter: ^4.1.0
   camera: ^0.12.2
   tflite_flutter: ^0.12.1
   image: ^4.12.0
-  flutter_tts: ^4.2.5
   permission_handler: ^13.0.2
   http: ^1.6.0
   path_provider: ^2.1.6
@@ -23,7 +26,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true

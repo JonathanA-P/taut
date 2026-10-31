@@ -1,4 +1,3 @@
-/// Value object representing an operation failure in the presentation layer.
 class Failure {
   final String title;
   final String message;
@@ -16,3 +15,4 @@ class Failure {
     return Failure(title: 'Terjadi Kendala', message: error.toString());
   }
 }
+

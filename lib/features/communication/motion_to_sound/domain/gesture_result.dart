@@ -1,4 +1,3 @@
-/// Result of a BISINDO gesture recognition pass.
 class GestureResult {
   final String label;
   final double confidence;
@@ -12,7 +11,6 @@ class GestureResult {
     required this.timestamp,
   });
 
-  /// Factory for unknown or low-confidence gestures to avoid fabricating translations.
   factory GestureResult.unknown([double confidence = 0.0]) {
     return GestureResult(
       label: 'Gerakan Tidak Dikenal',
@@ -38,3 +36,4 @@ class GestureResult {
   String toString() =>
       'GestureResult(label: $label, confidence: ${(confidence * 100).toStringAsFixed(1)}%, isRecognized: $isRecognized)';
 }
+

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/status_badge.dart';
 
-/// Navigable placeholder screen for Authentication.
-/// Feature Owner: Alfredo Jonathan Purba (Branch: feature/supabase-auth-friends).
 class LoginPlaceholderScreen extends StatelessWidget {
   const LoginPlaceholderScreen({super.key});
 
@@ -84,3 +82,4 @@ class LoginPlaceholderScreen extends StatelessWidget {
     );
   }
 }
+

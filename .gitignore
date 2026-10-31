@@ -22,6 +22,9 @@ migrate_working_dir/
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
 #.vscode/
+.kotlin/
+.vscode/
+.kotlin/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -51,4 +54,19 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+
+# Agent local files
+.agents/
+skills-lock.json
+
+# Internal AI & Agent workflow documentation (kept local, excluded from Git)
+AGENTS.md
+ARCHITECTURE.md
+DATABASE_DESIGN.md
+DEVELOPMENT_WORKFLOW.md
+IMPLEMENTATION_PLAN.md
+INTEGRATION_CONTRACTS.md
+PRIVACY_AND_SECURITY.md
+
+
 

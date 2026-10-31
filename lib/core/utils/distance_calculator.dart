@@ -1,14 +1,10 @@
 import 'dart:math' as math;
 
-/// Utility for geospatial distance calculation.
-/// Uses the Haversine formula (Earth radius ~6371 km).
-/// Standard library implementation: zero external dependencies.
 class DistanceCalculator {
   DistanceCalculator._();
 
   static const double _earthRadiusMeters = 6371000.0;
 
-  /// Calculates the great-circle distance between two GPS coordinates in meters.
   static double distanceBetweenMeters({
     required double startLatitude,
     required double startLongitude,
@@ -33,7 +29,6 @@ class DistanceCalculator {
     return _earthRadiusMeters * c;
   }
 
-  /// Calculates the distance in kilometers.
   static double distanceBetweenKm({
     required double startLatitude,
     required double startLongitude,
@@ -49,7 +44,6 @@ class DistanceCalculator {
         1000.0;
   }
 
-  /// Formats distance in an Indonesian human-readable string (e.g., "450 m" or "2.4 km").
   static String formatDistance(double meters) {
     if (meters < 1000) {
       return '${meters.round()} m';
@@ -62,3 +56,4 @@ class DistanceCalculator {
     return degrees * math.pi / 180.0;
   }
 }
+

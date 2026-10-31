@@ -10,15 +10,12 @@ enum AppPermissionStatus {
 
 enum AppPermissionType { location, microphone, camera }
 
-/// Abstract contract for querying and requesting runtime permissions.
-/// Decouples UI from direct native permission handlers.
 abstract class PermissionService {
   Future<AppPermissionStatus> checkPermission(AppPermissionType type);
   Future<AppPermissionStatus> requestPermission(AppPermissionType type);
   Future<bool> openAppSettings();
 }
 
-/// Production implementation using permission_handler.
 class PermissionServiceImpl implements PermissionService {
   const PermissionServiceImpl();
 

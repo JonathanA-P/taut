@@ -1,6 +1,5 @@
 import '../../../shared/models/user_profile.dart';
 
-/// Authentication status states.
 sealed class AuthState {
   const AuthState();
 }
@@ -26,3 +25,4 @@ class AuthError extends AuthState {
   final String message;
   const AuthError(this.message);
 }
+

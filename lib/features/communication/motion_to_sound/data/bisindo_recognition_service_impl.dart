@@ -3,9 +3,6 @@ import '../domain/bisindo_recognition_service.dart';
 import '../domain/gesture_result.dart';
 import 'bisindo_detector_service.dart';
 
-/// Concrete implementation of [BisindoRecognitionService] for Stage 02.
-/// Fully connects on-device TFLite inference via [BisindoDetectorService].
-/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class BisindoRecognitionServiceImpl implements BisindoRecognitionService {
   final BisindoDetectorService _detectorService;
 

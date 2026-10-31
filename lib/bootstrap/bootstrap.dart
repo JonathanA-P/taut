@@ -1,18 +1,8 @@
-import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:taut/app.dart';
 
-import 'package:flutter/widgets.dart';
-
-/// Bootstrap orchestrator for TAUT.
-/// Ensures system bindings, error zones, and critical services are initialized
-/// before the first frame is rendered.
-Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
+Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Global Flutter error catching
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    // In production, forward to monitoring service (e.g. Sentry)
-  };
-
-  runApp(await builder());
+  runApp(const TautApp());
 }
+

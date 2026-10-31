@@ -1,5 +1,3 @@
-/// Service responsible for constructing OpenStreetMap Overpass QL queries.
-/// Designed for reliable querying of hospitals, clinics, and doctors within a radius.
 class OsmOverpassService {
   final String endpoint;
   final int timeoutSeconds;
@@ -9,7 +7,6 @@ class OsmOverpassService {
     this.timeoutSeconds = 15,
   });
 
-  /// Builds a sanitized Overpass QL query string for healthcare amenities.
   String buildHealthcareQuery({
     required double latitude,
     required double longitude,
@@ -27,3 +24,4 @@ out center;
 ''';
   }
 }
+

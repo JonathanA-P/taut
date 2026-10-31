@@ -38,6 +38,10 @@
     </application>
 
     <queries>
+        <!-- Speech Recognition Service for Speech-to-Text -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <!-- Text-to-Speech Engine for Android 11+ (API Level 30+) -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />

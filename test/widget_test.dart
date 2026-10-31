@@ -1,39 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taut/app.dart';
+import 'package:taut/core/constants/app_constants.dart';
 import 'package:taut/core/utils/distance_calculator.dart';
 
 void main() {
   group('TautApp Smoke & Navigation Test', () {
-    testWidgets('Renders HomeShellScreen with all 4 primary destinations', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('Renders HomePage by default', (WidgetTester tester) async {
       await tester.pumpWidget(const TautApp());
       await tester.pumpAndSettle();
 
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('Renders HomeShellScreen with all 4 primary destinations', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        const TautApp(initialRoute: AppConstants.routeHome),
+      );
+      await tester.pumpAndSettle();
+
       // Verify navigation bar destinations exist
+      expect(find.text('Beranda'), findsWidgets);
       expect(find.text('Komunikasi'), findsWidgets);
-      expect(find.text('Faskes'), findsOneWidget);
-      expect(find.text('Bagi Lokasi'), findsOneWidget);
-      expect(find.text('Profil'), findsOneWidget);
+      expect(find.text('Lokasi'), findsWidgets);
+      expect(find.text('Profil'), findsWidgets);
 
-      // Verify initial tab title
-      expect(find.text('Komunikasi Dua Arah'), findsOneWidget);
+      // Verify initial tab has greeting
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
 
-      // Switch to Healthcare (Faskes) tab
-      await tester.tap(find.byIcon(Icons.local_hospital_outlined));
+      // Switch to Komunikasi tab (shows pre-communication landing screen)
+      await tester.tap(find.text('Komunikasi').first);
       await tester.pumpAndSettle();
-      expect(find.text('Fasilitas Kesehatan Terdekat'), findsOneWidget);
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+      expect(find.text('Dua arah.\nSatu percakapan.'), findsOneWidget);
 
-      // Switch to Location Sharing (Bagi Lokasi) tab
-      await tester.tap(find.byIcon(Icons.share_location_outlined));
+      // Tap Mulai komunikasi to enter live communication
+      await tester.ensureVisible(find.text('Mulai komunikasi'));
+      await tester.tap(find.text('Mulai komunikasi'));
       await tester.pumpAndSettle();
-      expect(find.text('Berbagi Lokasi'), findsOneWidget);
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
 
-      // Switch to Profile (Profil) tab
-      await tester.tap(find.byIcon(Icons.person_outline));
+      // Switch to Lokasi tab
+      await tester.tap(find.text('Lokasi').first);
       await tester.pumpAndSettle();
-      expect(find.text('Profil & Pengaturan'), findsOneWidget);
+
+      // Switch to Profil tab
+      await tester.tap(find.text('Profil').first);
+      await tester.pumpAndSettle();
     });
   });
 

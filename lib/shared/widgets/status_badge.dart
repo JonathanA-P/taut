@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// Semantic status badge for indicating system states, active sessions, or stages.
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color backgroundColor;
@@ -12,45 +11,61 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge({
     super.key,
     required this.label,
-    this.backgroundColor = AppColors.surfaceVariant,
-    this.textColor = AppColors.onSurfaceVariant,
+    this.backgroundColor = AppColors.lightGreen,
+    this.textColor = AppColors.darkGreen,
+    this.icon,
+  });
+
+  const StatusBadge.active({
+    super.key,
+    this.label = 'AKTIF',
+    this.backgroundColor = const Color(0xFFE8F5E9),
+    this.textColor = const Color(0xFF2E7D32),
+    this.icon = Icons.check_circle_rounded,
+  });
+
+  const StatusBadge.live({
+    super.key,
+    this.label = 'LIVE',
+    this.backgroundColor = const Color(0xFFFFEBEE),
+    this.textColor = AppColors.error,
     this.icon,
   });
 
   factory StatusBadge.development() {
     return const StatusBadge(
-      label: 'Tahap Fondasi / Belum Terhubung',
-      backgroundColor: Color(0xFFFEF3C7),
-      textColor: Color(0xFF92400E),
-      icon: Icons.construction_rounded,
+      label: 'Tahap Fondasi - Siap Integrasi',
+      backgroundColor: AppColors.accentMtsBg,
+      textColor: AppColors.onAccentMts,
+      icon: Icons.info_outline_rounded,
     );
   }
 
-  factory StatusBadge.active() {
-    return const StatusBadge(
-      label: 'Aktif',
-      backgroundColor: Color(0xFFDCFCE7),
-      textColor: Color(0xFF166534),
-      icon: Icons.check_circle_rounded,
-    );
-  }
-
-  factory StatusBadge.idle() {
-    return const StatusBadge(
-      label: 'Siap',
-      backgroundColor: Color(0xFFE0F2FE),
-      textColor: Color(0xFF0369A1),
+  factory StatusBadge.idle({String label = 'Siap Digunakan'}) {
+    return StatusBadge(
+      label: label,
+      backgroundColor: AppColors.lightGreen,
+      textColor: AppColors.darkGreen,
       icon: Icons.radio_button_checked_rounded,
+    );
+  }
+
+  factory StatusBadge.category(String text, {Color? bg, Color? fg}) {
+    return StatusBadge(
+      label: text,
+      backgroundColor: bg ?? AppColors.lightGreen,
+      textColor: fg ?? AppColors.darkGreen,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: textColor.withValues(alpha: 0.15), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -63,8 +78,9 @@ class StatusBadge extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: textColor,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -72,3 +88,4 @@ class StatusBadge extends StatelessWidget {
     );
   }
 }
+
