@@ -20,19 +20,7 @@ class ProfileScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            leading: (Navigator.canPop(context) || state.canPopPage)
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    color: AppColors.darkGreen,
-                    onPressed: () {
-                      if (state.canPopPage) {
-                        state.popPage();
-                      } else if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  )
-                : null,
+            automaticallyImplyLeading: false,
             title: const Text(
               'Profil',
               style: TextStyle(

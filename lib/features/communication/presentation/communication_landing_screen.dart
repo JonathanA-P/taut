@@ -19,43 +19,14 @@ class CommunicationLandingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      if (state.canPopPage) {
-                        state.popPage();
-                      } else {
-                        state.switchToTab(0);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE4E9E1)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
-                        color: AppColors.darkGreen,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Text(
-                    'Ruang komunikasi',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkGreen,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
+              const Text(
+                'Ruang komunikasi',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkGreen,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(height: 24),
 
