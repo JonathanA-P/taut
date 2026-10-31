@@ -1,6 +1,5 @@
 import 'env.dart';
 
-/// Centralized configuration provider for TAUT.
 class AppConfig {
   AppConfig._();
 
@@ -15,3 +14,4 @@ class AppConfig {
   static String get overpassEndpoint => Env.overpassApiUrl;
   static double get defaultRadiusMeters => Env.defaultHealthcareRadiusMeters;
 }
+

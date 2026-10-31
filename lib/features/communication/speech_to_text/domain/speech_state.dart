@@ -1,4 +1,3 @@
-/// Represents the state of the Android Speech Recognition pipeline.
 enum SpeechStatus { uninitialized, ready, listening, processing, error }
 
 class SpeechRecognitionState {
@@ -28,3 +27,4 @@ class SpeechRecognitionState {
     );
   }
 }
+

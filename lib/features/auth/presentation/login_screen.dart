@@ -4,15 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 import 'register_screen.dart';
 
-/// Login Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Selamat datang"
-/// - Logo "taut."
-/// - Heading: "Senang bertemu lagi."
-/// - Subtitle: "Masuk ke ruang yang memahami kamu."
-/// - Simulated email & password inputs with notice box
-/// - "Masuk demo" CTA
-/// - "Belum punya akun? Daftar" text link
-/// - "Jelajahi tanpa akun" ghost CTA
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -75,7 +66,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              // Brand Logo
               RichText(
                 text: const TextSpan(
                   text: 'taut',
@@ -98,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Heading & Subtitle
               const Text(
                 'Senang bertemu lagi.',
                 style: TextStyle(
@@ -118,7 +107,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Email Field
               const Text(
                 'Email',
                 style: TextStyle(
@@ -158,7 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Field
               const Text(
                 'Kata sandi',
                 style: TextStyle(
@@ -198,7 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 18),
 
-              // Notice Box
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
@@ -217,7 +203,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -242,7 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Switch to Register TextButton
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -265,7 +249,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Explore without account
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -296,3 +279,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

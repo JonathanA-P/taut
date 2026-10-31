@@ -4,15 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Profile Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Profil"
-/// - Profile Hero: Sage green background, large avatar, user name, "Ruangmu untuk terhubung.", "Edit profil" CTA
-/// - 3 Menu Listbuttons:
-///   1. Pengaturan & aksesibilitas
-///   2. Privasi & izin
-///   3. Teman terhubung
-/// - "Keluar dari demo" ghost button
-/// - Footer hint: "TAUT · Prototipe desain 01 / Data akun ini hanya contoh."
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -55,11 +46,9 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               child: Column(
                 children: [
-                  // Profile Hero (Sage green)
                   _buildProfileHero(context, state),
                   const SizedBox(height: 24),
 
-                  // 3 Menu Options Stack
                   _buildMenuButton(
                     context: context,
                     icon: Icons.settings_outlined,
@@ -82,7 +71,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Logout Button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -112,9 +100,8 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
 
-                  // Footer Hint
                   const Text(
-                    'TAUT · Prototipe desain 01\nData akun ini hanya contoh.',
+                    'TAUT Â· Prototipe desain 01\nData akun ini hanya contoh.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -246,3 +233,4 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+

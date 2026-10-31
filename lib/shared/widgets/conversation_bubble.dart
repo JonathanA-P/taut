@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taut/core/theme/app_theme.dart';
 
-/// Gelembung percakapan untuk Speech-to-Text.
-///
-/// [isFromUser] = true: gelembung plum di kanan (ucapan pengguna
-/// yang dikenali). False: gelembung putih di kiri (balasan lawan
-/// bicara / teks yang diketik lawan bicara).
-/// [isFinal] = false: hasil masih sementara (sedang didengarkan),
-/// ditampilkan lebih redup + label "Mendengarkan..." — jangan pernah
-/// menampilkan hasil sementara seolah-olah sudah pasti.
 class ConversationBubble extends StatelessWidget {
   const ConversationBubble({
     super.key,
@@ -66,3 +58,4 @@ class ConversationBubble extends StatelessWidget {
     );
   }
 }
+

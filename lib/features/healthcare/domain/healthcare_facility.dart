@@ -1,4 +1,3 @@
-/// Representation of a normalized healthcare facility from OpenStreetMap / Overpass API.
 class HealthcareFacility {
   final String id;
   final String name;
@@ -30,7 +29,6 @@ class HealthcareFacility {
   }) {
     final tags = element['tags'] as Map<String, dynamic>? ?? {};
 
-    // Coordinates can be direct (nodes) or center object (ways/relations)
     final double lat =
         (element['lat'] as num?)?.toDouble() ??
         ((element['center'] as Map<String, dynamic>?)?['lat'] as num?)
@@ -42,7 +40,6 @@ class HealthcareFacility {
             ?.toDouble() ??
         0.0;
 
-    // Determine category
     final amenity = tags['amenity'] as String?;
     final healthcare = tags['healthcare'] as String?;
     String category = 'Fasilitas Kesehatan';
@@ -57,13 +54,11 @@ class HealthcareFacility {
       category = 'Apotek';
     }
 
-    // Name normalization: fallback to category + id if unnamed
     final name =
         tags['name'] as String? ??
         tags['operator'] as String? ??
         '$category (Tanpa Nama Terdaftar)';
 
-    // Address construction
     final road = tags['addr:street'] as String?;
     final houseNumber = tags['addr:housenumber'] as String?;
     final city = tags['addr:city'] as String?;
@@ -73,7 +68,6 @@ class HealthcareFacility {
       if (city != null) address += ', $city';
     }
 
-    // Accessibility check: Do NOT claim disability-friendly unless tagged
     final wheelchairTag = tags['wheelchair'] as String?;
     final bool? isWheelchair = wheelchairTag == 'yes'
         ? true
@@ -97,3 +91,4 @@ class HealthcareFacility {
     );
   }
 }
+

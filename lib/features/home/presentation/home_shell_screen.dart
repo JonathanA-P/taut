@@ -17,12 +17,6 @@ import '../../location_sharing/presentation/location_sharing_screen.dart';
 import '../../privacy/presentation/privacy_policy_screen.dart';
 import 'home_page.dart';
 
-/// Main Application Shell containing the 4 primary feature destinations:
-/// 1. Beranda
-/// 2. Komunikasi
-/// 3. Lokasi
-/// 4. Profil
-/// Preserves the persistent floating navigation bar across all internal screens.
 class HomeShellScreen extends StatelessWidget {
   final int initialIndex;
 
@@ -230,3 +224,4 @@ class HomeShellScreen extends StatelessWidget {
     );
   }
 }
+

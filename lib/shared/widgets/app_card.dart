@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-/// Clean, healthcare-oriented Card container inspired by the Dribbble reference.
-/// Characteristics:
-/// - 20px rounded corners
-/// - Subtle layered shadow + soft border
-/// - Consistent internal padding
-/// - Proper Material ancestor for ListTile & ink effects
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -64,3 +58,4 @@ class AppCard extends StatelessWidget {
     );
   }
 }
+

@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:taut/core/theme/app_theme.dart';
 import 'package:taut/shared/widgets/taut_action_button.dart';
 
-/// Banner merah "Sesi berbagi AKTIF" di atas halaman Lokasi.
-///
-/// Banner ini sengaja selalu di atas (sebelum tab Faskes/Teman) dan
-/// punya tombol berhenti langsung — untuk keadaan darurat, pengguna
-/// tidak boleh mencari-cari tombol berhenti di dalam menu.
-/// Satu ketukan [onStop] langsung menghentikan sesi, tanpa dialog
-/// konfirmasi kedua (pelajaran dari prototipe: dialog kedua membuat
-/// pengguna mengira tombolnya tidak berfungsi).
 class LocationSharingBanner extends StatelessWidget {
   const LocationSharingBanner({
     super.key,
@@ -42,7 +34,7 @@ class LocationSharingBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Sesi berbagi AKTIF — $recipientName',
+                  'Sesi berbagi AKTIF â€” $recipientName',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
@@ -68,3 +60,4 @@ class LocationSharingBanner extends StatelessWidget {
     );
   }
 }
+

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// Reusable accessible error view with an optional retry button.
 class ErrorView extends StatelessWidget {
   final String title;
   final String message;
@@ -66,3 +65,4 @@ class ErrorView extends StatelessWidget {
     );
   }
 }
+

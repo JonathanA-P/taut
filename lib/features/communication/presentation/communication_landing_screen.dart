@@ -4,13 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
-/// Communication Landing / Pre-Communication Screen ("Ruang komunikasi")
-/// Strictly implementing the HTML prototype and user design:
-/// - Screen title: "Ruang komunikasi" with back button
-/// - Central two-way communication illustration
-/// - Heading: "Dua arah. Satu percakapan."
-/// - Subtitle: "Baca ucapan teman dengar, lalu balas lewat isyarat atau tulisan tanpa berpindah layar."
-/// - Primary CTA: "Mulai komunikasi" -> routes to live session ("Komunikasi langsung")
 class CommunicationLandingScreen extends StatelessWidget {
   const CommunicationLandingScreen({super.key});
 
@@ -26,7 +19,6 @@ class CommunicationLandingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Header: Back Button + Screen Title
               Row(
                 children: [
                   InkWell(
@@ -67,7 +59,6 @@ class CommunicationLandingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Central Communication Illustration
               Center(
                 child: SizedBox(
                   width: 250,
@@ -77,7 +68,6 @@ class CommunicationLandingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // Headings and description
               const Text(
                 'Dua arah.\nSatu percakapan.',
                 style: TextStyle(
@@ -99,7 +89,6 @@ class CommunicationLandingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // Primary CTA Button
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -132,3 +121,4 @@ class CommunicationLandingScreen extends StatelessWidget {
     );
   }
 }
+

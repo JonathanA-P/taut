@@ -3,13 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Add Friend Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Tambah teman"
-/// - Heading: "Perluas ruang terhubung."
-/// - Subtitle: "Tambahkan nama untuk mencoba alur berbagi."
-/// - Input: "Nama teman", placeholder "Contoh: Alya"
-/// - Button: "Tambah ke demo"
-/// - Hint: "Tidak ada undangan yang dikirim."
 class AddFriendScreen extends StatefulWidget {
   const AddFriendScreen({super.key});
 
@@ -118,7 +111,6 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Name Field
               const Text(
                 'Nama teman',
                 style: TextStyle(
@@ -159,7 +151,6 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -197,3 +188,4 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
     );
   }
 }
+

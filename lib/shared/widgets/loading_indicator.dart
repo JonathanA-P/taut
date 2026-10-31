@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// Reusable accessible loading indicator with explanatory message.
 class LoadingIndicator extends StatelessWidget {
   final String message;
 
@@ -34,3 +33,4 @@ class LoadingIndicator extends StatelessWidget {
     );
   }
 }
+

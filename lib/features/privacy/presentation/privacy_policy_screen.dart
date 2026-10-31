@@ -3,15 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Privacy Policy Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Privasi & izin"
-/// - Hero card: Shield icon, "Kendalinya ada padamu.", "Izin diminta saat fitur digunakan."
-/// - Legal card:
-///   1. Kamera
-///   2. Mikrofon
-///   3. Lokasi
-///   4. Penyimpanan
-/// - "Hentikan akses perangkat" CTA button
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
@@ -51,15 +42,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           child: Column(
             children: [
-              // Profile Hero (Sage green)
               _buildHero(),
               const SizedBox(height: 24),
 
-              // Legal Information Card
               _buildLegalCard(),
               const SizedBox(height: 24),
 
-              // Stop Device Access Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -236,3 +224,4 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 }
+

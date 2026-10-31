@@ -6,9 +6,6 @@ import '../../../core/errors/app_exception.dart';
 import '../domain/location_share_session.dart';
 import '../domain/location_sharing_repository.dart';
 
-/// Production implementation of [LocationSharingRepository] powered by
-/// Supabase PostgreSQL (RLS) and Supabase Realtime WebSocket streaming.
-/// Feature Owner: Alfredo Jonathan Purba (Team Lead & Backend Architect)
 class LocationSharingRepositoryImpl implements LocationSharingRepository {
   final sb.SupabaseClient? _customClient;
 
@@ -67,7 +64,6 @@ class LocationSharingRepositoryImpl implements LocationSharingRepository {
           .select()
           .single();
 
-      // Fetch recipient display name
       final profile = await _client
           .from('profiles')
           .select('display_name')
@@ -126,7 +122,6 @@ class LocationSharingRepositoryImpl implements LocationSharingRepository {
         updateData['accuracy_m'] = accuracy;
       }
 
-      // RLS policy strictly guarantees only the owner can update coordinates
       await _client
           .from('location_shares')
           .update(updateData)
@@ -140,7 +135,6 @@ class LocationSharingRepositoryImpl implements LocationSharingRepository {
   @override
   Stream<LocationShareSession> subscribeLocation({required String sessionId}) {
     try {
-      // Idiomatic Supabase Realtime Postgres Changes stream
       return _client
           .from('location_shares')
           .stream(primaryKey: ['id'])
@@ -194,7 +188,6 @@ class LocationSharingRepositoryImpl implements LocationSharingRepository {
 
       if (rows.isEmpty) return [];
 
-      // Collect other user IDs for display name enrichment
       final otherUserIds = <String>{};
       for (final row in rows) {
         final owner = row['owner_id'] as String;
@@ -238,3 +231,4 @@ class LocationSharingRepositoryImpl implements LocationSharingRepository {
     }
   }
 }
+

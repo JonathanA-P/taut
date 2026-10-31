@@ -4,8 +4,6 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/status_badge.dart';
 
-/// Navigable placeholder screen for Friend management and invitations.
-/// Feature Owner: Alfredo Jonathan Purba (Branch: feature/supabase-auth-friends).
 class FriendsPlaceholderScreen extends StatelessWidget {
   const FriendsPlaceholderScreen({super.key});
 
@@ -91,3 +89,4 @@ class FriendsPlaceholderScreen extends StatelessWidget {
     );
   }
 }
+

@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/app_router.dart';
 
-/// Splash Screen strictly adhering to the TAUT prototype visual identity:
-/// - Sage Green & Dark Green palette
-/// - Brand logo "taut."
-/// - Tagline "Ruang untuk saling memahami"
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -90,3 +86,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+

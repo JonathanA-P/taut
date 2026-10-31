@@ -1,6 +1,5 @@
 enum FriendshipStatus { pending, accepted, rejected, blocked, none }
 
-/// Representation of a bi-directional friendship relation.
 class FriendshipModel {
   final String id;
   final String requesterId;
@@ -44,3 +43,4 @@ class FriendshipModel {
     'updated_at': updatedAt.toIso8601String(),
   };
 }
+

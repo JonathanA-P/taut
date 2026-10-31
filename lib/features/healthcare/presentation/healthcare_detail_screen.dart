@@ -6,14 +6,6 @@ import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 import '../domain/healthcare_facility.dart';
 
-/// Healthcare Detail Screen strictly implementing the TAUT HTML prototype design:
-/// - Screen title: "Detail fasilitas"
-/// - Profile Hero: Sage green background, facility icon, category pill, facility name, distance
-/// - Map illustration: "Peta ilustrasi · bukan posisi nyata"
-/// - Card "Informasi lokasi": address, "Fasilitas fiktif · demo" tag, "Informasi belum tersedia"
-/// - Action buttons:
-///   1. "Petunjuk Arah" -> modal with route preview & "Fasilitas ini fiktif. Rute nyata tidak tersedia dalam demo."
-///   2. "Bagikan lokasi fasilitas" -> modal with copyable demo facility info
 class HealthcareDetailScreen extends StatelessWidget {
   final FacilityItem? facilityItem;
   final HealthcareFacility? facility;
@@ -26,7 +18,6 @@ class HealthcareDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Resolve facility data from parameter or prototype app state
     final name = facilityItem?.name ??
         facility?.name ??
         TautAppState().selectedFacility.name;
@@ -75,19 +66,15 @@ class HealthcareDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Profile Hero (Sage green)
               _buildProfileHero(name, type, distance),
               const SizedBox(height: 20),
 
-              // 2. Map preview
               _buildMapPreview(),
               const SizedBox(height: 20),
 
-              // 3. Location Information Card
               _buildInfoCard(address),
               const SizedBox(height: 24),
 
-              // 4. Action Buttons Stack
               _buildActionButtons(context, name, address),
             ],
           ),
@@ -164,7 +151,7 @@ class HealthcareDetailScreen extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '$distance · jarak contoh',
+                '$distance Â· jarak contoh',
                 style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -204,7 +191,7 @@ class HealthcareDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
-                'Peta ilustrasi · bukan posisi nyata',
+                'Peta ilustrasi Â· bukan posisi nyata',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -261,7 +248,7 @@ class HealthcareDetailScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(9),
             ),
             child: const Text(
-              'Fasilitas fiktif · demo',
+              'Fasilitas fiktif Â· demo',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -436,7 +423,7 @@ class HealthcareDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  '$name · $address\nDATA DEMO — bukan fasilitas nyata.',
+                  '$name Â· $address\nDATA DEMO â€” bukan fasilitas nyata.',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF5B6E55),
@@ -452,7 +439,7 @@ class HealthcareDetailScreen extends StatelessWidget {
                   onPressed: () {
                     Clipboard.setData(
                       ClipboardData(
-                        text: '$name — $address (DATA DEMO, bukan fasilitas nyata)',
+                        text: '$name â€” $address (DATA DEMO, bukan fasilitas nyata)',
                       ),
                     );
                     Navigator.pop(ctx);
@@ -491,3 +478,4 @@ class HealthcareDetailScreen extends StatelessWidget {
     );
   }
 }
+

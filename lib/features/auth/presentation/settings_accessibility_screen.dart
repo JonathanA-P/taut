@@ -5,15 +5,6 @@ import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
 import 'onboarding_screen.dart';
 
-/// Settings & Accessibility Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Pengaturan"
-/// - Heading: "Kenyamanan untukmu"
-/// - Subtitle: "Sesuaikan cara kamu menggunakan TAUT."
-/// - Font scale selector: 16px (Standar), 19px (Besar), 22px (Sangat besar)
-/// - Preview text box showing dynamic font scaling: "Halo, senang bisa saling memahami."
-/// - "Putar suara setelah konfirmasi" section with hint
-/// - "Mulai ulang onboarding" button
-/// - "Reset seluruh demo" button
 class SettingsAccessibilityScreen extends StatelessWidget {
   const SettingsAccessibilityScreen({super.key});
 
@@ -76,7 +67,6 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Main Settings Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -124,21 +114,21 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                                 DropdownMenuItem(
                                   value: 16.0,
                                   child: Text(
-                                    'Standar · 16px',
+                                    'Standar Â· 16px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
                                 DropdownMenuItem(
                                   value: 19.0,
                                   child: Text(
-                                    'Besar · 19px',
+                                    'Besar Â· 19px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
                                 DropdownMenuItem(
                                   value: 22.0,
                                   child: Text(
-                                    'Sangat besar · 22px',
+                                    'Sangat besar Â· 22px',
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -148,7 +138,6 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
 
-                        // Preview Box
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
@@ -170,7 +159,6 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                           child: Divider(color: Color(0xFFE4E9E1), height: 1),
                         ),
 
-                        // Confirmation section
                         const Text(
                           'Putar suara setelah konfirmasi',
                           style: TextStyle(
@@ -193,7 +181,6 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Restart Onboarding Button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -225,7 +212,6 @@ class SettingsAccessibilityScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Reset Demo Button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -271,3 +257,4 @@ class SettingsAccessibilityScreen extends StatelessWidget {
     );
   }
 }
+

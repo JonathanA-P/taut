@@ -4,12 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
-/// Live Location Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Lokasi bersama"
-/// - Map illustration: "Peta ilustrasi · bukan posisi nyata"
-/// - Section: "Sesi berbagi demo"
-/// - Hint: "Lokasi pada peta adalah ilustrasi. Tidak ada pergerakan atau koordinat nyata."
-/// - Session list with live remaining timers & stop button
 class LiveLocationScreen extends StatelessWidget {
   const LiveLocationScreen({super.key});
 
@@ -53,11 +47,9 @@ class LiveLocationScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Map Preview Card
                   _buildMapPreview(),
                   const SizedBox(height: 24),
 
-                  // Section Title
                   const Text(
                     'Sesi berbagi demo',
                     style: TextStyle(
@@ -77,7 +69,6 @@ class LiveLocationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
 
-                  // Sessions List
                   if (state.sessions.isEmpty)
                     Container(
                       width: double.infinity,
@@ -146,7 +137,7 @@ class LiveLocationScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
-                'Peta ilustrasi · bukan posisi nyata',
+                'Peta ilustrasi Â· bukan posisi nyata',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -278,3 +269,4 @@ class LiveLocationScreen extends StatelessWidget {
     );
   }
 }
+

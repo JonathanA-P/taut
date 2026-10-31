@@ -1,7 +1,5 @@
 import '../domain/healthcare_share_service.dart';
 
-/// Foundation implementation of [HealthcareShareService] for Stage 01.
-/// Full integration with `share_plus` will be completed by Adriel.
 class HealthcareShareServiceImpl implements HealthcareShareService {
   const HealthcareShareServiceImpl();
 
@@ -26,7 +24,7 @@ Pesan ini dikirimkan melalui aplikasi aksesibilitas TAUT.''';
     required double latitude,
     required double longitude,
   }) async {
-    // Stage 01 foundation: returns false until share_plus invocation
     return false;
   }
 }
+

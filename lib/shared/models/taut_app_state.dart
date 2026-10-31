@@ -1,25 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-/// Single source of truth state for the TAUT prototype.
-/// Replicates the exact reactive state and behaviors of the HTML prototype:
-/// - User name
-/// - Friends list
-/// - Active location sharing sessions with live countdown
-/// - Conversation history (Speech, Sign, Typed)
-/// - Facility filtering & searching
-/// - Font size scaling (16px, 19px, 22px)
-/// - Microphone & Camera states
-/// - TTS speech echo protection
 class TautAppState extends ChangeNotifier {
   static final TautAppState _instance = TautAppState._internal();
   factory TautAppState() => _instance;
 
   TautAppState._internal() {
-    // Timers are started on demand when active sessions exist
   }
 
-  // Persistent Shell Navigation State
   String _currentPage = 'home';
   String get currentPage => _currentPage;
 
@@ -97,7 +85,6 @@ class TautAppState extends ChangeNotifier {
     return !const ['onboard', 'login', 'register', 'splash'].contains(_currentPage);
   }
 
-  // User Profile
   String _userName = 'Adriel';
   String get userName => _userName;
 
@@ -109,7 +96,6 @@ class TautAppState extends ChangeNotifier {
     }
   }
 
-  // Friends
   List<String> _friends = ['Nadia', 'Raka', 'Dinda'];
   List<String> get friends => List.unmodifiable(_friends);
 
@@ -124,7 +110,6 @@ class TautAppState extends ChangeNotifier {
     return true;
   }
 
-  // Location Sharing Sessions
   final List<SharingSession> _sessions = [];
   List<SharingSession> get sessions => List.unmodifiable(_sessions);
   bool get isSharingLocation => _sessions.isNotEmpty;
@@ -180,7 +165,6 @@ class TautAppState extends ChangeNotifier {
     _expiryTimer = null;
   }
 
-  // Conversation History
   final List<ChatMessage> _messages = [];
   List<ChatMessage> get messages => List.unmodifiable(_messages);
 
@@ -198,7 +182,6 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Communication Channel States
   bool _isMicActive = false;
   bool get isMicActive => _isMicActive;
 
@@ -267,7 +250,6 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Healthcare Facilities & Filtering
   final List<FacilityItem> _facilities = const [
     FacilityItem(
       name: 'Klinik Harmoni',
@@ -340,7 +322,6 @@ class TautAppState extends ChangeNotifier {
     }).toList();
   }
 
-  // Accessibility Font Scaling
   double _fontSize = 16.0;
   double get fontSize => _fontSize;
 
@@ -360,7 +341,6 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Reset Demo
   void resetDemo() {
     _userName = 'Adriel';
     _friends = ['Nadia', 'Raka', 'Dinda'];
@@ -429,3 +409,4 @@ class FacilityItem {
     required this.distance,
   });
 }
+

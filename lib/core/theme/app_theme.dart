@@ -1,18 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Application Theme definition strictly adhering to the TAUT HTML prototype design:
-/// - Background: #F8FAF7
-/// - Sage Brand: #D7E3D1
-/// - Ink / Dark Green: #263D2F
-/// - Primary Green: #527B5D
-/// - Light Green: #E5EEE5
-/// - Muted Text: #66756B
-/// - Border / Line: #E4E9E1
-/// - Surface Cards: #FFFFFF
 class AppTheme {
   AppTheme._();
 
-  // Core Brand Colors matching prototype
   static const Color background = Color(0xFFF8FAF7);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color border = Color(0xFFE4E9E1);
@@ -231,3 +221,4 @@ class AppTheme {
     );
   }
 }
+

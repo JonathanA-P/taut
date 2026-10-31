@@ -1,5 +1,3 @@
-/// Application environment variables and configurations.
-/// Centralized config for Supabase, OSM Overpass API, and service parameters.
 class Env {
   Env._();
 
@@ -38,5 +36,5 @@ class Env {
   static const int locationUpdateIntervalSeconds = 10;
 }
 
-/// Backwards compatibility alias for code referencing [EnvConfig].
 typedef EnvConfig = Env;
+

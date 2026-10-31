@@ -3,8 +3,6 @@ import 'package:taut/core/routing/app_router.dart';
 import 'package:taut/core/theme/app_theme.dart';
 import 'package:taut/shared/models/taut_app_state.dart';
 
-/// Root widget aplikasi TAUT.
-/// Mengintegrasikan tema visual dari prototipe HTML dan penskalaan teks dinamis.
 class TautApp extends StatelessWidget {
   final String? initialRoute;
 
@@ -32,3 +30,4 @@ class TautApp extends StatelessWidget {
     );
   }
 }
+

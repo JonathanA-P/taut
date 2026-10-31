@@ -8,9 +8,6 @@ import '../../../core/errors/app_exception.dart';
 import '../domain/friends_repository.dart';
 import '../domain/friendship_model.dart';
 
-/// Production implementation of [FriendsRepository] with cryptographic token hashing (SHA-256)
-/// and PostgreSQL RLS security verification.
-/// Feature Owner: Alfredo Jonathan Purba (Team Lead & Backend Architect)
 class FriendsRepositoryImpl implements FriendsRepository {
   final sb.SupabaseClient? _customClient;
 
@@ -41,19 +38,16 @@ class FriendsRepositoryImpl implements FriendsRepository {
     }
 
     try {
-      // 1. Generate human-readable secure token: "TAUT-" + 6 uppercase chars
       final rawToken = _generateRandomToken();
       final hashedToken = _hashToken(rawToken);
       final expiresAt = DateTime.now().toUtc().add(validity);
 
-      // 2. Persist ONLY the hash in public.friend_invites
       await _client.from('friend_invites').insert({
         'inviter_id': currentUserId,
         'token_hash': hashedToken,
         'expires_at': expiresAt.toIso8601String(),
       });
 
-      // 3. Return plaintext token to inviter (for QR code or sharing link)
       return rawToken;
     } catch (e) {
       if (e is AppException) rethrow;
@@ -74,7 +68,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
     try {
       final hashed = _hashToken(inviteToken);
 
-      // 1. Find active non-expired invite by token hash
       final invite = await _client
           .from('friend_invites')
           .select()
@@ -106,7 +99,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
         );
       }
 
-      // 2. Mark invite as accepted
       await _client
           .from('friend_invites')
           .update({
@@ -115,8 +107,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
           })
           .eq('id', invite['id']);
 
-      // 3. Create or update friendship relation to 'accepted'
-      // Symmetrical pair constraint handled by PostgreSQL index
       final existing = await _client
           .from('friendships')
           .select()
@@ -146,7 +136,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
             .single();
       }
 
-      // 4. Fetch inviter's display name
       final inviterProfile = await _client
           .from('profiles')
           .select('display_name')
@@ -182,7 +171,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
 
       if (rows.isEmpty) return [];
 
-      // Collect other user IDs
       final otherUserIds = <String>{};
       for (final row in rows) {
         final req = row['requester_id'] as String;
@@ -190,7 +178,6 @@ class FriendsRepositoryImpl implements FriendsRepository {
         otherUserIds.add(req == currentUserId ? add : req);
       }
 
-      // Fetch profiles of friends
       final profilesRes = await _client
           .from('profiles')
           .select('id, display_name')
@@ -265,3 +252,4 @@ class FriendsRepositoryImpl implements FriendsRepository {
     return sha256.convert(utf8.encode(cleaned)).toString();
   }
 }
+

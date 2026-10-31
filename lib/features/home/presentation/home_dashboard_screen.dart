@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 
-/// Personalized and Friendly Dashboard for TAUT.
-/// Mirrors and delegates to [HomePage], implementing the HTML prototype design.
 class HomeDashboardScreen extends StatelessWidget {
   final VoidCallback? onNavigateToCommunication;
   final VoidCallback? onNavigateToHealthcare;
@@ -27,3 +25,4 @@ class HomeDashboardScreen extends StatelessWidget {
     );
   }
 }
+

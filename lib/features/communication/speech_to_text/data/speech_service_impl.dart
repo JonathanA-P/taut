@@ -8,11 +8,6 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../domain/speech_service.dart';
 import '../domain/speech_state.dart';
 
-/// Production implementation of [SpeechService] using `speech_to_text` plugin.
-/// Designed for Teman Tuli accessibility in TAUT.
-/// Supports continuous listening, auto-recovery across speech pauses,
-/// dynamic Indonesian locale matching, and real-time streaming.
-/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechServiceImpl implements SpeechService {
   final SpeechToText _speechToText;
   final StreamController<SpeechRecognitionState> _stateController =
@@ -36,7 +31,6 @@ class SpeechServiceImpl implements SpeechService {
   Future<bool> initialize() async {
     if (_isAvailable) return true;
 
-    // Masalah 1 Fix: Guard against race condition with Completer
     if (_initCompleter != null) {
       return _initCompleter!.future;
     }
@@ -50,7 +44,6 @@ class SpeechServiceImpl implements SpeechService {
       );
 
       if (_isAvailable) {
-        // Masalah 2 Fix: Dynamically resolve verified Indonesian locale ID from device
         await _resolveIndonesianLocale();
       }
 
@@ -85,7 +78,6 @@ class SpeechServiceImpl implements SpeechService {
 
       for (final loc in availableLocales) {
         final id = loc.localeId.toLowerCase();
-        // Android may register Indonesian as id_ID, id-ID, in_ID, or in-ID
         if (id == 'id_id' ||
             id == 'id-id' ||
             id.startsWith('id_') ||
@@ -111,7 +103,6 @@ class SpeechServiceImpl implements SpeechService {
       'SpeechRecognition error: ${error.errorMsg} (permanent: ${error.permanent})',
     );
     if (_isContinuousActive && !error.permanent) {
-      // Non-fatal pause / network hiccup: restart listening automatically
       _scheduleAutoRestart();
     } else {
       _stateController.add(
@@ -156,7 +147,6 @@ class SpeechServiceImpl implements SpeechService {
     }
 
     try {
-      // Masalah 2 Fix: Prioritize verified resolved Indonesian locale ID
       final localeId =
           _resolvedIndonesianLocaleId ?? _currentLanguage.replaceAll('-', '_');
 
@@ -186,7 +176,6 @@ class SpeechServiceImpl implements SpeechService {
         ),
       );
 
-      // Masalah 3 Fix: Handle silent listen() rejection
       if (started == false) {
         debugPrint('SpeechToText.listen() returned false');
         _stateController.add(
@@ -268,3 +257,4 @@ class SpeechServiceImpl implements SpeechService {
     _stateController.close();
   }
 }
+

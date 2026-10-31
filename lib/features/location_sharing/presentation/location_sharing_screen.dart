@@ -3,14 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Location Sharing / Ruang Lokasi Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Ruang lokasi"
-/// - Hero card: "DEKAT DENGAN YANG BERARTI / Ke mana pun, tetap terhubung."
-/// - 3 Feature Destinations:
-///   1. Fasilitas kesehatan ("Cari klinik dan rumah sakit")
-///   2. Teman terhubung ("X teman contoh")
-///   3. Berbagi lokasi ("X sesi demo aktif")
-/// - Notice: "Tidak ada pelacakan latar belakang. Berbagi selalu dimulai dan dihentikan olehmu."
 class LocationSharingScreen extends StatelessWidget {
   const LocationSharingScreen({super.key});
 
@@ -54,11 +46,9 @@ class LocationSharingScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hero Card (Sage Green)
                   _buildHeroCard(),
                   const SizedBox(height: 24),
 
-                  // 3 Feature Buttons Stack
                   _buildListButton(
                     context: context,
                     icon: Icons.local_hospital_rounded,
@@ -84,7 +74,6 @@ class LocationSharingScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Notice Box
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -238,3 +227,4 @@ class LocationSharingScreen extends StatelessWidget {
     );
   }
 }
+

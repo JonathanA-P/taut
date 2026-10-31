@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-/// Standard accessible elevated or outlined button with healthcare aesthetics.
-/// Features 26px rounded pill design, minimum 52dp tap height, and clear contrast.
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -113,3 +111,4 @@ class AppButton extends StatelessWidget {
     );
   }
 }
+

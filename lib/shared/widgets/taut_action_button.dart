@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taut/core/theme/app_theme.dart';
 
-/// Tombol aksi utama TAUT: tinggi 56, radius 20, teks tebal.
-///
-/// [TautActionButton.primary] = tombol plum (aksi utama).
-/// [TautActionButton.secondary] = tombol outline plum (aksi kedua).
-/// [TautActionButton.danger] = tombol merah — KHUSUS aksi darurat
-/// seperti Berhenti Berbagi, supaya langsung terlihat berbeda.
 class TautActionButton extends StatelessWidget {
   const TautActionButton({
     super.key,
@@ -67,3 +61,4 @@ class TautActionButton extends StatelessWidget {
 }
 
 enum _ButtonVariant { primary, secondary, danger }
+

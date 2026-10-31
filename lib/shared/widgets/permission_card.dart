@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// Card explaining why a specific permission is requested,
-/// adhering to transparent accessibility and privacy principles.
 class PermissionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -58,3 +56,4 @@ class PermissionCard extends StatelessWidget {
     );
   }
 }
+

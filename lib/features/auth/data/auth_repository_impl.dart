@@ -6,8 +6,6 @@ import '../../../core/errors/app_exception.dart';
 import '../../../shared/models/user_profile.dart';
 import '../domain/auth_repository.dart';
 
-/// Production implementation of [AuthRepository] powered by Supabase Auth and PostgreSQL.
-/// Feature Owner: Alfredo Jonathan Purba (Team Lead & Backend Architect)
 class AuthRepositoryImpl implements AuthRepository {
   final sb.SupabaseClient? _customClient;
 
@@ -47,7 +45,6 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // Fetch the automatically provisioned profile from public.profiles
       UserProfile? profile = await _fetchProfile(user.id);
       profile ??= UserProfile(
         id: user.id,
@@ -169,7 +166,6 @@ class AuthRepositoryImpl implements AuthRepository {
         return UserProfile.fromJson(res);
       }
     } catch (_) {
-      // Fallback if query fails during initial registration race condition
     }
     return null;
   }

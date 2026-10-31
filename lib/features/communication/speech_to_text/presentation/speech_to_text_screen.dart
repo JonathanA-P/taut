@@ -10,16 +10,6 @@ import '../data/speech_service_impl.dart';
 import '../domain/speech_service.dart';
 import '../domain/speech_state.dart';
 
-/// Production Live Speech-to-Text screen for Teman Tuli accessibility.
-/// Adopts the Dribbble-inspired healthcare aesthetic & sage green identity:
-/// - Real-time live caption with extra-large high-contrast text (#263D2F) and zero confirmation step
-/// - Continuous listening with auto-recovery and multi-sentence aggregation
-/// - Spacious transcription viewport with auto-scroll
-/// - Large, accessible microphone control
-/// - One-tap "Bersihkan Layar" (Clear Screen) button
-/// - Fast manual typing fallback for noisy environments
-/// - Reactive synchronization with native speech recognition engine status stream.
-/// Feature Owner: Roganda Tua Tampubolon (Communication AI Lead).
 class SpeechToTextScreen extends StatefulWidget {
   final SpeechService? speechService;
 
@@ -39,10 +29,8 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   bool _isManualInputVisible = false;
   String? _errorMessage;
 
-  /// Accumulated committed sentences from previous speech segments.
   String _accumulatedText = '';
 
-  /// Active partial speech recognized in the current ongoing segment.
   String _currentSentenceWords = '';
 
   @override
@@ -53,7 +41,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   }
 
   void _initSpeechPipeline() {
-    // Masalah 4 Fix: Sync UI state reactively with engine's statusStream
     _statusSubscription = _speechService.statusStream.listen((state) {
       if (!mounted) return;
       setState(() {
@@ -70,7 +57,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
       });
     });
 
-    // Masalah 1 Fix: Safe async initialization handled with Completer in service
     _speechService.initialize().catchError((e) {
       debugPrint('Screen initialization catchError: $e');
       return false;
@@ -142,7 +128,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
         });
       }
     } else {
-      // Masalah 4 Fix: Engine statusStream will drive _isListening
       await _speechService.startListening(
         onResult: _onSpeechResult,
         language: 'id_ID',
@@ -216,16 +201,12 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Status Banner: Guides Deaf user on microphone and engine state
             _buildStatusHeader(),
 
-            // Error notice banner if recognition encounters an issue
             if (_errorMessage != null) _buildErrorNotice(),
 
-            // Manual Typing Input (collapsible)
             if (_isManualInputVisible) _buildManualInputField(),
 
-            // Spacious Transcription Area / Main Live Caption Display Area
             Expanded(
               child: AppCard(
                 margin: const EdgeInsets.symmetric(
@@ -296,7 +277,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
               ),
             ),
 
-            // Bottom Controls Area
             _buildBottomControls(),
           ],
         ),
@@ -505,7 +485,6 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
           ),
           const SizedBox(height: 14),
 
-          // Large Microphone Control Button (Satu Sentuhan Teman Tuli)
           SizedBox(
             width: double.infinity,
             height: 58,
@@ -542,3 +521,4 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     );
   }
 }
+

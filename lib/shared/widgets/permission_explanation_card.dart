@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taut/core/theme/app_theme.dart';
 
-/// Kartu penjelasan SEBELUM izin perangkat diminta.
-///
-/// Aturan TAUT: jangan pernah meminta izin (lokasi/kamera/mikrofon)
-/// tanpa menjelaskan dulu untuk apa izin itu, apa yang terjadi kalau
-/// ditolak, dan bahwa pengguna bisa mengubahnya kapan saja di
-/// Pengaturan. Kartu ini tampil di atas tombol "Izinkan".
 class PermissionExplanationCard extends StatelessWidget {
   const PermissionExplanationCard({
     super.key,
@@ -59,3 +53,4 @@ class PermissionExplanationCard extends StatelessWidget {
     );
   }
 }
+

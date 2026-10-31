@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Layar kosong untuk fitur yang belum dibangun.
-///
-/// Dipakai router untuk semua rute di luar Beranda selama Stage 01.
-/// Pesannya jujur: fitur ini belum dibangun, bukan pura-pura jalan.
-/// Begitu fitur aslinya selesai, rutenya diarahkan ke halaman asli
-/// dan placeholder ini tidak lagi dipakai untuk rute itu.
 class EmptyStatePlaceholder extends StatelessWidget {
   const EmptyStatePlaceholder({
     super.key,
@@ -45,3 +39,4 @@ class EmptyStatePlaceholder extends StatelessWidget {
     );
   }
 }
+

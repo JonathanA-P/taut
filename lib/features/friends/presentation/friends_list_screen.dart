@@ -3,12 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Friends List Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Teman terhubung"
-/// - Subtitle: "Tetap dekat dengan orang yang kamu percaya."
-/// - List of friends with avatar, name, and status ("Sesi berbagi demo aktif" or "Tidak ada sesi berbagi")
-/// - "+ Tambah teman" CTA button
-/// - Hint: "Daftar teman contoh. Menambahkan nama tidak mengirim undangan sungguhan."
 class FriendsListScreen extends StatelessWidget {
   const FriendsListScreen({super.key});
 
@@ -61,7 +55,6 @@ class FriendsListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Friends Stack
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -75,7 +68,6 @@ class FriendsListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Add Friend CTA
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -213,3 +205,4 @@ class FriendsListScreen extends StatelessWidget {
     );
   }
 }
+

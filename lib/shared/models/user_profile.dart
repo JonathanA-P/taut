@@ -1,4 +1,3 @@
-/// User profile representation across TAUT.
 class UserProfile {
   final String id;
   final String displayName;
@@ -36,3 +35,4 @@ class UserProfile {
     'updated_at': updatedAt.toIso8601String(),
   };
 }
+

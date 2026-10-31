@@ -3,12 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Manage Location Sharing Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Berbagi lokasi"
-/// - Notice: "Kamu memilih penerima dan durasinya. Sesi di prototipe ini merupakan simulasi; tidak ada koordinat yang dikirim."
-/// - Form: Recipient dropdown, duration dropdown, consent agreement checkbox, "Mulai berbagi demo" button
-/// - Active sessions list with live remaining countdown, "Lihat lokasi" CTA, and "Hentikan" button
-/// - Empty state: "Belum ada sesi aktif.\nLokasimu tidak dibagikan."
 class ManageLocationSharingScreen extends StatefulWidget {
   const ManageLocationSharingScreen({super.key});
 
@@ -115,7 +109,6 @@ class _ManageLocationSharingScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Notice Box
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -134,7 +127,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 22),
 
-                  // Section Title
                   const Text(
                     'Mulai sesi baru',
                     style: TextStyle(
@@ -145,7 +137,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 16),
 
-                  // Dropdown: Bagikan kepada
                   const Text(
                     'Bagikan kepada',
                     style: TextStyle(
@@ -191,7 +182,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 16),
 
-                  // Dropdown: Durasi
                   const Text(
                     'Durasi',
                     style: TextStyle(
@@ -257,7 +247,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 16),
 
-                  // Agreement Checkbox
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -292,7 +281,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 18),
 
-                  // Start Sharing Button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -317,7 +305,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 28),
 
-                  // Active Sessions Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -351,7 +338,6 @@ class _ManageLocationSharingScreenState
                   ),
                   const SizedBox(height: 14),
 
-                  // Sessions List
                   if (state.sessions.isEmpty)
                     Container(
                       width: double.infinity,
@@ -540,3 +526,4 @@ class _ManageLocationSharingScreenState
     );
   }
 }
+

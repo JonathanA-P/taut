@@ -5,13 +5,6 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
 
-/// Screen for Motion-to-Sound (BISINDO to Speech).
-/// Captures hand signs using the camera and converts recognized words to spoken audio.
-/// Refined with healthcare aesthetic:
-/// - Hero camera preview with rounded corners and hand-position guides
-/// - Clearly separated recognition result card
-/// - Prominent TTS audio playback
-/// - Clear recognition status & confidence indicator
 class MotionToSoundScreen extends StatefulWidget {
   const MotionToSoundScreen({super.key});
 
@@ -70,7 +63,7 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             Row(
               children: [
                 StatusBadge.category(
-                  _isCameraActive ? 'Kamera Aktif • Deteksi 30 FPS' : 'Kamera Siap',
+                  _isCameraActive ? 'Kamera Aktif â€¢ Deteksi 30 FPS' : 'Kamera Siap',
                   bg: _isCameraActive ? AppColors.successBg : AppColors.lightGreen,
                   fg: _isCameraActive ? AppColors.success : AppColors.darkGreen,
                 ),
@@ -87,7 +80,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             ),
             const SizedBox(height: 16),
 
-            // MAIN VISUAL ELEMENT: CAMERA PREVIEW WITH HAND-GUIDES
             Container(
               height: 290,
               decoration: BoxDecoration(
@@ -101,7 +93,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
               ),
               child: Stack(
                 children: [
-                  // Viewfinder center content
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -129,7 +120,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
                     ),
                   ),
 
-                  // Hand Position Guidance Box (Friendly dashed boundary)
                   if (_isCameraActive)
                     Center(
                       child: Container(
@@ -159,7 +149,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
                       ),
                     ),
 
-                  // Top indicator pill
                   Positioned(
                     top: 14,
                     left: 14,
@@ -197,7 +186,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Camera Toggle Control
             AppButton(
               label: _isCameraActive ? 'Matikan Kamera' : 'Buka Pratinjau Kamera',
               icon: _isCameraActive ? Icons.videocam_off_rounded : Icons.videocam_rounded,
@@ -206,7 +194,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             ),
             const SizedBox(height: 20),
 
-            // CLEARLY SEPARATED RECOGNITION RESULT CARD
             AppCard(
               margin: EdgeInsets.zero,
               backgroundColor: AppColors.accentMtsBg,
@@ -290,7 +277,6 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
             ),
             const SizedBox(height: 18),
 
-            // Friendly guidance card
             AppCard(
               margin: EdgeInsets.zero,
               child: Row(
@@ -328,3 +314,4 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen> {
     );
   }
 }
+

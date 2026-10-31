@@ -5,15 +5,6 @@ import '../../../core/routing/app_router.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 import 'login_screen.dart';
 
-/// Onboarding Screen strictly implementing the TAUT HTML prototype:
-/// - Brand logo "taut." + "Lewati" shortcut to home
-/// - Art illustration in rounded curved container
-/// - Eyebrow: "SALING MEMAHAMI"
-/// - Headline: "Ceritamu layak\nuntuk didengar."
-/// - Subtitle: "Ucapan menjadi tulisan. Isyarat menjadi suara. Terhubung dalam satu ruang yang nyaman."
-/// - 3 dots indicator
-/// - Primary CTA: "Mulai bersama TAUT →"
-/// - Footer hint: "Dirancang untuk komunikasi yang lebih setara."
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
@@ -26,7 +17,6 @@ class OnboardingScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             children: [
-              // Header: Logo + Lewati
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -67,7 +57,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Onboarding Art Container
               Container(
                 height: 240,
                 width: double.infinity,
@@ -88,7 +77,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // Eyebrow
               const Text(
                 'SALING MEMAHAMI',
                 style: TextStyle(
@@ -100,7 +88,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Main Headline
               const Text(
                 'Ceritamu layak\nuntuk didengar.',
                 textAlign: TextAlign.center,
@@ -114,7 +101,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
-              // Subtitle
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Text(
@@ -129,7 +115,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // 3 Dots indicator
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -163,7 +148,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // Primary CTA
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -195,7 +179,6 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Hint
               const Text(
                 'Dirancang untuk komunikasi yang lebih setara.',
                 style: TextStyle(
@@ -210,3 +193,4 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 }
+

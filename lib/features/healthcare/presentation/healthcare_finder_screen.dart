@@ -4,16 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
-/// Healthcare Finder Screen strictly implementing the TAUT HTML prototype design:
-/// - Screen title: "Fasilitas kesehatan"
-/// - Heading: "Temukan bantuan di sekitarmu."
-/// - Subtitle: "Tempat yang tepat, lebih mudah dijangkau."
-/// - Search input: "Cari nama fasilitas…"
-/// - Category Chips: "Semua", "Klinik", "Rumah sakit", "Puskesmas"
-/// - Map illustration: "Peta ilustrasi · bukan posisi nyata"
-/// - List of facilities with hospital icon, category, name, distance ("jarak contoh")
-/// - Empty state: "Tidak ada fasilitas yang sesuai. Coba kata lain."
-/// - Bottom hint: "Nama, alamat, dan jarak di sini fiktif untuk peninjauan desain."
 class HealthcareFinderScreen extends StatefulWidget {
   const HealthcareFinderScreen({super.key});
 
@@ -80,7 +70,6 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Headline & Subtitle
                   const Text(
                     'Temukan bantuan\ndi sekitarmu.',
                     style: TextStyle(
@@ -101,12 +90,11 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Search input
                   TextField(
                     controller: _searchController,
                     onChanged: (val) => state.setFacilitySearchQuery(val),
                     decoration: InputDecoration(
-                      hintText: 'Cari nama fasilitas…',
+                      hintText: 'Cari nama fasilitasâ€¦',
                       prefixIcon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.textSecondary,
@@ -145,15 +133,12 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Chips: 'Semua', 'Klinik', 'Rumah sakit', 'Puskesmas'
                   _buildCategoryChips(state),
                   const SizedBox(height: 16),
 
-                  // Map Preview Card
                   _buildMapPreview(),
                   const SizedBox(height: 24),
 
-                  // Section Title + Amber Tag
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -187,7 +172,6 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Facilities Stack
                   if (filteredList.isEmpty)
                     Container(
                       width: double.infinity,
@@ -293,7 +277,6 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
       ),
       child: Stack(
         children: [
-          // SVG / Illustration Background
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(22),
@@ -317,7 +300,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                 ],
               ),
               child: const Text(
-                'Peta ilustrasi · bukan posisi nyata',
+                'Peta ilustrasi Â· bukan posisi nyata',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -403,7 +386,7 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        '${item.distance} · jarak contoh',
+                        '${item.distance} Â· jarak contoh',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -425,3 +408,4 @@ class _HealthcareFinderScreenState extends State<HealthcareFinderScreen> {
     );
   }
 }
+

@@ -1,21 +1,11 @@
 import 'dart:math' as math;
 
-/// Koordinat geografis sederhana (lintang & bujur dalam derajat).
-///
-/// Sengaja TIDAK memakai tipe dari package peta/geolocator di sini,
-/// supaya model domain TAUT tidak bergantung pada satu package.
-/// Konversi ke tipe package dilakukan di layer data nanti.
 class LatLng {
   const LatLng(this.latitude, this.longitude);
 
   final double latitude;
   final double longitude;
 
-  /// Jarak garis lurus ke titik lain, dalam kilometer (rumus haversine).
-  ///
-  /// Dipakai untuk mengurutkan faskes dari yang terdekat, dan untuk
-  /// memeriksa radius 10 km. Ini jarak garis lurus, bukan jarak rute
-  /// jalan — petunjuk arah tetap dibuka lewat aplikasi peta.
   double distanceKmTo(LatLng other) {
     const earthRadiusKm = 6371.0;
     final lat1 = latitude * math.pi / 180;
@@ -42,3 +32,4 @@ class LatLng {
   @override
   String toString() => 'LatLng($latitude, $longitude)';
 }
+

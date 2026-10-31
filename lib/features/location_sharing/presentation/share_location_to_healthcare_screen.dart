@@ -6,8 +6,6 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../healthcare/domain/healthcare_facility.dart';
 
-/// Screen for sharing user's live GPS coordinates to a healthcare facility or emergency contact.
-/// Uses Android Share Sheet (Feature 3) without polluting the backend database.
 class ShareLocationToHealthcareScreen extends StatelessWidget {
   final HealthcareFacility? targetFacility;
 
@@ -31,7 +29,7 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: StatusBadge.active(label: 'Android Share Sheet • Siap Kirim'),
+              child: StatusBadge.active(label: 'Android Share Sheet â€¢ Siap Kirim'),
             ),
             const SizedBox(height: 20),
             Text(
@@ -54,7 +52,6 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // TARGET FACILITY CARD
             AppCard(
               margin: EdgeInsets.zero,
               backgroundColor: AppColors.lightGreen,
@@ -103,7 +100,6 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
 
-            // COORDINATE PREVIEW CARD
             AppCard(
               margin: EdgeInsets.zero,
               child: Column(
@@ -188,7 +184,6 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // ACTION BUTTONS
             AppButton(
               label: 'Buka Lembar Berbagi Android',
               icon: Icons.share_rounded,
@@ -216,3 +211,4 @@ class ShareLocationToHealthcareScreen extends StatelessWidget {
     );
   }
 }
+

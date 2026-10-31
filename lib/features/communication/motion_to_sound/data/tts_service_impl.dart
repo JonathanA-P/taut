@@ -1,7 +1,5 @@
 import '../domain/tts_service.dart';
 
-/// Foundation implementation of [TtsService] for Stage 01.
-/// Full integration with TTS engine will be completed on `feature/motion-to-sound`.
 class TtsServiceImpl implements TtsService {
   bool _isSpeaking = false;
 
@@ -28,3 +26,4 @@ class TtsServiceImpl implements TtsService {
     _isSpeaking = false;
   }
 }
+

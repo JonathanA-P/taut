@@ -3,16 +3,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_illustrations.dart';
 
-/// Beranda TAUT strictly implementing the prototype HTML design:
-/// - Sapaan ramah "Halo, selamat datang / [Nama] ✦" + Avatar
-/// - Hero Card Sage Green: "SETIAP CERITA BERARTI / Saling mengerti, tanpa batas." + Ilustrasi + Tombol "Mulai Komunikasi →"
-/// - 4 Fitur Utama Grid:
-///   1. Ucapan ke Teks ("Dengar lewat tulisan")
-///   2. Isyarat ke Suara ("Sampaikan dengan isyarat")
-///   3. Fasilitas Kesehatan ("Temukan layanan sekitar")
-///   4. Berbagi Lokasi ("Tetap dekat, tetap aman")
-/// - Teman terhubung (preview avatar, nama, status) + tombol "Lihat semua ›"
-/// - Kartu Sesi Berbagi Aktif (jika ada sesi) atau hint privasi perisai
 class HomePage extends StatelessWidget {
   final VoidCallback? onNavigateToCommunication;
   final VoidCallback? onNavigateToHealthcare;
@@ -42,7 +32,6 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Row: Sapaan & Avatar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -71,7 +60,7 @@ class HomePage extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               const Text(
-                                '✦',
+                                'âœ¦',
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Color(0xFF84A078),
@@ -95,11 +84,9 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Hero Section: Saling Mengerti Tanpa Batas
                   _buildHero(context, state),
                   const SizedBox(height: 24),
 
-                  // 4 Fitur Utama Section Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -123,11 +110,9 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // 4 Features Grid
                   _buildFeatureGrid(context, state),
                   const SizedBox(height: 24),
 
-                  // Teman Terhubung Section Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -166,11 +151,9 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Teman Terhubung Card
                   _buildFriendsCard(context, state),
                   const SizedBox(height: 16),
 
-                  // Active Location Sharing Card or Privacy Shield Hint
                   if (state.sessions.isNotEmpty)
                     _buildActiveSharingCard(context, state)
                   else
@@ -508,7 +491,7 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${state.sessions.length} penerima · simulasi lokal',
+            '${state.sessions.length} penerima Â· simulasi lokal',
             style: const TextStyle(fontSize: 12.5, color: Color(0xFF4C6551)),
           ),
           const SizedBox(height: 12),
@@ -563,3 +546,4 @@ class HomePage extends StatelessWidget {
     );
   }
 }
+

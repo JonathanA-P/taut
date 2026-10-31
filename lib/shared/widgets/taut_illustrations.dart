@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-/// Clean, self-contained vector illustrations crafted specifically for TAUT.
-/// Follows the friendly healthcare aesthetic of the Dribbble reference:
-/// soft pastel fills, rounded human silhouettes, sage green harmony, and zero external network dependency.
 class TautIllustration {
   TautIllustration._();
 
-  /// Hero Illustration for the Personal Dashboard and Communication Hub.
-  /// Depicts friendly human two-way communication (sound waves & visual interaction).
   static Widget communicationHero({double height = 150}) {
     return SizedBox(
       height: height,
@@ -19,8 +14,6 @@ class TautIllustration {
     );
   }
 
-  /// Onboarding Welcome Illustration inspired by Dribbble Screen 1:
-  /// Friendly healthcare professional welcoming the user with clipboard and accessibility smile.
   static Widget onboardingWelcome({double height = 240}) {
     return SizedBox(
       height: height,
@@ -31,8 +24,6 @@ class TautIllustration {
     );
   }
 
-  /// Detail Header Banner Illustration inspired by Dribbble Screen 3:
-  /// Doctors collaborating in a modern accessible clinic.
   static Widget clinicHeaderBanner({double height = 180}) {
     return SizedBox(
       height: height,
@@ -43,7 +34,6 @@ class TautIllustration {
     );
   }
 
-  /// Sign Language & Gesture Recognition Illustration.
   static Widget signLanguage({double size = 100}) {
     return SizedBox(
       width: size,
@@ -55,7 +45,6 @@ class TautIllustration {
     );
   }
 
-  /// Hearing Accessibility & Audio Wave Illustration.
   static Widget hearingAccessibility({double size = 100}) {
     return SizedBox(
       width: size,
@@ -67,7 +56,6 @@ class TautIllustration {
     );
   }
 
-  /// Location & Emergency Sharing Illustration.
   static Widget locationSharing({double size = 100}) {
     return SizedBox(
       width: size,
@@ -79,7 +67,6 @@ class TautIllustration {
     );
   }
 
-  /// Friendly Avatar Placeholder for Doctors / Healthcare Staff.
   static Widget healthcareAvatar({
     double radius = 28,
     Color backgroundColor = AppColors.lightGreen,
@@ -96,7 +83,6 @@ class TautIllustration {
     );
   }
 
-  /// Map illustration card placeholder strictly matching the HTML prototype vector.
   static Widget mapPlaceholder({double height = 170}) {
     return SizedBox(
       height: height,
@@ -107,7 +93,6 @@ class TautIllustration {
     );
   }
 
-  /// Friendly two-person inclusive communication vector for Onboarding.
   static Widget friendlyConversationHero({double width = 260, double height = 220}) {
     return SizedBox(
       width: width,
@@ -119,7 +104,6 @@ class TautIllustration {
     );
   }
 
-  /// Friendly Avatar Placeholder for Connected Friends.
   static Widget friendAvatar({
     required String initials,
     double radius = 24,
@@ -143,16 +127,11 @@ class TautIllustration {
   }
 }
 
-// ---------------------------------------------------------------------------
-// CUSTOM PAINTER IMPLEMENTATIONS (Lightweight, pure native canvas rendering)
-// ---------------------------------------------------------------------------
-
 class _CommunicationHeroPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width <= 0 || size.height <= 0) return;
 
-    // ViewBox is 230x230, exactly matching the prototype SVG
     final scale = (size.width / 230).clamp(0.0, size.height / 230);
     final dx = (size.width - 230 * scale) / 2;
     final dy = (size.height - 230 * scale) / 2;
@@ -161,20 +140,17 @@ class _CommunicationHeroPainter extends CustomPainter {
     canvas.translate(dx, dy);
     canvas.scale(scale);
 
-    // 1. Ground shadow ellipse: <ellipse cx="116" cy="205" rx="95" ry="12" fill="#b8cbb0"/>
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(116, 205), width: 190, height: 24),
       Paint()..color = const Color(0xFFB8CBB0)..style = PaintingStyle.fill,
     );
 
-    // 2. Circular backdrop: <circle cx="129" cy="101" r="86" fill="#e7efdf"/>
     canvas.drawCircle(
       const Offset(129, 101),
       86,
       Paint()..color = const Color(0xFFE7EFDF)..style = PaintingStyle.fill,
     );
 
-    // 3. Left person shirt/body: <path d="M30 200v-55q0-38 40-38t40 38v55" fill="#527B5D"/>
     final leftBody = Path()
       ..moveTo(30, 200)
       ..lineTo(30, 145)
@@ -187,7 +163,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       Paint()..color = const Color(0xFF527B5D)..style = PaintingStyle.fill,
     );
 
-    // 4. Right person shirt/body: <path d="M125 200v-61q0-32 34-32t39 32v61" fill="#a7b997"/>
     final rightBody = Path()
       ..moveTo(125, 200)
       ..lineTo(125, 139)
@@ -200,7 +175,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       Paint()..color = const Color(0xFFA7B997)..style = PaintingStyle.fill,
     );
 
-    // 5. Left person arms: <path d="m53 143 30 31 50-28" stroke="#d6aa8b" stroke-width="16" stroke-linecap="round"/>
     final leftArm = Path()
       ..moveTo(53, 143)
       ..lineTo(83, 174)
@@ -215,7 +189,6 @@ class _CommunicationHeroPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // 6. Right person arms: <path d="m176 143-23 28-25-18" stroke="#b87d61" stroke-width="14" stroke-linecap="round"/>
     final rightArm = Path()
       ..moveTo(176, 143)
       ..lineTo(153, 171)
@@ -230,13 +203,11 @@ class _CommunicationHeroPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // 7. Left head: <ellipse cx="69" cy="79" rx="25" ry="31" fill="#d6aa8b"/>
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(69, 79), width: 50, height: 62),
       Paint()..color = const Color(0xFFD6AA8B)..style = PaintingStyle.fill,
     );
 
-    // 8. Left hair: <path d="M44 80q-15-40 22-38 35-1 28 36l-12-16q-11 15-38 10" fill="#263d2f"/>
     final leftHair = Path()
       ..moveTo(44, 80)
       ..quadraticBezierTo(29, 40, 66, 42)
@@ -249,13 +220,11 @@ class _CommunicationHeroPainter extends CustomPainter {
       Paint()..color = const Color(0xFF263D2F)..style = PaintingStyle.fill,
     );
 
-    // 9. Right head: <ellipse cx="159" cy="82" rx="24" ry="30" fill="#b87d61"/>
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(159, 82), width: 48, height: 60),
       Paint()..color = const Color(0xFFB87D61)..style = PaintingStyle.fill,
     );
 
-    // 10. Right hair: <path d="M135 79q-12-35 19-39 36-6 30 41l-14-23q-15 13-35 12" fill="#384a38"/>
     final rightHair = Path()
       ..moveTo(135, 79)
       ..quadraticBezierTo(123, 44, 154, 40)
@@ -268,7 +237,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       Paint()..color = const Color(0xFF384A38)..style = PaintingStyle.fill,
     );
 
-    // 11. Eyes: <path d="M82 84h3m67 0h3" stroke="#263d2f" stroke-width="3" stroke-linecap="round"/>
     final eyePaint = Paint()
       ..color = const Color(0xFF263D2F)
       ..style = PaintingStyle.stroke
@@ -277,7 +245,6 @@ class _CommunicationHeroPainter extends CustomPainter {
     canvas.drawLine(const Offset(82, 84), const Offset(85, 84), eyePaint);
     canvas.drawLine(const Offset(152, 84), const Offset(155, 84), eyePaint);
 
-    // 12. Smiles: <path d="M79 95q7 5 11-1m50 1q6 5 11 0" stroke="#79533c" fill="none" stroke-width="2"/>
     final smilePaint = Paint()
       ..color = const Color(0xFF79533C)
       ..style = PaintingStyle.stroke
@@ -293,7 +260,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       ..quadraticBezierTo(146, 100, 151, 95);
     canvas.drawPath(rightSmile, smilePaint);
 
-    // 13. Speech bubble: <rect x="85" y="7" width="55" height="33" rx="14" fill="white"/>
     final bubblePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -302,7 +268,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       ),
       bubblePaint,
     );
-    // Tail: <path d="m108 38-8 9 2-12" fill="white"/>
     final tail = Path()
       ..moveTo(108, 38)
       ..lineTo(100, 47)
@@ -310,7 +275,6 @@ class _CommunicationHeroPainter extends CustomPainter {
       ..close();
     canvas.drawPath(tail, bubblePaint);
 
-    // Dots: <circle cx="102" cy="23" r="3" fill="#527B5D"/> etc.
     final dotPaint = Paint()..color = const Color(0xFF527B5D)..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(102, 23), 3, dotPaint);
     canvas.drawCircle(const Offset(113, 23), 3, dotPaint);
@@ -329,7 +293,6 @@ class _OnboardingWelcomePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Soft sage gradient background circle
     final bgPaint = Paint()
       ..shader = LinearGradient(
         colors: [AppColors.lightGreen, AppColors.sageGreen.withValues(alpha: 0.8)],
@@ -339,7 +302,6 @@ class _OnboardingWelcomePainter extends CustomPainter {
 
     canvas.drawCircle(Offset(w * 0.5, h * 0.5), h * 0.46, bgPaint);
 
-    // Small decorative bubbles
     final bubblePaint = Paint()
       ..color = AppColors.white.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
@@ -347,8 +309,6 @@ class _OnboardingWelcomePainter extends CustomPainter {
     canvas.drawCircle(Offset(w * 0.82, h * 0.28), 22, bubblePaint);
     canvas.drawCircle(Offset(w * 0.85, h * 0.65), 14, bubblePaint);
 
-    // Central Doctor / Specialist Figure
-    // Stethoscope / Coat
     final coatPaint = Paint()
       ..color = AppColors.white
       ..style = PaintingStyle.fill;
@@ -367,7 +327,6 @@ class _OnboardingWelcomePainter extends CustomPainter {
     canvas.drawRRect(coatRRect.shift(const Offset(0, 4)), coatShadow);
     canvas.drawRRect(coatRRect, coatPaint);
 
-    // Dark green scrub collar / tie
     final scrubPaint = Paint()..color = AppColors.primaryGreen;
     final scrubPath = Path()
       ..moveTo(w * 0.45, h * 0.48)
@@ -376,11 +335,9 @@ class _OnboardingWelcomePainter extends CustomPainter {
       ..close();
     canvas.drawPath(scrubPath, scrubPaint);
 
-    // Head
     final skinPaint = Paint()..color = const Color(0xFFF3C59D);
     canvas.drawCircle(Offset(w * 0.5, h * 0.35), h * 0.14, skinPaint);
 
-    // Hair (Dark Green / Black style)
     final hairPaint = Paint()..color = AppColors.darkGreen;
     final hairPath = Path()
       ..addArc(
@@ -394,7 +351,6 @@ class _OnboardingWelcomePainter extends CustomPainter {
       );
     canvas.drawPath(hairPath, hairPaint);
 
-    // Clipboard held with checkmark (symbolizing verification & accessibility)
     final clipPaint = Paint()..color = AppColors.sageGreen;
     final clipRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
@@ -429,7 +385,6 @@ class _ClinicHeaderPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Pastel gradient background
     final bgPaint = Paint()
       ..shader = LinearGradient(
         colors: [AppColors.sageGreen, AppColors.lightGreen],
@@ -438,7 +393,6 @@ class _ClinicHeaderPainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgPaint);
 
-    // Clinic Building / Medical Cross in backdrop
     final buildingPaint = Paint()..color = Colors.white.withValues(alpha: 0.6);
     final buildingRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(w * 0.15, h * 0.15, w * 0.7, h * 0.85),
@@ -446,7 +400,6 @@ class _ClinicHeaderPainter extends CustomPainter {
     );
     canvas.drawRRect(buildingRect, buildingPaint);
 
-    // Medical Cross
     final crossPaint = Paint()
       ..color = AppColors.primaryGreen
       ..strokeWidth = 7
@@ -462,7 +415,6 @@ class _ClinicHeaderPainter extends CustomPainter {
       crossPaint,
     );
 
-    // Doctors standing in front (Silhouettes like Dribbble Screen 3)
     final d1 = Paint()..color = AppColors.darkGreen;
     canvas.drawCircle(Offset(w * 0.36, h * 0.54), h * 0.10, d1);
     final d1Torso = RRect.fromRectAndRadius(
@@ -498,13 +450,11 @@ class _SignLanguagePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Soft warm amber background circle
     final bgPaint = Paint()
       ..color = AppColors.accentMtsBg
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.48, bgPaint);
 
-    // Stylized hand silhouette
     final handPaint = Paint()
       ..color = AppColors.accentMts
       ..style = PaintingStyle.fill;
@@ -519,7 +469,6 @@ class _SignLanguagePainter extends CustomPainter {
     );
     canvas.drawRRect(palmRect, handPaint);
 
-    // Fingers
     final fingerPaint = Paint()
       ..color = AppColors.accentMts
       ..strokeWidth = w * 0.08
@@ -546,7 +495,6 @@ class _SignLanguagePainter extends CustomPainter {
       fingerPaint,
     );
 
-    // Motion spark lines
     final sparkPaint = Paint()
       ..color = AppColors.darkGreen
       ..strokeWidth = 2.5
@@ -574,13 +522,11 @@ class _HearingAccessibilityPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Soft coral background circle
     final bgPaint = Paint()
       ..color = AppColors.accentSttBg
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.48, bgPaint);
 
-    // Microphone capsule
     final micPaint = Paint()
       ..color = AppColors.accentStt
       ..style = PaintingStyle.fill;
@@ -595,7 +541,6 @@ class _HearingAccessibilityPainter extends CustomPainter {
     );
     canvas.drawRRect(micCapsule, micPaint);
 
-    // Base & Stand
     final standPaint = Paint()
       ..color = AppColors.accentStt
       ..strokeWidth = 3.5
@@ -641,7 +586,6 @@ class _LocationSharingPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.48, bgPaint);
 
-    // Radar pulse rings
     final ringPaint = Paint()
       ..color = AppColors.accentLocation.withValues(alpha: 0.25)
       ..style = PaintingStyle.stroke
@@ -649,7 +593,6 @@ class _LocationSharingPainter extends CustomPainter {
     canvas.drawCircle(Offset(w * 0.5, h * 0.46), w * 0.38, ringPaint);
     canvas.drawCircle(Offset(w * 0.5, h * 0.46), w * 0.24, ringPaint);
 
-    // Map Pin
     final pinPaint = Paint()
       ..color = AppColors.accentLocation
       ..style = PaintingStyle.fill;
@@ -665,7 +608,6 @@ class _LocationSharingPainter extends CustomPainter {
       ..close();
     canvas.drawPath(pinPath, pinPaint);
 
-    // White dot inside pin
     final dotPaint = Paint()..color = Colors.white;
     canvas.drawCircle(Offset(w * 0.5, h * 0.40), w * 0.08, dotPaint);
   }
@@ -680,13 +622,11 @@ class _MapPlaceholderPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Background
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
       Paint()..color = const Color(0xFFE6ECDF),
     );
 
-    // White Roads
     final roadPaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 14
@@ -704,7 +644,6 @@ class _MapPlaceholderPainter extends CustomPainter {
       ..lineTo(w, h * 0.12);
     canvas.drawPath(roadPath, roadPaint);
 
-    // River
     final riverPaint = Paint()
       ..color = const Color(0xFFC6DCE0)
       ..strokeWidth = 14
@@ -717,7 +656,6 @@ class _MapPlaceholderPainter extends CustomPainter {
       ..quadraticBezierTo(w * 0.74, h * 0.84, w, h * 0.60);
     canvas.drawPath(riverPath, riverPaint);
 
-    // Dotted route
     final routePaint = Paint()
       ..color = const Color(0xFF527B5D)
       ..strokeWidth = 3.5
@@ -729,7 +667,6 @@ class _MapPlaceholderPainter extends CustomPainter {
       ..lineTo(w * 0.66, h * 0.56);
     canvas.drawPath(routePath, routePaint);
 
-    // Origin Pin
     final originPaint = Paint()..color = const Color(0xFF527B5D);
     canvas.drawCircle(Offset(w * 0.28, h * 0.80), 8, originPaint);
     canvas.drawCircle(
@@ -741,7 +678,6 @@ class _MapPlaceholderPainter extends CustomPainter {
         ..strokeWidth = 3,
     );
 
-    // Destination Hospital Pin
     final destRect = Rect.fromCenter(
       center: Offset(w * 0.66, h * 0.56),
       width: 26,
@@ -752,7 +688,6 @@ class _MapPlaceholderPainter extends CustomPainter {
       Paint()..color = const Color(0xFF527B5D),
     );
 
-    // Cross icon inside destination
     final crossPaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 2.5
@@ -772,3 +707,4 @@ class _MapPlaceholderPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

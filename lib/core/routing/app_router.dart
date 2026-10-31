@@ -44,8 +44,6 @@ class AppRoutes {
   static const String register = '/register';
 }
 
-/// Centralized declarative router for TAUT navigation.
-/// Maps all 20 primary application screens and flows.
 class AppRouter {
   AppRouter._();
 
@@ -156,3 +154,4 @@ class AppRouter {
     }
   }
 }
+

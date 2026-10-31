@@ -4,14 +4,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Unified Communication Screen ("Komunikasi Langsung - Satu ruang, dua arah").
-/// Implements the exact single-screen two-way communication workflow from the HTML prototype:
-/// 1. Session header with title, status badge, and dynamic text-size cycling (Aa · 16/19/22 px)
-/// 2. Camera & sign-recognition area with framing guide, status badge, and demo sign generation
-/// 3. Speech-to-Text area with large microphone control, live transcript, and echo protection
-/// 4. Shared conversation history displaying speech, sign, and typed messages
-/// 5. Fast manual typing fallback with instant TTS speech playback
-/// 6. Safe session termination that stops camera, microphone, and TTS
 class CommunicationHubScreen extends StatefulWidget {
   final VoidCallback? onOpenDashboard;
 
@@ -45,7 +37,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         state.setTtsActive(false);
         if (_wantMic) {
           state.setMicActive(true);
-          setState(() => _micStatusText = 'Mendengarkan…');
+          setState(() => _micStatusText = 'Mendengarkanâ€¦');
         } else {
           setState(() => _micStatusText = 'Mikrofon nonaktif');
         }
@@ -56,7 +48,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
         setState(() => _micStatusText = 'Mikrofon nonaktif');
       });
     } catch (_) {
-      // Graceful fallback if TTS engine is unavailable
     }
   }
 
@@ -129,7 +120,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                 Navigator.pop(ctx);
                 _wantMic = true;
                 state.setMicActive(true);
-                setState(() => _micStatusText = 'Mendengarkan…');
+                setState(() => _micStatusText = 'Mendengarkanâ€¦');
                 _showToast('Mikrofon aktif. Silakan lawan bicara berbicara.');
               },
               child: const Text('Lanjutkan'),
@@ -144,7 +135,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
 
-    // Echo protection: temporarily pause mic while TTS speaks
     state.setTtsActive(true);
     state.setMicActive(false);
     setState(() => _micStatusText = 'Dijeda saat suara diputar');
@@ -152,13 +142,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     try {
       await _tts.speak(trimmed);
     } catch (_) {
-      // In headless or mock environment: simulate completion
       Future.delayed(const Duration(milliseconds: 600), () {
         if (!mounted) return;
         state.setTtsActive(false);
         if (_wantMic) {
           state.setMicActive(true);
-          setState(() => _micStatusText = 'Mendengarkan…');
+          setState(() => _micStatusText = 'Mendengarkanâ€¦');
         } else {
           setState(() => _micStatusText = 'Mikrofon nonaktif');
         }
@@ -238,7 +227,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Subheader: Status indicator + Text Size Toggle
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -269,7 +257,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                         },
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         child: Text(
-                          'Aa · Ukuran teks (${state.fontSize.toInt()}px)',
+                          'Aa Â· Ukuran teks (${state.fontSize.toInt()}px)',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -281,7 +269,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  // 1. CAMERA VIEWPORT & SIGN RECOGNITION AREA
                   _buildCameraViewport(state),
                   const SizedBox(height: 6),
                   const Text(
@@ -290,15 +277,12 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 2. ISYARAT -> SUARA CARD
                   _buildSignToSoundCard(state),
                   const SizedBox(height: 14),
 
-                  // 3. UCAPAN -> TEKS CARD
                   _buildSpeechToTextCard(state),
                   const SizedBox(height: 20),
 
-                  // 4. SHARED CONVERSATION HISTORY
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -326,7 +310,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   _buildConversationHistory(state),
                   const SizedBox(height: 14),
 
-                  // 5. MANUAL TYPING FALLBACK
                   _buildManualInputForm(state),
                   const SizedBox(height: 8),
                   const Text(
@@ -335,7 +318,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 6. END SESSION ACTION
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -378,7 +360,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Visual framing corners
           Positioned(
             left: 45,
             right: 45,
@@ -392,7 +373,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
             ),
           ),
 
-          // Viewfinder state
           if (state.isCamActive)
             Center(
               child: Column(
@@ -405,7 +385,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Kamera Aktif • Menangkap Isyarat',
+                    'Kamera Aktif â€¢ Menangkap Isyarat',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -446,7 +426,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
               ),
             ),
 
-          // Status Badge top-left
           Positioned(
             left: 12,
             top: 12,
@@ -463,7 +442,6 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
             ),
           ),
 
-          // Camera Toggle Button bottom-right
           Positioned(
             right: 12,
             bottom: 12,
@@ -513,7 +491,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Isyarat → suara',
+                'Isyarat â†’ suara',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -548,7 +526,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
             maxLines: 2,
             style: TextStyle(fontSize: state.fontSize, color: AppColors.darkGreen),
             decoration: const InputDecoration(
-              hintText: 'Hasil isyarat akan muncul di sini…',
+              hintText: 'Hasil isyarat akan muncul di siniâ€¦',
               border: OutlineInputBorder(),
             ),
             onChanged: (val) => state.setSignText(val),
@@ -622,7 +600,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Ucapan → teks',
+                    'Ucapan â†’ teks',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -753,7 +731,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${msg.type.toUpperCase()}${msg.isDemo ? ' · DEMO' : ''}',
+                    '${msg.type.toUpperCase()}${msg.isDemo ? ' Â· DEMO' : ''}',
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -818,7 +796,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
                 controller: _manualInputController,
                 style: TextStyle(fontSize: state.fontSize, color: AppColors.darkGreen),
                 decoration: const InputDecoration(
-                  hintText: 'Tulis pesan…',
+                  hintText: 'Tulis pesanâ€¦',
                   contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
                 onSubmitted: (_) => _handleSendManual(state),
@@ -844,3 +822,4 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen> {
     );
   }
 }
+

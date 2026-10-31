@@ -5,15 +5,6 @@ import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
 import 'login_screen.dart';
 
-/// Register Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Buat akun"
-/// - Logo "taut."
-/// - Heading: "Mulai perjalananmu."
-/// - Subtitle: "Masuk ke ruang yang memahami kamu."
-/// - Simulated name, email & password inputs with notice box
-/// - "Daftar demo" CTA
-/// - "Sudah punya akun? Masuk" text link
-/// - "Jelajahi tanpa akun" ghost CTA
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -84,7 +75,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              // Brand Logo
               RichText(
                 text: const TextSpan(
                   text: 'taut',
@@ -107,7 +97,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Heading & Subtitle
               const Text(
                 'Mulai perjalananmu.',
                 style: TextStyle(
@@ -127,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Name Field
               const Text(
                 'Nama',
                 style: TextStyle(
@@ -168,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Email Field
               const Text(
                 'Email',
                 style: TextStyle(
@@ -208,7 +195,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Field
               const Text(
                 'Kata sandi',
                 style: TextStyle(
@@ -248,7 +234,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // Notice Box
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
@@ -267,7 +252,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -292,7 +276,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Switch to Login TextButton
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -315,7 +298,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Explore without account
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -346,3 +328,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+

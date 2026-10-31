@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// Semantic status badge for indicating system states, active sessions, or stages.
-/// Styled as a soft, pill-shaped badge supporting accessibility rules and healthcare aesthetic.
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color backgroundColor;
@@ -18,7 +16,6 @@ class StatusBadge extends StatelessWidget {
     this.icon,
   });
 
-  /// Badge hijau untuk "AKTIF".
   const StatusBadge.active({
     super.key,
     this.label = 'AKTIF',
@@ -27,10 +24,9 @@ class StatusBadge extends StatelessWidget {
     this.icon = Icons.check_circle_rounded,
   });
 
-  /// Badge merah untuk sesi live.
   const StatusBadge.live({
     super.key,
-    this.label = '● LIVE',
+    this.label = 'â— LIVE',
     this.backgroundColor = const Color(0xFFFFEBEE),
     this.textColor = AppColors.error,
     this.icon,
@@ -38,7 +34,7 @@ class StatusBadge extends StatelessWidget {
 
   factory StatusBadge.development() {
     return const StatusBadge(
-      label: 'Tahap Fondasi • Siap Integrasi',
+      label: 'Tahap Fondasi â€¢ Siap Integrasi',
       backgroundColor: AppColors.accentMtsBg,
       textColor: AppColors.onAccentMts,
       icon: Icons.info_outline_rounded,
@@ -92,3 +88,4 @@ class StatusBadge extends StatelessWidget {
     );
   }
 }
+

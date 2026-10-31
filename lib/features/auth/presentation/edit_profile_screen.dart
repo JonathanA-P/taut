@@ -3,11 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
 
-/// Edit Profile Screen strictly implementing the TAUT HTML prototype:
-/// - Screen title: "Edit profil"
-/// - Field: "Nama panggilan", maxLength 40
-/// - Button: "Simpan perubahan"
-/// - Updates state.userName and pops with toast
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -152,3 +147,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+
