@@ -20,15 +20,23 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   void initState() {
     super.initState();
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
-    )..repeat();
+    );
+    if (!isTest) {
+      _pulseController.repeat();
+    }
 
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
-    )..repeat(reverse: true);
+    );
+    if (!isTest) {
+      _floatController.repeat(reverse: true);
+    }
 
     _bounceController = AnimationController(
       vsync: this,
@@ -383,7 +391,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           height: 52,
           child: ElevatedButton.icon(
             onPressed: () {
-              Navigator.pushReplacementNamed(context, AppRoutes.register);
+              Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

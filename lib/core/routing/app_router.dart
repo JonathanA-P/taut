@@ -15,7 +15,6 @@ import '../../features/friends/presentation/friends_list_screen.dart';
 import '../../features/friends/presentation/add_friend_screen.dart';
 import '../../features/friends/presentation/live_location_screen.dart';
 import '../../features/friends/presentation/manage_location_sharing_screen.dart';
-import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -53,22 +52,20 @@ class AppRouter {
     switch (settings.name) {
       case AppRoutes.splash:
       case AppConstants.routeSplash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
-
-      case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => const HomeShellScreen());
-
-      case AppConstants.routeOnboarding:
-        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
-
       case AppRoutes.welcome:
         return MaterialPageRoute(builder: (_) => const WelcomeScreen());
 
-      case AppConstants.routeLogin:
+      case AppRoutes.onboarding:
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+
+      case AppRoutes.register:
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
+
+      case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
 
-      case AppConstants.routeRegister:
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case AppRoutes.home:
+        return MaterialPageRoute(builder: (_) => const HomeShellScreen());
 
       case AppConstants.routeHomeDashboard:
         return MaterialPageRoute(builder: (_) => const HomeDashboardScreen());

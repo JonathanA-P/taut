@@ -21,8 +21,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _goToWelcome() {
-    Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+  void _goToRegister() {
+    Navigator.pushReplacementNamed(context, AppRoutes.register);
   }
 
   void _goToPage(int page) {
@@ -120,7 +120,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           else
             const SizedBox.shrink(),
           TextButton(
-            onPressed: _goToWelcome,
+            onPressed: _goToRegister,
             child: const Text(
               'Lewati',
               style: TextStyle(
@@ -438,28 +438,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       padding: EdgeInsets.symmetric(vertical: 10),
                       child: Divider(color: Color(0xFFE4E9E1), height: 1),
                     ),
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.security_rounded,
-                              size: 15,
-                              color: AppColors.primary,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              'Lokasi Terenkripsi',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.security_rounded,
+                                size: 15,
                                 color: AppColors.primary,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 5),
+                              Expanded(
+                                child: Text(
+                                  'Lokasi Terenkripsi',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        Text(
+                        const SizedBox(width: 8),
+                        const Text(
                           '0,8 km',
                           style: TextStyle(
                             fontSize: 11,
@@ -546,7 +552,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: ElevatedButton.icon(
           onPressed: () {
             if (isLast) {
-              _goToWelcome();
+              _goToRegister();
             } else {
               _goToPage(_currentPage + 1);
             }
@@ -563,7 +569,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_forward_rounded, size: 18),
           label: Text(
-            isLast ? 'Selesai & Masuk TAUT' : 'Lanjut',
+            isLast ? 'Selesai & Daftar' : 'Lanjut',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

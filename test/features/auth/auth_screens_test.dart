@@ -12,7 +12,7 @@ import 'package:taut/features/auth/presentation/settings_accessibility_screen.da
 
 void main() {
   group('Auth & Profile Screens Tests', () {
-    testWidgets('SplashScreen renders TAUT brand title and tagline', (tester) async {
+    testWidgets('SplashScreen renders TAUT Welcome screen and navigates to Onboarding', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -22,14 +22,66 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('taut'), findsOneWidget);
+      expect(find.text('taut.', findRichText: true), findsOneWidget);
       expect(find.text('Ruang untuk saling memahami'), findsOneWidget);
+      expect(find.text('Mulai Eksplorasi'), findsOneWidget);
 
-      // Advance timer so pending timer resolves and navigates to LoginScreen
-      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.tap(find.text('Mulai Eksplorasi'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+    });
+
+    testWidgets('Complete startup flow: Welcome -> Intro Splash (1..3) -> Register <-> Login', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          initialRoute: AppRoutes.welcome,
+          onGenerateRoute: AppRouter.onGenerateRoute,
+        ),
+      );
+      await tester.pump();
+
+      // 1. TAUT Welcome (Gambar 1)
+      expect(find.text('Mulai Eksplorasi'), findsOneWidget);
+      await tester.tap(find.text('Mulai Eksplorasi'));
+      await tester.pumpAndSettle();
+
+      // 2. Intro Splash 1
+      expect(find.textContaining('SALING MEMAHAMI'), findsOneWidget);
+      await tester.tap(find.text('Lanjut'));
+      await tester.pumpAndSettle();
+
+      // 3. Intro Splash 2
+      expect(find.textContaining('KOMUNIKASI DUA ARAH'), findsOneWidget);
+      await tester.tap(find.text('Lanjut'));
+      await tester.pumpAndSettle();
+
+      // 4. Intro Splash 3
+      expect(find.textContaining('AMAN & DEKAT'), findsOneWidget);
+      await tester.tap(find.text('Selesai & Daftar'));
+      await tester.pumpAndSettle();
+
+      // 5. Menu Register
+      expect(find.byType(RegisterScreen), findsOneWidget);
+      expect(find.text('Daftar Akun Baru'), findsOneWidget);
+
+      // 6. Switch from Register to Login
+      final loginBtnFinder = find.text('Masuk di sini');
+      await tester.ensureVisible(loginBtnFinder);
+      await tester.tap(loginBtnFinder);
       await tester.pumpAndSettle();
 
       expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.text('Masuk ke TAUT'), findsOneWidget);
+
+      // 7. Switch from Login back to Register
+      final registerBtnFinder = find.text('Daftar Sekarang');
+      await tester.ensureVisible(registerBtnFinder);
+      await tester.tap(registerBtnFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RegisterScreen), findsOneWidget);
     });
 
     testWidgets('OnboardingScreen renders 3-step intro slides, illustration, and CTA', (tester) async {
