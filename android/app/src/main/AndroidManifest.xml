@@ -44,6 +44,10 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Speech Recognition Service for Speech-to-Text -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <!-- Text-to-Speech Engine -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />

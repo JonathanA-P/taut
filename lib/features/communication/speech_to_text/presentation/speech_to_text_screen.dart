@@ -4,535 +4,447 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_card.dart';
-import '../../../../shared/widgets/status_badge.dart';
-import '../data/flutter_text_to_speech_service.dart';
 import '../data/speech_service_impl.dart';
 import '../domain/speech_service.dart';
-import '../domain/text_to_speech_service.dart';
 
-/// Screen for Speech-to-Text and Text-to-Speech communication.
-/// Bridges two-way communication between Deaf and hearing individuals.
+/// Production Live Speech-to-Text screen for Teman Tuli accessibility.
+///
+/// Features:
+/// 1. Real-time live caption with extra-large high-contrast text and zero confirmation step.
+/// 2. Continuous listening with auto-recovery and multi-sentence aggregation.
+/// 3. One-tap "Bersihkan Layar" (Clear Screen) button.
+/// 4. Fast manual typing fallback for noisy environments.
+///
 /// Feature Owner: Roganda Tua Tampubolon (Branch: feature/speech-to-text).
 class SpeechToTextScreen extends StatefulWidget {
-  final TextToSpeechService? ttsService;
   final SpeechService? speechService;
 
-  const SpeechToTextScreen({super.key, this.ttsService, this.speechService});
+  const SpeechToTextScreen({super.key, this.speechService});
 
   @override
   State<SpeechToTextScreen> createState() => _SpeechToTextScreenState();
 }
 
 class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
-  late final TextToSpeechService _ttsService;
   late final SpeechService _speechService;
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _manualInputController = TextEditingController();
 
-  final TextEditingController _ttsTextController = TextEditingController();
-  final TextEditingController _sttTextController = TextEditingController();
-
-  StreamSubscription<bool>? _speakingSubscription;
-  bool _isSpeaking = false;
   bool _isListening = false;
+  bool _isManualInputVisible = false;
 
-  double _speechRate = 0.5;
-  double _pitch = 1.0;
-  double _volume = 1.0;
+  /// Accumulated committed sentences from previous speech segments.
+  String _accumulatedText = '';
 
-  static const List<String> _quickPhrases = [
-    'Halo, salam kenal!',
-    'Saya teman Tuli, mohon bantuannya.',
-    'Bisa tolong tuliskan di layar?',
-    'Terima kasih banyak!',
-    'Saya butuh bantuan medis segera.',
-    'Di mana ruang periksa atau apotek?',
-    'Permisi, boleh saya bertanya?',
-  ];
+  /// Active partial speech recognized in the current ongoing segment.
+  String _currentSentenceWords = '';
 
   @override
   void initState() {
     super.initState();
-    _ttsService = widget.ttsService ?? FlutterTextToSpeechService();
     _speechService = widget.speechService ?? SpeechServiceImpl();
-
-    _ttsService.initialize(language: 'id-ID');
     _speechService.initialize();
-
-    _speakingSubscription = _ttsService.isSpeakingStream.listen((speaking) {
-      if (mounted) {
-        setState(() {
-          _isSpeaking = speaking;
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _speakingSubscription?.cancel();
-    _ttsTextController.dispose();
-    _sttTextController.dispose();
-    _ttsService.stopSpeaking();
     _speechService.dispose();
+    _scrollController.dispose();
+    _manualInputController.dispose();
     super.dispose();
   }
 
-  Future<void> _speakText(String text) async {
-    final target = text.trim();
-    if (target.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ketik pesan atau pilih ungkapan terlebih dahulu.'),
-        ),
-      );
-      return;
-    }
-
-    await _ttsService.speakText(target);
-    if (mounted) {
-      setState(() {
-        _isSpeaking = _ttsService.isSpeaking;
-      });
-    }
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
-  Future<void> _stopSpeaking() async {
-    await _ttsService.stopSpeaking();
-    if (mounted) {
-      setState(() {
-        _isSpeaking = false;
-      });
-    }
-  }
+  void _onSpeechResult(String text, bool isFinal) {
+    if (!mounted) return;
 
-  void _toggleListening() {
     setState(() {
-      _isListening = !_isListening;
+      if (isFinal) {
+        final trimmed = text.trim();
+        if (trimmed.isNotEmpty) {
+          if (_accumulatedText.isEmpty) {
+            _accumulatedText = trimmed;
+          } else {
+            _accumulatedText = '$_accumulatedText $trimmed';
+          }
+        }
+        _currentSentenceWords = '';
+      } else {
+        _currentSentenceWords = text.trim();
+      }
     });
 
+    _scrollToBottom();
+  }
+
+  Future<void> _toggleListening() async {
     if (_isListening) {
-      _speechService.startListening(
-        onResult: (text, isFinal) {
-          if (mounted) {
-            setState(() {
-              _sttTextController.text = text;
-            });
+      await _speechService.stopListening();
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          if (_currentSentenceWords.isNotEmpty) {
+            if (_accumulatedText.isEmpty) {
+              _accumulatedText = _currentSentenceWords;
+            } else {
+              _accumulatedText = '$_accumulatedText $_currentSentenceWords';
+            }
+            _currentSentenceWords = '';
           }
-        },
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Mendengarkan ucapan bahasa Indonesia (Mikrofon aktif)...',
-          ),
-        ),
-      );
+        });
+      }
     } else {
-      _speechService.stopListening();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perekaman audio dihentikan.')),
+      setState(() {
+        _isListening = true;
+      });
+
+      await _speechService.startListening(
+        onResult: _onSpeechResult,
+        language: 'id_ID',
       );
     }
+  }
+
+  void _clearScreen() {
+    setState(() {
+      _accumulatedText = '';
+      _currentSentenceWords = '';
+    });
+  }
+
+  void _submitManualText() {
+    final text = _manualInputController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      if (_accumulatedText.isEmpty) {
+        _accumulatedText = text;
+      } else {
+        _accumulatedText = '$_accumulatedText $text';
+      }
+      _manualInputController.clear();
+      _isManualInputVisible = false;
+    });
+
+    _scrollToBottom();
+  }
+
+  String get _displayCaption {
+    if (_accumulatedText.isEmpty && _currentSentenceWords.isEmpty) {
+      return '';
+    }
+    if (_accumulatedText.isEmpty) {
+      return _currentSentenceWords;
+    }
+    if (_currentSentenceWords.isEmpty) {
+      return _accumulatedText;
+    }
+    return '$_accumulatedText $_currentSentenceWords';
   }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Komunikasi Suara & Teks'),
-          bottom: const TabBar(
-            indicatorColor: AppColors.primary,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.onSurfaceVariant,
-            tabs: [
-              Tab(
-                icon: Icon(Icons.record_voice_over_rounded),
-                text: 'Teks ke Suara (TTS)',
-              ),
-              Tab(icon: Icon(Icons.mic_rounded), text: 'Suara ke Teks (STT)'),
-            ],
-          ),
+    final hasContent = _displayCaption.isNotEmpty;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9), // Slate 100 soft background
+      appBar: AppBar(
+        title: const Text(
+          'Live Speech-to-Text',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        body: TabBarView(children: [_buildTtsTab(), _buildSttTab()]),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isManualInputVisible ? Icons.keyboard_hide : Icons.keyboard,
+              color: AppColors.primary,
+            ),
+            tooltip: 'Ketik Manual Cepat',
+            onPressed: () {
+              setState(() {
+                _isManualInputVisible = !_isManualInputVisible;
+              });
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Status Banner: Guides Deaf user on microphone state
+            _buildStatusHeader(),
+
+            // Main Live Caption Display Area
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _isListening
+                        ? AppColors.primary
+                        : AppColors.outline.withValues(alpha: 0.5),
+                    width: _isListening ? 2.5 : 1.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  child: hasContent
+                      ? SelectableText(
+                          _displayCaption,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            height: 1.45,
+                            color: Color(0xFF0F172A), // Slate 900 high contrast
+                            letterSpacing: -0.3,
+                          ),
+                        )
+                      : Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 60.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isListening
+                                      ? Icons.hearing_rounded
+                                      : Icons.mic_none_rounded,
+                                  size: 64,
+                                  color: _isListening
+                                      ? AppColors.primary
+                                      : Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _isListening
+                                      ? 'Mendengarkan lawan bicara...\nSetiap kata akan langsung muncul di sini.'
+                                      : 'Ketuk tombol mikrofon di bawah untuk mulai merekam ucapan lawan bicara.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    height: 1.5,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+
+            // Quick Manual Typing Fallback (Shown when toggled)
+            if (_isManualInputVisible) _buildManualInputField(),
+
+            // Bottom Controls Bar: Clear Screen & Big Mic Toggle Button
+            _buildBottomControls(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTtsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildStatusHeader() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _isListening
+            ? const Color(0xFFDCFCE7) // Mint 100
+            : AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isListening ? const Color(0xFF16A34A) : AppColors.outline,
+        ),
+      ),
+      child: Row(
         children: [
-          Center(child: StatusBadge.active()),
-          const SizedBox(height: 16),
-          AppCard(
-            margin: EdgeInsets.zero,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _isListening
+                  ? const Color(0xFF16A34A)
+                  : Colors.grey.shade500,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _isListening ? Icons.mic_rounded : Icons.mic_off_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.volume_up_rounded,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Text-to-Speech (Bahasa Indonesia)',
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 Text(
-                  'Ketik pesan atau pilih ungkapan cepat di bawah. TAUT akan membacakan teks dengan suara lantang dalam bahasa Indonesia untuk lawan bicara.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  _isListening
+                      ? 'MIKROFON AKTIF (Bahasa Indonesia)'
+                      : 'MIKROFON TIDAK AKTIF',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: _isListening
+                        ? const Color(0xFF166534)
+                        : AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _isListening
+                      ? 'Arahkan mikrofon ke lawan bicara untuk transkripsi langsung'
+                      : 'Ketuk tombol biru besar di bawah untuk mulai mendengarkan',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _isListening
+                        ? const Color(0xFF15803D)
+                        : Colors.grey.shade700,
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Ungkapan Cepat (Quick Phrases)',
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _quickPhrases.map((phrase) {
-              return ActionChip(
-                label: Text(phrase),
-                avatar: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                onPressed: () {
-                  setState(() {
-                    _ttsTextController.text = phrase;
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: AppColors.outline),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Pesan yang Akan Diucapkan',
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (_ttsTextController.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 20),
-                          tooltip: 'Hapus Teks',
-                          onPressed: () {
-                            setState(() {
-                              _ttsTextController.clear();
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _ttsTextController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: 'Ketik kalimat yang ingin dibacakan oleh suara sistem...',
-                      border: InputBorder.none,
-                    ),
-                    style: const TextStyle(fontSize: 16, height: 1.4),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_isSpeaking) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary),
-              ),
-              child: const Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Sedang berbicara dalam bahasa Indonesia...',
-                      style: TextStyle(
-                        color: AppColors.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: AppButton(
-                  label: _isSpeaking
-                      ? 'Sedang Bicara...'
-                      : 'Ucapkan Suara (TTS)',
-                  icon: Icons.volume_up_rounded,
-                  onPressed: () => _speakText(_ttsTextController.text),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 1,
-                child: AppButton(
-                  label: 'Hentikan',
-                  icon: Icons.stop_rounded,
-                  isOutlined: true,
-                  onPressed: _isSpeaking ? _stopSpeaking : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ExpansionTile(
-            leading: const Icon(Icons.tune_rounded, color: AppColors.primary),
-            title: const Text('Pengaturan Suara'),
-            subtitle: const Text('Kecepatan Bicara, Nada & Volume'),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Text('Kecepatan:'),
-                        Expanded(
-                          child: Slider(
-                            value: _speechRate,
-                            min: 0.2,
-                            max: 1.0,
-                            divisions: 8,
-                            label: '${_speechRate.toStringAsFixed(1)}x',
-                            onChanged: (val) {
-                              setState(() => _speechRate = val);
-                              _ttsService.setSpeechRate(val);
-                            },
-                          ),
-                        ),
-                        Text('${_speechRate.toStringAsFixed(1)}x'),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Text('Nada (Pitch):'),
-                        Expanded(
-                          child: Slider(
-                            value: _pitch,
-                            min: 0.5,
-                            max: 1.5,
-                            divisions: 10,
-                            label: _pitch.toStringAsFixed(1),
-                            onChanged: (val) {
-                              setState(() => _pitch = val);
-                              _ttsService.setPitch(val);
-                            },
-                          ),
-                        ),
-                        Text(_pitch.toStringAsFixed(1)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Text('Volume:'),
-                        Expanded(
-                          child: Slider(
-                            value: _volume,
-                            min: 0.0,
-                            max: 1.0,
-                            divisions: 10,
-                            label: '${(_volume * 100).toInt()}%',
-                            onChanged: (val) {
-                              setState(() => _volume = val);
-                              _ttsService.setVolume(val);
-                            },
-                          ),
-                        ),
-                        Text('${(_volume * 100).toInt()}%'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSttTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildManualInputField() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary),
+      ),
+      child: Row(
         children: [
-          Center(child: StatusBadge.development()),
-          const SizedBox(height: 16),
-          AppCard(
-            margin: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Panduan Suara ke Teks',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tekan tombol mikrofon untuk merekam ucapan lawan bicara. Ucapan bahasa Indonesia akan dikonversi menjadi teks yang dapat dibaca dengan jelas oleh teman Tuli.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: AppColors.outline),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Hasil Transkripsi',
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (_isListening)
-                        const Row(
-                          children: [
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Mendengarkan...',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _sttTextController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: 'Teks transkripsi ucapan akan muncul di sini. Anda juga dapat mengetik langsung...',
-                      border: InputBorder.none,
-                    ),
-                    style: const TextStyle(fontSize: 18, height: 1.5),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ],
+          Expanded(
+            child: TextField(
+              controller: _manualInputController,
+              decoration: const InputDecoration(
+                hintText: 'Ketik pesan cepat di sini...',
+                border: InputBorder.none,
+                isDense: true,
               ),
+              style: const TextStyle(fontSize: 16),
+              onSubmitted: (_) => _submitManualText(),
             ),
           ),
-          const SizedBox(height: 16),
-          Center(
-            child: SizedBox(
-              width: 76,
-              height: 76,
-              child: ElevatedButton(
-                onPressed: _toggleListening,
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  padding: EdgeInsets.zero,
-                  backgroundColor: _isListening
-                      ? AppColors.error
-                      : AppColors.primary,
-                ),
-                child: Icon(
-                  _isListening ? Icons.mic_off_rounded : Icons.mic_rounded,
-                  size: 34,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+            tooltip: 'Tampilkan ke Layar',
+            onPressed: _submitManualText,
           ),
-          const SizedBox(height: 8),
-          Text(
-            _isListening ? 'Ketuk untuk berhenti' : 'Ketuk untuk mulai bicara',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomControls() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Row(
             children: [
+              // Clear Screen Button (Hapus / Bersihkan Layar)
               Expanded(
+                flex: 1,
                 child: AppButton(
-                  label: 'Putar TTS',
-                  icon: Icons.volume_up_rounded,
+                  label: 'Bersihkan Layar',
+                  icon: Icons.delete_sweep_rounded,
                   isOutlined: true,
-                  onPressed: _sttTextController.text.trim().isNotEmpty
-                      ? () => _speakText(_sttTextController.text)
-                      : null,
+                  onPressed: _displayCaption.isNotEmpty ? _clearScreen : null,
                 ),
               ),
               const SizedBox(width: 12),
+              // Fallback Manual Input Button
               Expanded(
+                flex: 1,
                 child: AppButton(
-                  label: 'Bersihkan',
+                  label: _isManualInputVisible ? 'Tutup Ketik' : 'Ketik Manual',
+                  icon: _isManualInputVisible
+                      ? Icons.close_rounded
+                      : Icons.keyboard_rounded,
                   isOutlined: true,
                   onPressed: () {
                     setState(() {
-                      _sttTextController.clear();
+                      _isManualInputVisible = !_isManualInputVisible;
                     });
                   },
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          // Large Microphone Control Button (Satu Sentuhan Teman Tuli)
+          Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: 64,
+              child: ElevatedButton.icon(
+                onPressed: _toggleListening,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isListening
+                      ? AppColors.error
+                      : AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: _isListening ? 6 : 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                icon: Icon(
+                  _isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                  size: 32,
+                ),
+                label: Text(
+                  _isListening
+                      ? 'Hentikan Mendengarkan'
+                      : 'Mulai Mendengarkan Suara',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
