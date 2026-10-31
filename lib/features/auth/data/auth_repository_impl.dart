@@ -16,7 +16,14 @@ class AuthRepositoryImpl implements AuthRepository {
   sb.SupabaseClient get _client {
     final custom = _customClient;
     if (custom != null) return custom;
-    return sb.Supabase.instance.client;
+    try {
+      return sb.Supabase.instance.client;
+    } catch (_) {
+      throw const AuthException(
+        message: 'Koneksi Supabase belum diinisialisasi.',
+        code: 'UNINITIALIZED_CLIENT',
+      );
+    }
   }
 
   @override
