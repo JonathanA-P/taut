@@ -153,5 +153,65 @@ void main() {
       expect(state.currentNavIndex, 0);
       expect(find.text('Halo, selamat datang'), findsOneWidget);
     });
+
+    testWidgets('Opening Isyarat ke Suara allows horizontal swipe across tabs and navbar taps switch pages accurately without getting stuck on Beranda', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const HomeShellScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open Isyarat ke Suara from Beranda
+      state.navigateTo('motion');
+      await tester.pumpAndSettle();
+
+      expect(state.currentPage, 'motion');
+      expect(state.currentNavIndex, 0);
+      expect(find.text('Isyarat BISINDO ke Suara'), findsOneWidget);
+
+      // 1. Swipe left from Isyarat ke Suara -> Komunikasi
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 1);
+      expect(state.currentPage, 'hub');
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+
+      // 2. Swipe left from Komunikasi -> Lokasi
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+
+      // 3. Return to motion
+      state.navigateTo('motion');
+      await tester.pumpAndSettle();
+      expect(find.text('Isyarat BISINDO ke Suara'), findsOneWidget);
+
+      // 4. Tap Lokasi tab from navbar -> must show Lokasi page, NOT Beranda!
+      await tester.tap(find.text('Lokasi'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+      expect(find.text('Halo, selamat datang'), findsNothing);
+
+      // 5. Tap Profil tab from navbar -> must show Profil page, NOT Beranda!
+      await tester.tap(find.text('Profil'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 3);
+      expect(state.currentPage, 'profile');
+      expect(find.text('Profil'), findsWidgets);
+      expect(find.text('Halo, selamat datang'), findsNothing);
+
+      // 6. Tap Beranda tab from navbar -> must show HomePage!
+      await tester.tap(find.text('Beranda'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 0);
+      expect(state.currentPage, 'home');
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
+    });
   });
 }

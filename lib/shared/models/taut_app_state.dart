@@ -58,6 +58,7 @@ class TautAppState extends ChangeNotifier {
   int get currentNavIndex {
     switch (_currentPage) {
       case 'home':
+      case 'motion':
         return 0;
       case 'comm':
       case 'hub':

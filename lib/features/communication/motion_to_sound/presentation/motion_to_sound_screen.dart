@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../shared/models/taut_app_state.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/permissions/permission_service.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -495,6 +496,13 @@ class _MotionToSoundScreenState extends State<MotionToSoundScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            final state = TautAppState();
+            state.navigateTo('home');
+          },
+        ),
         title: const Text(
           'Isyarat BISINDO ke Suara',
           style: TextStyle(fontWeight: FontWeight.bold),

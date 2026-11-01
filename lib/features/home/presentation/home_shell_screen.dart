@@ -31,10 +31,10 @@ class HomeShellScreen extends StatefulWidget {
 }
 
 class _HomeShellScreenState extends State<HomeShellScreen> {
-  late final PageController _pageController;
+  late PageController _pageController;
   bool _isAnimatingToPage = false;
 
-  static const _primaryTabs = ['home', 'hub', 'location', 'profile'];
+  static const _primaryTabs = ['home', 'motion', 'hub', 'location', 'profile'];
 
   @override
   void initState() {
@@ -80,6 +80,9 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
 
   void _onNavTap(int index, TautAppState state) {
     if (state.currentNavIndex == index && _primaryTabs.contains(state.currentPage)) {
+      if (index == 0 && state.currentPage == 'motion') {
+        state.navigateTo('home');
+      }
       return;
     }
     _isAnimatingToPage = true;
@@ -95,6 +98,8 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
         }
       });
     } else {
+      _pageController.dispose();
+      _pageController = PageController(initialPage: index);
       _isAnimatingToPage = false;
     }
   }
@@ -111,7 +116,17 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
           _pageController.jumpToPage(targetIndex);
         }
       });
+    } else if (!_pageController.hasClients && _pageController.initialPage != targetIndex) {
+      _pageController.dispose();
+      _pageController = PageController(initialPage: targetIndex);
     }
+  }
+
+    Widget _resolveTab0(TautAppState state) {
+    if (state.currentPage == 'motion') {
+      return const MotionToSoundScreen();
+    }
+    return const HomePage();
   }
 
   Widget _resolveScreen(String page) {
@@ -169,10 +184,12 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
         }
 
         return PopScope(
-          canPop: !state.canPopPage,
+          canPop: !state.canPopPage && state.currentPage != 'motion',
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) {
-              if (state.currentPage == 'comm') {
+              if (state.currentPage == 'motion') {
+                state.navigateTo('home');
+              } else if (state.currentPage == 'comm') {
                 state.stopHardwareTracks();
                 state.endCommunicationSession();
                 state.switchToTab(0);
@@ -205,11 +222,11 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                             controller: _pageController,
                             physics: const ClampingScrollPhysics(),
                             onPageChanged: (idx) => _onPageChanged(idx, state),
-                            children: const [
-                              HomePage(),
-                              CommunicationLandingScreen(),
-                              LocationSharingScreen(),
-                              ProfileScreen(),
+                            children: [
+                              _resolveTab0(state),
+                              const CommunicationLandingScreen(),
+                              const LocationSharingScreen(),
+                              const ProfileScreen(),
                             ],
                           )
                         : AnimatedSwitcher(
