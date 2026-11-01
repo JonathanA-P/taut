@@ -387,6 +387,70 @@ class HomePage extends StatelessWidget {
   Widget _buildFriendsCard(BuildContext context, TautAppState state) {
     final displayFriends = state.friends.take(3).toList();
 
+    if (displayFriends.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.90),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFEDF0E9)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x08263D2F),
+              blurRadius: 16,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.people_outline_rounded,
+                size: 28, color: AppColors.primary),
+            const SizedBox(height: 8),
+            const Text(
+              'Belum ada teman terhubung',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkGreen,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Hubungkan teman untuk saling berbagi cerita dan lokasi.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: () {
+                if (state.isGuestMode) {
+                  showAuthGateDialog(context, featureTitle: 'Teman Terhubung');
+                  return;
+                }
+                state.navigateTo('friends');
+              },
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+              label: const Text('Tambah Teman',
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                backgroundColor: AppColors.lightGreen,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(

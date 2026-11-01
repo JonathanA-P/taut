@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
@@ -19,7 +20,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
     super.dispose();
   }
 
-  void _handleAddFriend(TautAppState state) {
+  Future<void> _handleAddFriend(TautAppState state) async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,26 +32,52 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
       return;
     }
 
+    try {
+      final client = Supabase.instance.client;
+      final currentUserId = client.auth.currentUser?.id;
+      if (currentUserId != null) {
+        final profile = await client
+            .from('profiles')
+            .select('id, display_name')
+            .ilike('display_name', name)
+            .maybeSingle();
+        if (profile != null && profile['id'] != currentUserId) {
+          final addresseeId = profile['id'] as String;
+          await client.from('friendships').upsert({
+            'requester_id': currentUserId,
+            'addressee_id': addresseeId,
+            'status': 'accepted',
+          });
+        }
+      }
+    } catch (_) {}
+
     final success = state.addFriend(name);
+    state.syncWithBackend();
+
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nama ini sudah ada.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nama ini sudah ada di daftar temanmu.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sahabat berhasil ditambahkan.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sahabat berhasil ditambahkan.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
     if (state.canPopPage) {
       state.popPage();
-    } else if (Navigator.canPop(context)) {
+    } else if (mounted && Navigator.canPop(context)) {
       Navigator.pop(context);
     }
   }

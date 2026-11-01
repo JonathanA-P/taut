@@ -26,9 +26,9 @@ void main() {
 
       expect(find.text('Fasilitas kesehatan'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Klinik'), findsWidgets);
-      expect(find.text('Klinik Harmoni'), findsOneWidget);
-      expect(find.text('RS Taman Sehat'), findsOneWidget);
+      expect(find.text('Rumah Sakit'), findsWidgets);
+      expect(find.text('RSUD Dr. Saiful Anwar (RSSA)'), findsOneWidget);
+      expect(find.text('RS Lavalette'), findsOneWidget);
     });
 
     testWidgets('HealthcareDetailScreen renders facility info and action buttons', (tester) async {

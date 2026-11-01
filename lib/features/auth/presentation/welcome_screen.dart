@@ -262,9 +262,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       ],
                     ),
                     child: Center(
-                      child: CustomPaint(
-                        size: const Size(54, 54),
-                        painter: _TautKnotPainter(),
+                      child: Image.asset(
+                        'assets/icons/app_logo.png',
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => CustomPaint(
+                          size: const Size(54, 54),
+                          painter: _TautKnotPainter(),
+                        ),
                       ),
                     ),
                   ),

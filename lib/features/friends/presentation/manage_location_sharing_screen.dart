@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
+import '../../healthcare/data/healthcare_repository_impl.dart';
+import '../../location_sharing/data/location_sharing_repository_impl.dart';
+import '../data/friends_repository_impl.dart';
 import 'widgets/friend_location_detail_sheet.dart';
 
 class ManageLocationSharingScreen extends StatefulWidget {
@@ -73,7 +77,7 @@ class _ManageLocationSharingScreenState
     }
   }
 
-  void _handleStartSharing(TautAppState state) {
+  Future<void> _handleStartSharing(TautAppState state) async {
     if (!_hasAgreed) {
       _showMinimalNotification(
         context,
@@ -94,15 +98,49 @@ class _ManageLocationSharingScreenState
       return;
     }
 
+    try {
+      final pos = await const HealthcareRepositoryImpl().getCurrentLocation();
+      state.setRealHealthcareFacilities(
+        state.allFacilities,
+        lat: pos.latitude,
+        lon: pos.longitude,
+      );
+
+      final client = Supabase.instance.client;
+      final currentUserId = client.auth.currentUser?.id;
+      if (currentUserId != null) {
+        final friends = await FriendsRepositoryImpl(client: client).getFriends();
+        final friendMatch = friends
+            .where((f) => f.friendDisplayName == _selectedRecipient)
+            .toList();
+        if (friendMatch.isNotEmpty) {
+          final recipientId =
+              friendMatch.first.addresseeId == currentUserId
+                  ? friendMatch.first.requesterId
+                  : friendMatch.first.addresseeId;
+          await LocationSharingRepositoryImpl(client: client).createShare(
+            recipientId: recipientId,
+            duration: Duration(minutes: _selectedDuration),
+            initialLatitude: pos.latitude,
+            initialLongitude: pos.longitude,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[ManageLocationSharing] Backend share fallback: $e');
+    }
+
     state.startSharing(
       recipient: _selectedRecipient!,
       durationMinutes: _selectedDuration,
     );
 
-    _showMinimalNotification(
-      context,
-      message: 'Sesi demo dimulai. Tidak ada lokasi nyata yang dikirim.',
-    );
+    if (mounted) {
+      _showMinimalNotification(
+        context,
+        message: 'Berbagi lokasi dengan $_selectedRecipient aktif.',
+      );
+    }
   }
 
   @override

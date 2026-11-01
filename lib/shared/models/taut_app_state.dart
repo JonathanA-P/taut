@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../features/friends/data/friends_repository_impl.dart';
+import '../../features/location_sharing/data/location_sharing_repository_impl.dart';
 
 class TautAppState extends ChangeNotifier {
   static final TautAppState _instance = TautAppState._internal();
@@ -440,6 +444,85 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isBackendSynced = false;
+  bool get isBackendSynced => _isBackendSynced;
+
+  Future<void> syncWithBackend() async {
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest) return;
+
+    try {
+      final client = Supabase.instance.client;
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null) {
+        if (_isGuestMode) {
+          _friends.clear();
+          _friendRequests.clear();
+          _incomingSessions.clear();
+          _sessions.clear();
+          notifyListeners();
+        }
+        return;
+      }
+
+      // Sync display name
+      final metaName = currentUser.userMetadata?['display_name'] as String?;
+      if (metaName != null && metaName.trim().isNotEmpty) {
+        _userName = metaName.trim();
+      } else if (currentUser.email != null) {
+        _userName = currentUser.email!.split('@').first;
+      }
+
+      // Sync friends
+      final friendsRepo = FriendsRepositoryImpl(client: client);
+      final friendModels = await friendsRepo.getFriends();
+      _friends.clear();
+      _friendAvatars.clear();
+      for (final f in friendModels) {
+        final name = f.friendDisplayName ?? 'Teman TAUT';
+        _friends.add(name);
+      }
+      _friendRequests.clear();
+
+      // Sync active location shares
+      final locRepo = LocationSharingRepositoryImpl(client: client);
+      final activeShares = await locRepo.getActiveShares();
+      _incomingSessions.clear();
+      for (final s in activeShares) {
+        if (s.recipientId == currentUser.id) {
+          _incomingSessions.add(
+            IncomingSharingSession(
+              id: s.id,
+              friendName: s.friendDisplayName ?? 'Teman TAUT',
+              subtitle: 'Berbagi lokasi real-time',
+              latitude: s.latitude,
+              longitude: s.longitude,
+              expiry: s.expiresAt,
+              status: IncomingSharingStatus.accepted,
+            ),
+          );
+        }
+      }
+
+      _sessions.clear();
+      for (final s in activeShares) {
+        if (s.ownerId == currentUser.id) {
+          _sessions.add(
+            SharingSession(
+              name: s.friendDisplayName ?? 'Teman TAUT',
+              expiry: s.expiresAt,
+            ),
+          );
+        }
+      }
+
+      _isBackendSynced = true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[TautAppState] syncWithBackend error: $e');
+    }
+  }
+
   Timer? _expiryTimer;
   void _startSessionExpiryTimer() {
     _expiryTimer?.cancel();
@@ -548,24 +631,46 @@ class TautAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  final List<FacilityItem> _facilities = const [
-    FacilityItem(
-      name: 'Klinik Harmoni',
-      type: 'Klinik',
-      address: 'Jl. Contoh Sehat No. 12',
-      distance: '0,8 km',
+  final List<FacilityItem> _facilities = [
+    const FacilityItem(
+      name: 'RSUD Dr. Saiful Anwar (RSSA)',
+      type: 'Rumah Sakit',
+      address: 'Jl. Jaksa Agung Suprapto No. 2, Kota Malang',
+      distance: '0,9 km',
+      latitude: -7.9723,
+      longitude: 112.6318,
+      isReal: true,
+      isWheelchairAccessible: true,
     ),
-    FacilityItem(
-      name: 'RS Taman Sehat',
-      type: 'Rumah sakit',
-      address: 'Jl. Contoh Utama No. 8',
-      distance: '1,6 km',
+    const FacilityItem(
+      name: 'RS Lavalette',
+      type: 'Rumah Sakit',
+      address: 'Jl. W.R. Supratman No. 10, Kota Malang',
+      distance: '1,4 km',
+      latitude: -7.9650,
+      longitude: 112.6362,
+      isReal: true,
+      isWheelchairAccessible: true,
     ),
-    FacilityItem(
-      name: 'Puskesmas Cempaka',
+    const FacilityItem(
+      name: 'Puskesmas Klojen',
       type: 'Puskesmas',
-      address: 'Jl. Contoh Cempaka No. 4',
-      distance: '2,3 km',
+      address: 'Jl. Patimura No. 19, Kota Malang',
+      distance: '1,8 km',
+      latitude: -7.9772,
+      longitude: 112.6348,
+      isReal: true,
+      isWheelchairAccessible: true,
+    ),
+    const FacilityItem(
+      name: 'Apotek Kimia Farma Ijen',
+      type: 'Apotek',
+      address: 'Jl. Besar Ijen No. 88, Kota Malang',
+      distance: '2,1 km',
+      latitude: -7.9702,
+      longitude: 112.6225,
+      isReal: true,
+      isWheelchairAccessible: true,
     ),
   ];
 

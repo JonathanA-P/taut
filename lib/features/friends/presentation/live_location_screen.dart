@@ -16,12 +16,15 @@ class LiveLocationScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
+        final userLat = state.userGpsLatitude ?? -7.9723;
+        final userLon = state.userGpsLongitude ?? 112.6318;
+
         final mapMarkers = <TautMapMarker>[
-          // Current User position (Malang Center)
-          const TautMapMarker(
-            point: LatLng(-7.9723, 112.6318),
+          // Current User position
+          TautMapMarker(
+            point: LatLng(userLat, userLon),
             label: 'Posisi Saya',
-            subtitle: 'Alun-Alun Tugu Malang (Akurasi GPS ±5m)',
+            subtitle: 'Koordinat GPS Perangkat ($userLat, $userLon)',
             isUser: true,
           ),
           // Incoming Friend positions
@@ -71,7 +74,7 @@ class LiveLocationScreen extends StatelessWidget {
                 children: [
                   // OpenStreetMap interactive viewer
                   TautOpenStreetMap(
-                    initialCenter: const LatLng(-7.9723, 112.6318),
+                    initialCenter: LatLng(userLat, userLon),
                     initialZoom: 14.2,
                     height: 250,
                     markers: mapMarkers,
