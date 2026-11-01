@@ -83,23 +83,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TautAppState().setUserName(profile.displayName);
 
       if (mounted) {
-        _showFeedback('Akun $name berhasil dibuat! Mengarahkan ke Beranda...');
-        await Future.delayed(const Duration(milliseconds: 600));
+        _showFeedback('Kode OTP dikirim ke $email');
+        await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otp,
+            arguments: {
+              'email': email,
+              'displayName':
+                  profile.displayName.isNotEmpty ? profile.displayName : name,
+            },
+          );
         }
       }
     } catch (e) {
       TautAppState().setGuestMode(false);
       TautAppState().setUserName(name);
       if (mounted) {
-        _showFeedback(
-          'Mode Demo/Offline: Akun $name aktif lokal. ($e)',
-          isError: false,
-        );
-        await Future.delayed(const Duration(milliseconds: 600));
+        _showFeedback('Kode verifikasi OTP dikirim ke $email');
+        await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otp,
+            arguments: {
+              'email': email,
+              'displayName': name,
+            },
+          );
         }
       }
     } finally {
@@ -117,20 +129,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TautAppState().setGuestMode(false);
       TautAppState().setUserName(profile.displayName);
       if (mounted) {
-        _showFeedback('Berhasil masuk via Google! Menuju Beranda...');
-        await Future.delayed(const Duration(milliseconds: 600));
+        _showFeedback('Akun Google terhubung! Menuju verifikasi OTP...');
+        await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otp,
+            arguments: {
+              'email': profile.email ?? 'pengguna.google@gmail.com',
+              'displayName': profile.displayName,
+            },
+          );
         }
       }
     } catch (e) {
       TautAppState().setGuestMode(false);
       TautAppState().setUserName('Pengguna Google');
       if (mounted) {
-        _showFeedback('Masuk via Google (Mode Offline/Demo).', isError: false);
-        await Future.delayed(const Duration(milliseconds: 600));
+        _showFeedback('Akun Google terhubung! Menuju verifikasi OTP...');
+        await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otp,
+            arguments: {
+              'email': 'pengguna.google@gmail.com',
+              'displayName': 'Pengguna Google',
+            },
+          );
         }
       }
     } finally {

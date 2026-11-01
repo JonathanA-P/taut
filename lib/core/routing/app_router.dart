@@ -19,6 +19,7 @@ import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/otp_verification_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
 import '../../features/auth/presentation/edit_profile_screen.dart';
 import '../../features/auth/presentation/settings_accessibility_screen.dart';
@@ -43,6 +44,7 @@ class AppRoutes {
   static const String profile = '/profil';
   static const String login = '/login';
   static const String register = '/register';
+  static const String otp = '/otp';
 }
 
 class AppRouter {
@@ -63,6 +65,15 @@ class AppRouter {
 
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
+
+      case AppRoutes.otp:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            email: args['email'] as String? ?? 'adriel@email.com',
+            displayName: args['displayName'] as String? ?? 'Adriel',
+          ),
+        );
 
       case AppRoutes.home:
         return MaterialPageRoute(builder: (_) => const HomeShellScreen());
