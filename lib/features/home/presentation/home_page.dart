@@ -51,7 +51,9 @@ class HomePage extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            state.userName,
+                            (state.userName.trim().isNotEmpty && state.userName != 'Tamu TAUT')
+                                ? state.userName
+                                : 'Adriel',
                             style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
@@ -70,7 +72,9 @@ class HomePage extends StatelessWidget {
                           }
                         },
                         child: _buildAvatar(
-                          state.userName,
+                          (state.userName.trim().isNotEmpty && state.userName != 'Tamu TAUT')
+                              ? state.userName
+                              : 'Adriel',
                           0,
                           avatarUrl: state.userAvatarUrl,
                         ),
