@@ -283,5 +283,84 @@ void main() {
       expect(state.currentPage, 'home');
       expect(find.text('Halo, selamat datang'), findsOneWidget);
     });
+
+    testWidgets('Opening Mulai Komunikasi (comm) allows horizontal swipe across tabs and navbar taps switch pages accurately without getting stuck on Beranda', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const HomeShellScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open Mulai Komunikasi (comm)
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+
+      expect(state.currentPage, 'comm');
+      expect(state.currentNavIndex, 1);
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+
+      // 1. Swipe left from comm (Tab 1) -> Lokasi (Tab 2)
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+
+      // 2. Return to comm
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+
+      // 3. Swipe right from comm (Tab 1) -> Beranda (Tab 0)
+      await tester.fling(find.byType(PageView), const Offset(400, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 0);
+      expect(state.currentPage, 'home');
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
+
+      // 4. Return to comm
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+
+      // 5. Tap Lokasi tab from navbar -> must show Lokasi page, NOT Beranda!
+      await tester.tap(find.text('Lokasi'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 2);
+      expect(state.currentPage, 'location');
+      expect(find.text('Ruang lokasi'), findsOneWidget);
+      expect(find.text('Halo, selamat datang'), findsNothing);
+
+      // 6. Return to comm and tap Profil tab from navbar -> must show Profil page, NOT Beranda!
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Profil'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 3);
+      expect(state.currentPage, 'profile');
+      expect(find.text('Profil'), findsWidgets);
+      expect(find.text('Halo, selamat datang'), findsNothing);
+
+      // 7. Return to comm and tap Beranda tab from navbar -> must show HomePage!
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Beranda'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 0);
+      expect(state.currentPage, 'home');
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
+
+      // 8. Return to comm and tap Komunikasi tab from navbar -> returns to hub (CommunicationLandingScreen)
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+      await tester.tap(find.text('Komunikasi'));
+      await tester.pumpAndSettle();
+      expect(state.currentNavIndex, 1);
+      expect(state.currentPage, 'hub');
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+    });
   });
 }

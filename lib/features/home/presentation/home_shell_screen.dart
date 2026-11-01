@@ -34,7 +34,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
   late PageController _pageController;
   bool _isAnimatingToPage = false;
 
-  static const _primaryTabs = ['home', 'motion', 'stt', 'hub', 'location', 'profile'];
+  static const _primaryTabs = ['home', 'motion', 'stt', 'hub', 'comm', 'location', 'profile'];
 
   @override
   void initState() {
@@ -82,6 +82,10 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
     if (state.currentNavIndex == index && _primaryTabs.contains(state.currentPage)) {
       if (index == 0 && (state.currentPage == 'motion' || state.currentPage == 'stt')) {
         state.navigateTo('home');
+      } else if (index == 1 && state.currentPage == 'comm') {
+        state.stopHardwareTracks();
+        state.endCommunicationSession();
+        state.navigateTo('hub');
       }
       return;
     }
@@ -129,7 +133,18 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
     if (state.currentPage == 'stt') {
       return const SpeechToTextScreen();
     }
-    return const HomePage();
+    return HomePage(
+      onNavigateToCommunication: () => _onNavTap(1, state),
+      onNavigateToLocation: () => _onNavTap(2, state),
+      onNavigateToProfile: () => _onNavTap(3, state),
+    );
+  }
+
+  Widget _resolveTab1(TautAppState state) {
+    if (state.currentPage == 'comm') {
+      return const CommunicationHubScreen();
+    }
+    return const CommunicationLandingScreen();
   }
 
   Widget _resolveScreen(String page) {
@@ -227,7 +242,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                             onPageChanged: (idx) => _onPageChanged(idx, state),
                             children: [
                               _resolveTab0(state),
-                              const CommunicationLandingScreen(),
+                              _resolveTab1(state),
                               const LocationSharingScreen(),
                               const ProfileScreen(),
                             ],
