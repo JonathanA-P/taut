@@ -462,6 +462,8 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
       state.popPage();
     } else if (Navigator.canPop(context)) {
       Navigator.pop(context);
+    } else {
+      state.switchToTab(1);
     }
   }
 

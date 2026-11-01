@@ -124,5 +124,48 @@ void main() {
       expect(state.currentPage, 'location');
       expect(find.text('Ruang lokasi'), findsOneWidget);
     });
+
+    testWidgets('Navigating from Komunikasi to CommunicationHub and tapping back returns to Komunikasi with synced indicator', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const HomeShellScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Switch to Komunikasi tab
+      await tester.tap(find.text('Komunikasi'));
+      await tester.pumpAndSettle();
+
+      expect(state.currentNavIndex, 1);
+      expect(state.currentPage, 'hub');
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+
+      // 2. Tap Mulai komunikasi to enter comm
+      await tester.tap(find.text('Mulai komunikasi'));
+      await tester.pumpAndSettle();
+
+      expect(state.currentPage, 'comm');
+      expect(state.currentNavIndex, 1);
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+
+      // 3. Tap back button in AppBar
+      final backButton = find.byIcon(Icons.arrow_back_rounded);
+      expect(backButton, findsOneWidget);
+      await tester.tap(backButton);
+      await tester.pumpAndSettle();
+
+      // 4. Verify user returns to Komunikasi landing screen, NOT home page!
+      expect(state.currentPage, 'hub');
+      expect(state.currentNavIndex, 1);
+      expect(find.text('Ruang komunikasi'), findsOneWidget);
+      expect(find.text('Halo, selamat datang'), findsNothing);
+    });
+
   });
 }
