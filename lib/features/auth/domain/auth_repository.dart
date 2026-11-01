@@ -13,6 +13,8 @@ abstract class AuthRepository {
 
   Future<UserProfile> verifyOtp({required String email, required String token});
 
+  Future<void> resendOtp({required String email});
+
   Future<void> signOut();
 
   Future<UserProfile?> getCurrentUser();

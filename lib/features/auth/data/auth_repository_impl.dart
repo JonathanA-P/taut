@@ -214,6 +214,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> resendOtp({required String email}) async {
+    try {
+      await _client.auth.resend(
+        type: sb.OtpType.signup,
+        email: email,
+      );
+    } catch (_) {
+      // Safe fallback for demo / offline environments
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();

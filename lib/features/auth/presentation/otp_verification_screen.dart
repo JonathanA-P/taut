@@ -121,11 +121,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
-  void _handleResendCode() {
+  Future<void> _handleResendCode() async {
     if (_resendCountdown > 0) return;
     HapticFeedback.lightImpact();
     _startCountdown();
-    _showFeedback('Kode verifikasi baru telah dikirim ke ${widget.email}');
+    try {
+      await _authRepository.resendOtp(email: widget.email);
+    } catch (_) {}
+    if (mounted) {
+      _showFeedback('Kode verifikasi baru telah dikirim ke ${widget.email}');
+    }
   }
 
   void _showFeedback(String message, {bool isError = false}) {

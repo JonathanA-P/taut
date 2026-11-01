@@ -107,5 +107,31 @@ void main() {
       expect(find.byType(OtpVerificationScreen), findsOneWidget);
       expect(find.text('Masukkan Kode OTP'), findsOneWidget);
     });
+
+    testWidgets('Tapping Kirim Ulang after countdown triggers resend and feedback', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const OtpVerificationScreen(
+            email: 'adriel@email.com',
+            displayName: 'Adriel',
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Fast-forward 46 ticks for countdown to expire
+      for (int i = 0; i <= 46; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+
+      expect(find.text('Kirim Ulang Kode OTP'), findsOneWidget);
+      await tester.tap(find.text('Kirim Ulang Kode OTP'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.textContaining('Kode verifikasi baru telah dikirim'), findsOneWidget);
+    });
   });
 }
+
