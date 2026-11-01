@@ -50,26 +50,14 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              Text(
-                                state.userName,
-                                style: const TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.darkGreen,
-                                  letterSpacing: -0.8,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                '*',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF84A078),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            state.userName,
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.darkGreen,
+                              letterSpacing: -0.8,
+                            ),
                           ),
                         ],
                       ),
@@ -94,26 +82,14 @@ class HomePage extends StatelessWidget {
                   _buildHero(context, state),
                   const SizedBox(height: 24),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Teman aktivitasmu',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkGreen,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      Text(
-                        '4 fitur utama',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'Teman aktivitasmu',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                      letterSpacing: -0.4,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
