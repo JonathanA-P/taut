@@ -172,7 +172,13 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
           canPop: !state.canPopPage,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) {
-              state.popPage();
+              if (state.currentPage == 'comm') {
+                state.stopHardwareTracks();
+                state.endCommunicationSession();
+                state.switchToTab(0);
+              } else {
+                state.popPage();
+              }
             }
           },
           child: Scaffold(

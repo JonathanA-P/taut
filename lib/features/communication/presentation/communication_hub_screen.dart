@@ -458,11 +458,7 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
     _micStatusText = 'Mikrofon nonaktif';
     state.endCommunicationSession();
     _showToast('Sesi selesai. Kamera, mikrofon, dan suara dihentikan.');
-    if (state.canPopPage) {
-      state.popPage();
-    } else if (Navigator.canPop(context)) {
-      Navigator.pop(context);
-    }
+    state.switchToTab(0);
   }
 
   Future<void> _onModeChanged(BisindoMode newMode) async {
@@ -567,12 +563,10 @@ class _CommunicationHubScreenState extends State<CommunicationHubScreen>
         return Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            leading: (Navigator.canPop(context) || state.canPopPage)
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    onPressed: () => _handleEndSession(state),
-                  )
-                : null,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => _handleEndSession(state),
+            ),
             title: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -124,5 +124,34 @@ void main() {
       expect(state.currentPage, 'location');
       expect(find.text('Ruang lokasi'), findsOneWidget);
     });
+
+    testWidgets('Tapping back button in Communication screen returns to Beranda with indicator synced to Beranda (index 0)', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const HomeShellScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to comm
+      state.navigateTo('comm');
+      await tester.pumpAndSettle();
+
+      expect(state.currentPage, 'comm');
+      expect(state.currentNavIndex, 1);
+      expect(find.text('Komunikasi langsung'), findsOneWidget);
+
+      // Tap back button at the top
+      final backButton = find.byIcon(Icons.arrow_back_rounded);
+      expect(backButton, findsOneWidget);
+      await tester.tap(backButton);
+      await tester.pumpAndSettle();
+
+      // Verify returned to Beranda and indicator is synced to Beranda (index 0)
+      expect(state.currentPage, 'home');
+      expect(state.currentNavIndex, 0);
+      expect(find.text('Halo, selamat datang'), findsOneWidget);
+    });
   });
 }
