@@ -59,6 +59,7 @@ class TautAppState extends ChangeNotifier {
     switch (_currentPage) {
       case 'home':
       case 'motion':
+      case 'stt':
         return 0;
       case 'comm':
       case 'hub':

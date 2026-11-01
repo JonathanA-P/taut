@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../shared/models/taut_app_state.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
@@ -179,6 +180,13 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            final state = TautAppState();
+            state.navigateTo('home');
+          },
+        ),
         title: const Text('Live Speech-to-Text'),
         actions: [
           IconButton(

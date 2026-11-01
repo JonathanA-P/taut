@@ -34,7 +34,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
   late PageController _pageController;
   bool _isAnimatingToPage = false;
 
-  static const _primaryTabs = ['home', 'motion', 'hub', 'location', 'profile'];
+  static const _primaryTabs = ['home', 'motion', 'stt', 'hub', 'location', 'profile'];
 
   @override
   void initState() {
@@ -80,7 +80,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
 
   void _onNavTap(int index, TautAppState state) {
     if (state.currentNavIndex == index && _primaryTabs.contains(state.currentPage)) {
-      if (index == 0 && state.currentPage == 'motion') {
+      if (index == 0 && (state.currentPage == 'motion' || state.currentPage == 'stt')) {
         state.navigateTo('home');
       }
       return;
@@ -122,9 +122,12 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
     }
   }
 
-    Widget _resolveTab0(TautAppState state) {
+  Widget _resolveTab0(TautAppState state) {
     if (state.currentPage == 'motion') {
       return const MotionToSoundScreen();
+    }
+    if (state.currentPage == 'stt') {
+      return const SpeechToTextScreen();
     }
     return const HomePage();
   }
@@ -184,10 +187,10 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
         }
 
         return PopScope(
-          canPop: !state.canPopPage && state.currentPage != 'motion',
+          canPop: !state.canPopPage && state.currentPage != 'motion' && state.currentPage != 'stt',
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) {
-              if (state.currentPage == 'motion') {
+              if (state.currentPage == 'motion' || state.currentPage == 'stt') {
                 state.navigateTo('home');
               } else if (state.currentPage == 'comm') {
                 state.stopHardwareTracks();
