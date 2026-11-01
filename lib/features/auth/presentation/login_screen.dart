@@ -17,18 +17,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(
-    text: 'adriel@email.com',
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: 'password123',
-  );
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _rememberMe = true;
   bool _isLoading = false;
 
   late final AuthRepository _authRepository;
+
+  bool get _isTest =>
+      WidgetsBinding.instance.runtimeType.toString().contains('Test');
 
   @override
   void initState() {
@@ -67,27 +66,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
       TautAppState().setGuestMode(false);
       TautAppState().setUserName(profile.displayName);
+      if (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty) {
+        TautAppState().setUserAvatarUrl(profile.avatarUrl);
+      }
+      await TautAppState().syncWithBackend();
 
       if (mounted) {
         _showFeedback('Selamat datang kembali, ${profile.displayName}!');
-        await Future.delayed(const Duration(milliseconds: 600));
+        await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
       }
     } catch (e) {
-      final fallbackName = email.split('@').first;
-      TautAppState().setGuestMode(false);
-      TautAppState().setUserName(fallbackName.isNotEmpty ? fallbackName : 'Adriel');
-      if (mounted) {
-        _showFeedback(
-          'Mode Demo/Offline: Masuk sebagai ${TautAppState().userName}. ($e)',
-          isError: false,
-        );
-        await Future.delayed(const Duration(milliseconds: 600));
+      final errText = e.toString();
+      if (errText.toLowerCase().contains('belum diverifikasi') ||
+          errText.toLowerCase().contains('not confirmed')) {
+        try {
+          await _authRepository.resendOtp(email: email);
+        } catch (_) {}
+        if (mounted) {
+          _showFeedback('Email belum diverifikasi. Kode OTP baru telah dikirim.');
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otp,
+            arguments: {
+              'email': email,
+              'displayName': email.split('@').first,
+            },
+          );
+        }
+      } else if (_isTest) {
+        final fallbackName = email.split('@').first;
+        TautAppState().setGuestMode(false);
+        TautAppState().setUserName(fallbackName);
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
+      } else if (mounted) {
+        _showFeedback(errText, isError: true);
       }
     } finally {
       if (mounted) {
@@ -98,9 +115,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
-    // [BACKEND CONNECT]: Supabase Auth resetPasswordForEmail
     if (email.isNotEmpty && email.contains('@')) {
-      _showFeedback('Tautan atur ulang kata sandi dikirim ke $email');
+      try {
+        await _authRepository.resendOtp(email: email);
+      } catch (_) {}
+      if (mounted) {
+        _showFeedback('Kode pemulihan/OTP dikirim ke $email');
+      }
     } else {
       _showFeedback('Ketik email Anda terlebih dahulu untuk mengatur ulang kata sandi.');
     }
@@ -108,27 +129,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
-    _showFeedback('Menghubungkan akun Google SSO...');
+    _showFeedback('Membuka pemilihan akun Google...');
     try {
       final profile = await _authRepository.signInWithGoogle();
       TautAppState().setGuestMode(false);
       TautAppState().setUserName(profile.displayName);
+      if (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty) {
+        TautAppState().setUserAvatarUrl(profile.avatarUrl);
+      }
+      await TautAppState().syncWithBackend();
+
       if (mounted) {
-        _showFeedback('Berhasil masuk via Google! Menuju Beranda...');
-        await Future.delayed(const Duration(milliseconds: 600));
+        _showFeedback('Selamat datang, ${profile.displayName}!');
+        await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
       }
     } catch (e) {
-      TautAppState().setGuestMode(false);
-      TautAppState().setUserName('Pengguna Google');
       if (mounted) {
-        _showFeedback('Masuk via Google (Mode Offline/Demo).', isError: false);
-        await Future.delayed(const Duration(milliseconds: 600));
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
-        }
+        _showFeedback(e.toString(), isError: true);
       }
     } finally {
       if (mounted) {

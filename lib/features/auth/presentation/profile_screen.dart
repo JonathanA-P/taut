@@ -5,6 +5,7 @@ import '../../../core/routing/app_router.dart';
 import '../../../shared/models/taut_app_state.dart';
 import '../../../shared/widgets/taut_auth_gate_dialog.dart';
 import '../../../shared/widgets/taut_avatar.dart';
+import '../data/auth_repository_impl.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -128,12 +129,18 @@ class ProfileScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRoutes.login,
-                          (route) => false,
-                        );
+                      onPressed: () async {
+                        try {
+                          await AuthRepositoryImpl().signOut();
+                        } catch (_) {}
+                        state.signOutClear();
+                        if (context.mounted) {
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            AppRoutes.login,
+                            (route) => false,
+                          );
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/models/taut_app_state.dart';
@@ -33,7 +34,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _handleSave(TautAppState state) {
+  Future<void> _handleSave(TautAppState state) async {
     final name = _nameController.text.trim();
     final handle = _handleController.text.trim();
     if (name.isNotEmpty) {
@@ -42,6 +43,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         state.setUserHandle(handle);
       }
       state.setUserAvatarUrl(_selectedAvatarUrl);
+
+      final isTest =
+          WidgetsBinding.instance.runtimeType.toString().contains('Test');
+      if (!isTest) {
+        try {
+          final client = Supabase.instance.client;
+          final user = client.auth.currentUser;
+          if (user != null) {
+            await client.from('profiles').upsert({
+              'id': user.id,
+              'display_name': name,
+              'avatar_url': _selectedAvatarUrl,
+              'updated_at': DateTime.now().toIso8601String(),
+            });
+          }
+        } catch (_) {}
+      }
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profil berhasil diperbarui.'),

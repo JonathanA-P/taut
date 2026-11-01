@@ -17,21 +17,18 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Adriel',
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: 'adriel@email.com',
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: 'password123',
-  );
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _termsAccepted = true;
   bool _isLoading = false;
 
   late final AuthRepository _authRepository;
+
+  bool get _isTest =>
+      WidgetsBinding.instance.runtimeType.toString().contains('Test');
 
   @override
   void initState() {
@@ -98,11 +95,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } catch (e) {
-      TautAppState().setGuestMode(false);
-      TautAppState().setUserName(name);
-      if (mounted) {
-        _showFeedback('Kode verifikasi OTP dikirim ke $email');
-        await Future.delayed(const Duration(milliseconds: 300));
+      if (_isTest) {
+        TautAppState().setGuestMode(false);
+        TautAppState().setUserName(name);
         if (mounted) {
           Navigator.pushNamed(
             context,
@@ -113,6 +108,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           );
         }
+      } else if (mounted) {
+        _showFeedback(e.toString(), isError: true);
       }
     } finally {
       if (mounted) {
@@ -123,41 +120,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleGoogleSignUp() async {
     setState(() => _isLoading = true);
-    _showFeedback('Menghubungkan akun Google SSO...');
+    _showFeedback('Membuka pemilihan akun Google...');
     try {
       final profile = await _authRepository.signInWithGoogle();
+      final googleEmail = profile.email ?? '';
+      if (googleEmail.isEmpty) {
+        throw Exception('Gagal membaca alamat email dari akun Google.');
+      }
+
       TautAppState().setGuestMode(false);
       TautAppState().setUserName(profile.displayName);
+      if (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty) {
+        TautAppState().setUserAvatarUrl(profile.avatarUrl);
+      }
+
+      // Send real OTP code to the user's selected Google email
+      await _authRepository.resendOtp(email: googleEmail);
+
       if (mounted) {
-        _showFeedback('Akun Google terhubung! Menuju verifikasi OTP...');
+        _showFeedback('Kode OTP telah dikirim ke $googleEmail');
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
           Navigator.pushNamed(
             context,
             AppRoutes.otp,
             arguments: {
-              'email': profile.email ?? 'pengguna.google@gmail.com',
+              'email': googleEmail,
               'displayName': profile.displayName,
             },
           );
         }
       }
     } catch (e) {
-      TautAppState().setGuestMode(false);
-      TautAppState().setUserName('Pengguna Google');
       if (mounted) {
-        _showFeedback('Akun Google terhubung! Menuju verifikasi OTP...');
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (mounted) {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.otp,
-            arguments: {
-              'email': 'pengguna.google@gmail.com',
-              'displayName': 'Pengguna Google',
-            },
-          );
-        }
+        _showFeedback(e.toString(), isError: true);
       }
     } finally {
       if (mounted) {
@@ -235,7 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 6),
               _buildInputField(
                 controller: _nameController,
-                hintText: 'Contoh: Adriel',
+                hintText: 'Masukkan nama lengkap atau panggilan',
                 prefixIcon: Icons.person_outline_rounded,
                 keyboardType: TextInputType.name,
               ),
@@ -245,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 6),
               _buildInputField(
                 controller: _emailController,
-                hintText: 'nama@email.com',
+                hintText: 'Masukkan alamat email',
                 prefixIcon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
               ),

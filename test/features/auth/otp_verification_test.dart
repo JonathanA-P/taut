@@ -98,6 +98,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(0), 'Adriel');
+      await tester.enterText(fields.at(1), 'adriel@email.com');
+      await tester.enterText(fields.at(2), 'password123');
+      await tester.pump();
+
       // Tap submit registration
       await tester.tap(find.text('Daftar Akun Baru'));
       await tester.pump();

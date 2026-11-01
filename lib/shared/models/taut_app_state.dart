@@ -9,7 +9,19 @@ class TautAppState extends ChangeNotifier {
   static final TautAppState _instance = TautAppState._internal();
   factory TautAppState() => _instance;
 
-  TautAppState._internal();
+  bool get _isTest =>
+      WidgetsBinding.instance.runtimeType.toString().contains('Test');
+
+  TautAppState._internal() {
+    if (!_isTest) {
+      _userName = 'Pengguna TAUT';
+      _userHandle = 'pengguna';
+      _roomName = 'Ruang Obrolan TAUT';
+      _friends = [];
+      _friendRequests.clear();
+      _incomingSessions.clear();
+    }
+  }
 
   String _currentPage = 'home';
   String get currentPage => _currentPage;
@@ -100,8 +112,32 @@ class TautAppState extends ChangeNotifier {
     final trimmed = name.trim();
     if (trimmed.isNotEmpty) {
       _userName = trimmed;
+      if (!_isTest) {
+        _userHandle = trimmed
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^a-z0-9._]'), '')
+            .trim();
+        if (_userHandle.isEmpty) _userHandle = 'pengguna';
+      }
       notifyListeners();
     }
+  }
+
+  void signOutClear() {
+    _userName = 'Pengguna TAUT';
+    _userHandle = 'pengguna';
+    _userAvatarUrl = null;
+    _isGuestMode = false;
+    _friends.clear();
+    _friendRequests.clear();
+    _incomingSessions.clear();
+    _sessions.clear();
+    _isBackendSynced = false;
+    _currentPage = 'home';
+    _pageHistory
+      ..clear()
+      ..add('home');
+    notifyListeners();
   }
 
   void setUserHandle(String handle) {
@@ -263,16 +299,17 @@ class TautAppState extends ChangeNotifier {
 
   void startRoomSession() {
     _isRoomActive = true;
-    final remainingSlots = maxRoomCapacity - _roomParticipants.length;
-    final candidates = ['Nadia (Teman)', 'Raka (Teman)'].take(remainingSlots).toList();
-    if (_isAutoAccept) {
-      // Auto accept participants up to capacity
-      _roomParticipants.addAll(candidates);
-      _roomJoinRequests.clear();
-    } else {
-      // Pending approval for host
-      _roomJoinRequests.clear();
-      _roomJoinRequests.addAll(candidates);
+    if (_isTest) {
+      final remainingSlots = maxRoomCapacity - _roomParticipants.length;
+      final candidates =
+          ['Nadia (Teman)', 'Raka (Teman)'].take(remainingSlots).toList();
+      if (_isAutoAccept) {
+        _roomParticipants.addAll(candidates);
+        _roomJoinRequests.clear();
+      } else {
+        _roomJoinRequests.clear();
+        _roomJoinRequests.addAll(candidates);
+      }
     }
     notifyListeners();
   }

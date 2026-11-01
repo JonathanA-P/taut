@@ -70,8 +70,8 @@ class AppRouter {
         final args = settings.arguments as Map<String, dynamic>? ?? {};
         return MaterialPageRoute(
           builder: (_) => OtpVerificationScreen(
-            email: args['email'] as String? ?? 'adriel@email.com',
-            displayName: args['displayName'] as String? ?? 'Adriel',
+            email: args['email'] as String? ?? '',
+            displayName: args['displayName'] as String? ?? 'Pengguna',
           ),
         );
 
@@ -158,6 +158,12 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen());
 
       default:
+        final routeName = settings.name ?? '';
+        if (routeName.contains('login-callback') ||
+            routeName.contains('code=') ||
+            routeName.contains('access_token=')) {
+          return MaterialPageRoute(builder: (_) => const RegisterScreen());
+        }
         return MaterialPageRoute(
           builder: (_) => Scaffold(
             appBar: AppBar(title: const Text('Halaman Tidak Ditemukan')),
