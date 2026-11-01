@@ -72,9 +72,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
   }
 
   void _onPageChanged(int index, TautAppState state) {
-    if (!_isAnimatingToPage &&
-        _primaryTabs.contains(state.currentPage) &&
-        state.currentNavIndex != index) {
+    if (!_isAnimatingToPage && state.currentNavIndex != index) {
       HapticFeedback.selectionClick();
       state.switchToTab(index);
     }
@@ -196,16 +194,10 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                     padding: EdgeInsets.only(
                       bottom: state.isNavbarVisible ? 86 : 0,
                     ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        IgnorePointer(
-                          ignoring: !isPrimaryTab,
-                          child: PageView(
+                    child: isPrimaryTab
+                        ? PageView(
                             controller: _pageController,
-                            physics: isPrimaryTab
-                                ? const ClampingScrollPhysics()
-                                : const NeverScrollableScrollPhysics(),
+                            physics: const ClampingScrollPhysics(),
                             onPageChanged: (idx) => _onPageChanged(idx, state),
                             children: const [
                               HomePage(),
@@ -213,25 +205,19 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                               LocationSharingScreen(),
                               ProfileScreen(),
                             ],
-                          ),
-                        ),
-                        if (!isPrimaryTab)
-                          Positioned.fill(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 180),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeOutCubic,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(opacity: animation, child: child);
-                              },
-                              child: KeyedSubtree(
-                                key: ValueKey(state.currentPage),
-                                child: _resolveScreen(state.currentPage),
-                              ),
+                          )
+                        : AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeOutCubic,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
+                            child: KeyedSubtree(
+                              key: ValueKey(state.currentPage),
+                              child: _resolveScreen(state.currentPage),
                             ),
                           ),
-                      ],
-                    ),
                   ),
                 ),
                 if (state.isNavbarVisible)
